@@ -1,0 +1,21 @@
+{
+  "name": "cyberbit16",
+  "version": "0.0.1",
+  "description": "An attempt to create my own fantasy cpu",
+  "main": "script.js",
+  "scripts": {
+    "build": "wat2wasm cypu.wat",
+    "watch": "sane \"npm run build\" . --glob=cypu.wat"
+  },
+  "keywords": [
+    "fantasy-console",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "poeticAndroid",
+  "license": "MIT",
+  "dependencies": {
+    "sane": "^5.0.1",
+    "wabt": "^1.0.25"
+  }
+}
