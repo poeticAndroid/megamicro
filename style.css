@@ -1,0 +1,21 @@
+html {
+  background-color: #eee;
+  color: #111;
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
+}
+
+canvas {
+  border: 1px solid #666;
+}
+textarea{
+  background-color: rgba(0, 0, 255, 10%);
+  color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  html{
+    background-color: #111;
+    color: #eee;
+  }
+}
