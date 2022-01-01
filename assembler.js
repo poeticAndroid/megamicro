@@ -55,7 +55,7 @@
   const _ = null
   const opcodes = [
     "halt", "sleep", "vsync", _, "fwd", "rew", "fwdifz", "rewifz", "pushreg", "popreg", _, _, _, _, "jump", "noop",
-    "load8", "load16", "load32", _, "load", "loadreg", _, _, "store8", "store16", "store32", _, "copy", "fill", _, "memsize",
+    "load8", "load16", "load32", _, "set", "copy", _, _, "store8", "store16", "store32", _, "mcopy", "fill", _, "memsize",
     "add", "sub", "mult", "div", "rem", _, _, _, "fadd", "fsub", "fmult", "fdiv", _, _, _, _,
     "eq", "lt", "gt", _, "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
   ]

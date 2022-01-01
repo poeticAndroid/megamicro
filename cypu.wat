@@ -160,10 +160,10 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x12)) (then ;; load32
       (call $setReg (get_local $rega) (i32.load (get_local $data)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x14)) (then ;; load
+    (if (i32.eq (get_local $opcode) (i32.const 0x14)) (then ;; set
       (call $setReg (get_local $rega) (get_local $data))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x15)) (then ;; loadreg
+    (if (i32.eq (get_local $opcode) (i32.const 0x15)) (then ;; copy
       (call $setReg (get_local $rega) (call $getReg (get_local $regb)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x18)) (then ;; store8
@@ -175,7 +175,7 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x1a)) (then ;; store32
       (i32.store (get_local $data) (call $getReg (get_local $rega)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x1c)) (then ;; copy
+    (if (i32.eq (get_local $opcode) (i32.const 0x1c)) (then ;; mcopy
       (memory.copy (call $getReg (get_local $regc)) (call $getReg (get_local $rega)) (call $getReg (get_local $regb)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x1d)) (then ;; fill
