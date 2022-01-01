@@ -16,6 +16,11 @@ textarea {
   color: inherit;
   padding: .5em;
 }
+article {
+  display: inline-block;
+  text-align: left;
+  vertical-align: top;
+}
 
 @media (prefers-color-scheme: dark) {
   html {

@@ -2,6 +2,7 @@
   let cpu,
     ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
+    speed = 1,
     running = true,
     waitingforuser = false
 
@@ -16,8 +17,12 @@
     addEventListener("mousedown", onUser)
     addEventListener("mouseup", onUser)
     addEventListener("mousemove", onUser)
-    for (let i = 0x0; i < 0x9000; i++) {
-      mem[0x7000 + i] = i & 0xff
+
+    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;asm\n"
+    document.querySelector("#compileBtn").addEventListener("click", compileAsm)
+
+    for (let i = 0x0; i < mem.length; i++) {
+      mem[i] = 255 * Math.random()
     }
     mem[0] = 0
     mem[0x6fff] = 0
@@ -39,7 +44,7 @@
 
   function render(t) {
     if (running) {
-      let opcode = cpu.run(1)
+      let opcode = cpu.run(speed)
       // console.log(cpu.getReg(0), opcode)
       switch (opcode) {
         case 0x00: // halt
@@ -114,7 +119,10 @@
     }
 
     g.putImageData(img, 0, 0)
-    requestAnimationFrame(render)
+    updateMonitor()
+
+    // requestAnimationFrame(render)  
+    setTimeout(render, 256)
   }
 
   function renderbyte(madr, iadr, bpp) {
@@ -164,5 +172,34 @@
       waitingforuser = false
       running = true
     }
+  }
+
+  function compileAsm(e) {
+    let asm = document.querySelector("#asmTxt").value
+    let offset = parseInt(document.querySelector("#asmTxt").value)
+    let bin = assemble(asm)
+    mem.set(bin, offset)
+    cpu.setReg(0, offset)
+    running = true
+    localStorage.setItem("rom.asm", asm)
+  }
+
+  function updateMonitor() {
+    let pc = cpu.getReg(0)
+    let adr = Math.max(0, pc - 16)
+    let len = 14
+    let txt = ""
+    while (len--) {
+      txt += (adr == pc ? "> " : "  ")
+      txt += ("000000" + adr.toString(16)).slice(-5) + " "
+      txt += ("0000" + mem[adr + 0].toString(16)).slice(-2) + " "
+      txt += ("0000" + mem[adr + 1].toString(16)).slice(-2) + " "
+      txt += ("0000" + mem[adr + 2].toString(16)).slice(-2) + " "
+      txt += ("0000" + mem[adr + 3].toString(16)).slice(-2) + " "
+      txt += opcodes[mem[adr]] || ""
+      txt += "\n"
+      adr += 4
+    }
+    document.querySelector("#monitorPre").textContent = txt
   }
 })()

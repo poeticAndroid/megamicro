@@ -114,14 +114,28 @@
         (set_global $reg0 (i32.sub (call $getReg (get_local $rega)) (i32.const 4)))
       ))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; fifzero
-      (if (i32.eqz (call $getReg (get_local $rega))) (then
-        (set_global $reg0 (i32.add (get_global $reg0) (get_local $data)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; fwd
+      (if (i32.eqz (get_local $rega)) (then
+        (set_global $reg0 (i32.add (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
+      )(else
+        (set_global $reg0 (i32.add (get_global $reg0) (i32.mul (i32.const 4) (call $getReg (get_local $rega)))))
       ))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x05)) (then ;; rifzero
+    (if (i32.eq (get_local $opcode) (i32.const 0x05)) (then ;; rew
+      (if (i32.eqz (get_local $rega)) (then
+        (set_global $reg0 (i32.sub (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
+      )(else
+        (set_global $reg0 (i32.sub (get_global $reg0) (i32.mul (i32.const 4) (call $getReg (get_local $rega)))))
+      ))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x06)) (then ;; rwdifz
       (if (i32.eqz (call $getReg (get_local $rega))) (then
-        (set_global $reg0 (i32.sub (get_global $reg0) (get_local $data)))
+        (set_global $reg0 (i32.add (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
+      ))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x07)) (then ;; rewifz
+      (if (i32.eqz (call $getReg (get_local $rega))) (then
+        (set_global $reg0 (i32.sub (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
       ))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x08)) (then ;; pushreg
