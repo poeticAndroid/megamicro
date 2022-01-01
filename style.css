@@ -1,20 +1,23 @@
 html {
-  background-color: #eee;
+  background-color: #edc;
   color: #111;
   font-family: 'Courier New', Courier, monospace;
   text-align: center;
 }
 
 canvas {
+  background-color: black;
   border: 1px solid #666;
+  image-rendering: pixelated;
+  padding: .5em;
 }
-textarea{
+textarea {
   background-color: rgba(0, 0, 255, 10%);
   color: inherit;
 }
 
 @media (prefers-color-scheme: dark) {
-  html{
+  html {
     background-color: #111;
     color: #eee;
   }
