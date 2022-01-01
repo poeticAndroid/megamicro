@@ -65,11 +65,7 @@
     (block(loop (br_if 1 (i32.eqz (get_local $count)))
       (set_local $count (i32.sub (get_local $count) (i32.const 1)))
       (set_local $opcode (call $step))
-      (br_if 1 (i32.eqz (get_local $opcode)))
-      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0c))) ;; sleep
-      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0d))) ;; waitforuser
-      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0e))) ;; hsync
-      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0f))) ;; vsync
+      (br_if 1 (i32.lt_u (get_local $opcode) (i32.const 0x04))) 
       (br 0)
     ))
     (get_local $opcode)
@@ -104,15 +100,6 @@
     ;; Flow
     (if (i32.eq (get_local $opcode) (i32.const 0x00)) (then ;; halt
       (set_global $reg0 (i32.sub (get_global $reg0) (i32.const 4)))
-    ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x01)) (then ;; noop
-    ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x02)) (then ;; goto
-      (if (i32.eqz (get_local $rega)) (then
-        (set_global $reg0 (i32.sub (get_local $data) (i32.const 4)))
-      )(else
-        (set_global $reg0 (i32.sub (call $getReg (get_local $rega)) (i32.const 4)))
-      ))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; fwd
       (if (i32.eqz (get_local $rega)) (then
@@ -154,6 +141,13 @@
         (br 0)
       ))
       (set_global $reg15 (i32.const 0))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x0e)) (then ;; jump
+      (if (i32.eqz (get_local $rega)) (then
+        (set_global $reg0 (i32.sub (get_local $data) (i32.const 4)))
+      )(else
+        (set_global $reg0 (i32.sub (call $getReg (get_local $rega)) (i32.const 4)))
+      ))
     ))
 
     ;; Memory

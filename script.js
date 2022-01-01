@@ -50,19 +50,11 @@
         case 0x00: // halt
           running = false
           break
-        case 0x0c: // sleep
+        case 0x01: // sleep
           running = false
           setTimeout(() => {
             running = true
           }, mem[cpu.getReg(0) - 2] * 256 + mem[cpu.getReg(0) - 1])
-          break
-        case 0x0d: // waitforuser
-          running = false
-          waitingforuser = true
-          break
-        case 0x0e: // hsync
-          break
-        case 0x0f: // vsync
           break
 
         default:
@@ -176,7 +168,7 @@
 
   function compileAsm(e) {
     let asm = document.querySelector("#asmTxt").value
-    let offset = parseInt(document.querySelector("#asmTxt").value)
+    let offset = eval(document.querySelector("#adrTxt").value)
     let bin = assemble(asm)
     mem.set(bin, offset)
     cpu.setReg(0, offset)
