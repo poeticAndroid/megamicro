@@ -65,6 +65,11 @@
     (block(loop (br_if 1 (i32.eqz (get_local $count)))
       (set_local $count (i32.sub (get_local $count) (i32.const 1)))
       (set_local $opcode (call $step))
+      (br_if 1 (i32.eqz (get_local $opcode)))
+      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0c))) ;; sleep
+      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0d))) ;; waitforuser
+      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0e))) ;; hsync
+      (br_if 1 (i32.eq (get_local $opcode) (i32.const 0x0f))) ;; vsync
       (br 0)
     ))
     (get_local $opcode)

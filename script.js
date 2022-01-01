@@ -2,7 +2,8 @@
   let cpu,
     ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
-    running = true
+    running = true,
+    waitingforuser = false
 
   let img,
     canvas = document.querySelector("canvas"),
@@ -10,6 +11,11 @@
     gmode = -1
 
   async function init() {
+    addEventListener("keydown", onUser)
+    addEventListener("keyup", onUser)
+    addEventListener("mousedown", onUser)
+    addEventListener("mouseup", onUser)
+    addEventListener("mousemove", onUser)
     for (let i = 0x0; i < 0x9000; i++) {
       mem[0x7000 + i] = i & 0xff
     }
@@ -36,8 +42,22 @@
       let opcode = cpu.run(1)
       // console.log(cpu.getReg(0), opcode)
       switch (opcode) {
-        case 0:
+        case 0x00: // halt
           running = false
+          break
+        case 0x0c: // sleep
+          running = false
+          setTimeout(() => {
+            running = true
+          }, mem[cpu.getReg(0) - 2] * 256 + mem[cpu.getReg(0) - 1])
+          break
+        case 0x0d: // waitforuser
+          running = false
+          waitingforuser = true
+          break
+        case 0x0e: // hsync
+          break
+        case 0x0f: // vsync
           break
 
         default:
@@ -137,5 +157,12 @@
       byte = byte >> gs
     }
     return ppb * 4
+  }
+
+  function onUser(e) {
+    if (waitingforuser) {
+      waitingforuser = false
+      running = true
+    }
   }
 })()

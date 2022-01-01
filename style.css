@@ -14,6 +14,7 @@ canvas {
 textarea {
   background-color: rgba(0, 0, 255, 10%);
   color: inherit;
+  padding: .5em;
 }
 
 @media (prefers-color-scheme: dark) {
