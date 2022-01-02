@@ -1,64 +1,75 @@
 (module
   (import "pcb" "ram" (memory 1))
 
-  (global $reg0 (mut i32) (i32.const 0))
-  (global $reg1 (mut i32) (i32.const 0))
-  (global $reg2 (mut i32) (i32.const 0))
-  (global $reg3 (mut i32) (i32.const 0))
-  (global $reg4 (mut i32) (i32.const 0))
-  (global $reg5 (mut i32) (i32.const 0))
-  (global $reg6 (mut i32) (i32.const 0))
-  (global $reg7 (mut i32) (i32.const 0))
-  (global $reg8 (mut i32) (i32.const 0))
-  (global $reg9 (mut i32) (i32.const 0))
-  (global $reg10 (mut i32) (i32.const 0))
-  (global $reg11 (mut i32) (i32.const 0))
-  (global $reg12 (mut i32) (i32.const 0))
-  (global $reg13 (mut i32) (i32.const 0))
-  (global $reg14 (mut i32) (i32.const 0))
-  (global $reg15 (mut i32) (i32.const 0))
+  (global $pc (mut i32) (i32.const 0x400)) ;; program counter
+  (global $cs (mut i32) (i32.const 0x8)) ;; call stack counter
+  (global $vs (mut i32) (i32.const 0x8)) ;; value stack counter
 
-  (func $setReg (param $reg i32) (param $val i32)
-    (if (i32.eq (get_local $reg) (i32.const  0))(then (set_global $reg0  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  1))(then (set_global $reg1  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  2))(then (set_global $reg2  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  3))(then (set_global $reg3  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  4))(then (set_global $reg4  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  5))(then (set_global $reg5  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  6))(then (set_global $reg6  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  7))(then (set_global $reg7  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  8))(then (set_global $reg8  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const  9))(then (set_global $reg9  (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const 10))(then (set_global $reg10 (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const 11))(then (set_global $reg11 (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const 12))(then (set_global $reg12 (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const 13))(then (set_global $reg13 (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const 14))(then (set_global $reg14 (get_local $val)) ))
-    (if (i32.eq (get_local $reg) (i32.const 15))(then (set_global $reg15 (get_local $val)) ))
-  )
-  (export "setReg" (func $setReg))
+  (func $getPC (result i32) (get_global $pc) )
+  (export "getPC" (func $getPC))
+  (func $setPC (param $val i32) (set_global $pc (get_local $val)) )
+  (export "setPC" (func $setPC))
 
-  (func $getReg (param $reg i32) (result i32)
-    (local $val i32)
-    (if (i32.eq (get_local $reg) (i32.const  0))(then (set_local $val (get_global $reg0  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  1))(then (set_local $val (get_global $reg1  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  2))(then (set_local $val (get_global $reg2  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  3))(then (set_local $val (get_global $reg3  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  4))(then (set_local $val (get_global $reg4  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  5))(then (set_local $val (get_global $reg5  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  6))(then (set_local $val (get_global $reg6  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  7))(then (set_local $val (get_global $reg7  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  8))(then (set_local $val (get_global $reg8  ) )))
-    (if (i32.eq (get_local $reg) (i32.const  9))(then (set_local $val (get_global $reg9  ) )))
-    (if (i32.eq (get_local $reg) (i32.const 10))(then (set_local $val (get_global $reg10 ) )))
-    (if (i32.eq (get_local $reg) (i32.const 11))(then (set_local $val (get_global $reg11 ) )))
-    (if (i32.eq (get_local $reg) (i32.const 12))(then (set_local $val (get_global $reg12 ) )))
-    (if (i32.eq (get_local $reg) (i32.const 13))(then (set_local $val (get_global $reg13 ) )))
-    (if (i32.eq (get_local $reg) (i32.const 14))(then (set_local $val (get_global $reg14 ) )))
-    (if (i32.eq (get_local $reg) (i32.const 15))(then (set_local $val (get_global $reg15 ) )))
-    (get_local $val)
+  (func $getCS (result i32) (get_global $cs) )
+  (export "getCS" (func $getCS))
+  (func $setCS (param $val i32) (set_global $cs (get_local $val)) )
+  (export "setCS" (func $setCS))
+
+  (func $getVS (result i32) (get_global $vs) )
+  (export "getVS" (func $getVS))
+  (func $setVS (param $val i32) (set_global $vs (get_local $val)) )
+  (export "setVS" (func $setVS))
+
+  (func $push (param $val i32)
+    (i32.store (get_global $vs) (get_local $val))
+    (set_global $vs (i32.add (get_global $vs) (i32.const 4)))
   )
-  (export "getReg" (func $getReg))
+  (func $pop (result i32)
+    (set_global $vs (i32.sub (get_global $vs) (i32.const 4)))
+    (i32.load (get_global $vs))
+  )
+  (func $fpush (param $val f32)
+    (f32.store (get_global $vs) (get_local $val))
+    (set_global $vs (i32.add (get_global $vs) (i32.const 4)))
+  )
+  (func $fpop (result f32)
+    (set_global $vs (i32.sub (get_global $vs) (i32.const 4)))
+    (f32.load (get_global $vs))
+  )
+  (func $call (param $offset i32) (param $params i32)
+    (call $sys (i32.add (get_global $pc) (get_local $offset)) (get_local $params))
+  )
+  (func $sys (param $adr i32) (param $params i32)
+    (local $paramstart i32)
+    (local $paramend i32)
+    (set_local $paramstart (i32.add (get_global $vs) (i32.const 8)))
+    (set_local $paramend (get_local $paramstart))
+    (block(loop (br_if 1 (i32.eqz (get_local $params)))
+      (set_local $paramstart (i32.sub (get_local $paramstart) (i32.const 4)))
+      (i32.store (get_local $paramstart) (call $pop))
+      (set_local $params (i32.sub (get_local $params) (i32.const 1)))
+      (br 0)
+    ))
+
+    (call $push (get_global $pc))
+    (call $push (get_global $cs))
+    (set_global $cs (get_global $vs))
+    (set_global $pc (get_local $adr))
+    (set_global $vs (get_local $paramend))
+  )
+  (func $return (param $results i32)
+    (local $resultstart i32)
+    (set_local $resultstart (i32.sub (get_global $vs) (i32.mul (get_local $results) (i32.const 4))))
+    (set_global $vs (get_global $cs))
+    (set_global $cs (call $pop))
+    (set_global $pc (call $pop))
+    (block(loop (br_if 1 (i32.eqz (get_local $results)))
+      (call $push (i32.load (get_local $resultstart)))
+      (set_local $resultstart (i32.add (get_local $resultstart) (i32.const 4)))
+      (set_local $results (i32.sub (get_local $results) (i32.const 1)))
+      (br 0)
+    ))
+  )
 
   (func $run (param $count i32) (result i32)
     (local $opcode i32)
@@ -74,158 +85,215 @@
 
   (func $step (result i32)
     (local $opcode i32)
-    (local $rega i32)
-    (local $regb i32)
-    (local $regc i32)
-    (local $data i32)
+    (local $a i32)
+    (local $b i32)
+    (local $c i32)
+    (local $d i32)
+    (local $fa f32)
+    (local $fb f32)
 
-    (local $i i32)
-
-    (set_local $opcode (i32.load8_u (i32.add (get_global $reg0) (i32.const 0))))
-    (set_local $rega   (i32.load8_s (i32.add (get_global $reg0) (i32.const 1))))
-    (set_local $regb   (i32.load8_u (i32.add (get_global $reg0) (i32.const 2))))
-    (set_local $regc   (i32.load8_u (i32.add (get_global $reg0) (i32.const 3))))
-
-    (set_local $data (get_local $rega))
-    (set_local $data (i32.shr_s (get_local $data) (i32.const 4)))
-    (set_local $data (i32.shl (get_local $data) (i32.const 8)))
-    (set_local $data (i32.or (get_local $data) (get_local $regb)))
-    (set_local $data (i32.shl (get_local $data) (i32.const 8)))
-    (set_local $data (i32.or (get_local $data) (get_local $regc)))
-
-    (set_local $rega (i32.and (get_local $rega) (i32.const 0xf)))
-    (set_local $regb (i32.and (get_local $regb) (i32.const 0xf)))
-    (set_local $regc (i32.and (get_local $regc) (i32.const 0xf)))
+    (set_local $opcode (i32.load8_u (get_global $pc)))
 
     ;; Flow
     (if (i32.eq (get_local $opcode) (i32.const 0x00)) (then ;; halt
-      (set_global $reg0 (i32.sub (get_global $reg0) (i32.const 4)))
+      (set_global $pc (i32.sub (get_global $pc) (i32.const 1)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; fwd
-      (if (i32.eqz (get_local $rega)) (then
-        (set_global $reg0 (i32.add (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
-      )(else
-        (set_global $reg0 (i32.add (get_global $reg0) (i32.mul (i32.const 4) (call $getReg (get_local $rega)))))
+    (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; jump
+      (set_global $pc (i32.add (get_global $pc) (call $pop)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x05)) (then ;; jumpifz
+      (set_local $b (call $pop)) ;; offset
+      (set_local $a (call $pop)) ;; val
+      (if (i32.eqz (get_local $a)) (then
+        (set_global $pc (i32.add (get_global $pc) (get_local $b)))
       ))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x05)) (then ;; rew
-      (if (i32.eqz (get_local $rega)) (then
-        (set_global $reg0 (i32.sub (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
-      )(else
-        (set_global $reg0 (i32.sub (get_global $reg0) (i32.mul (i32.const 4) (call $getReg (get_local $rega)))))
-      ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x08)) (then ;; call
+      (set_local $b (call $pop)) ;; params
+      (set_local $a (call $pop)) ;; offset
+      (call $call (get_local $a) (get_local $b))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x06)) (then ;; rwdifz
-      (if (i32.eqz (call $getReg (get_local $rega))) (then
-        (set_global $reg0 (i32.add (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
-      ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x09)) (then ;; sys
+      (set_local $b (call $pop)) ;; params
+      (set_local $a (call $pop)) ;; adr
+      (call $sys (get_local $a) (get_local $b))
+      (set_global $pc (i32.sub (get_global $pc) (i32.const 1)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x07)) (then ;; rewifz
-      (if (i32.eqz (call $getReg (get_local $rega))) (then
-        (set_global $reg0 (i32.sub (get_global $reg0) (i32.mul (i32.const 4) (get_local $data))))
-      ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x0b)) (then ;; return
+      (call $return (call $pop))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x08)) (then ;; pushreg
-      (set_local $i (i32.const 15))
-      (block(loop (br_if 1 (i32.eq (get_local $i) (get_local $rega)))
-        (set_local $i (i32.sub (get_local $i) (i32.const 1)))
-        (call $setReg (i32.add (get_local $i) (i32.const 1)) (get_local $i))
-        (br 0)
-      ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x0c)) (then ;; stacksize
+      (call $push (get_global $vs))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x09)) (then ;; popreg
-      (set_local $i (get_local $rega))
-      (block(loop (br_if 1 (i32.eq (get_local $i) (i32.const 15)))
-        (call $setReg (get_local $i) (i32.add (get_local $i) (i32.const 1)))
-        (set_local $i (i32.add (get_local $i) (i32.const 1)))
-        (br 0)
-      ))
-      (set_global $reg15 (i32.const 0))
+    (if (i32.eq (get_local $opcode) (i32.const 0x0d)) (then ;; here
+      (call $push (get_global $pc))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x0e)) (then ;; jump
-      (if (i32.eqz (get_local $rega)) (then
-        (set_global $reg0 (i32.sub (get_local $data) (i32.const 4)))
-      )(else
-        (set_global $reg0 (i32.sub (call $getReg (get_local $rega)) (i32.const 4)))
-      ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x0e)) (then ;; goto
+      (set_global $pc (i32.sub (call $pop) (i32.const 1)))
     ))
 
     ;; Memory
-    (if (i32.eq (get_local $opcode) (i32.const 0x10)) (then ;; load8
-      (call $setReg (get_local $rega) (i32.load8_u (get_local $data)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x10)) (then ;; const
+      (call $push (i32.load (i32.add (get_global $pc) (i32.const 1))))
+      (set_global $pc (i32.add (get_global $pc) (i32.const 4)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x11)) (then ;; load16
-      (call $setReg (get_local $rega) (i32.load16_u (get_local $data)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x11)) (then ;; get
+      (call $push (i32.load (i32.add (get_global $cs) (i32.mul (call $pop) (i32.const 4)))))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x12)) (then ;; load32
-      (call $setReg (get_local $rega) (i32.load (get_local $data)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x13)) (then ;; load
+      (call $push (i32.load (call $pop)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x14)) (then ;; set
-      (call $setReg (get_local $rega) (get_local $data))
+    (if (i32.eq (get_local $opcode) (i32.const 0x14)) (then ;; load16u
+      (call $push (i32.load16_u (call $pop)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x15)) (then ;; copy
-      (call $setReg (get_local $rega) (call $getReg (get_local $regb)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x15)) (then ;; load8u
+      (call $push (i32.load8_u (call $pop)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x18)) (then ;; store8
-      (i32.store8 (get_local $data) (call $getReg (get_local $rega)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x16)) (then ;; load16s
+      (call $push (i32.load16_s (call $pop)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x19)) (then ;; store16
-      (i32.store16 (get_local $data) (call $getReg (get_local $rega)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x17)) (then ;; load8s
+      (call $push (i32.load8_s (call $pop)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x1a)) (then ;; store32
-      (i32.store (get_local $data) (call $getReg (get_local $rega)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x18)) (then ;; pop
+      (drop (call $pop))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x1c)) (then ;; mcopy
-      (memory.copy (call $getReg (get_local $regc)) (call $getReg (get_local $rega)) (call $getReg (get_local $regb)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x19)) (then ;; set
+      (set_local $b (call $pop)) ;; val
+      (set_local $a (call $pop)) ;; index
+      (i32.store (i32.add (get_global $cs) (i32.mul (get_local $a) (i32.const 4))) (get_local $b))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x1d)) (then ;; fill
-      (memory.fill (call $getReg (get_local $regc)) (call $getReg (get_local $rega)) (call $getReg (get_local $regb)))
+    (if (i32.eq (get_local $opcode) (i32.const 0x1b)) (then ;; store
+      (set_local $b (call $pop)) ;; val
+      (set_local $a (call $pop)) ;; adr
+      (i32.store (get_local $a) (get_local $b))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x1c)) (then ;; store16
+      (set_local $b (call $pop)) ;; val
+      (set_local $a (call $pop)) ;; adr
+      (i32.store16 (get_local $a) (get_local $b))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x1d)) (then ;; store8
+      (set_local $b (call $pop)) ;; val
+      (set_local $a (call $pop)) ;; adr
+      (i32.store8 (get_local $a) (get_local $b))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x1f)) (then ;; memsize
-      (call $setReg (get_local $rega) (i32.mul (i32.const 0x100) (memory.size)))
+      (call $push (i32.mul (i32.const 0x10000) (memory.size)))
     ))
 
     ;; Math
     (if (i32.eq (get_local $opcode) (i32.const 0x20)) (then ;; add
-      (call $setReg (get_local $rega) (i32.add (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.add (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x21)) (then ;; sub
-      (call $setReg (get_local $rega) (i32.sub (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.sub (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x22)) (then ;; mult
-      (call $setReg (get_local $rega) (i32.mul (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.mul (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x23)) (then ;; div
-      (call $setReg (get_local $rega) (i32.div_s (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.div_s (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x24)) (then ;; rem
-      (call $setReg (get_local $rega) (i32.rem_s (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.rem_s (get_local $a) (get_local $b)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x27)) (then ;; ftoi
+      (call $push (i32.trunc_f32_s (call $fpop)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x28)) (then ;; fadd
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $fpush (f32.add (get_local $fa) (get_local $fb)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x29)) (then ;; fsub
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $fpush (f32.sub (get_local $fa) (get_local $fb)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x2a)) (then ;; fmult
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $fpush (f32.mul (get_local $fa) (get_local $fb)))
+    )) 
+    (if (i32.eq (get_local $opcode) (i32.const 0x2b)) (then ;; fdiv
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $fpush (f32.div (get_local $fa) (get_local $fb)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x2e)) (then ;; uitof
+      (call $fpush (f32.convert_i32_u (call $pop)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x2f)) (then ;; sitof
+      (call $fpush (f32.convert_i32_s (call $pop)))
     ))
 
     ;; Logic
     (if (i32.eq (get_local $opcode) (i32.const 0x30)) (then ;; eq
-      (call $setReg (get_local $rega) (i32.eq (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.eq (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x31)) (then ;; lt
-      (call $setReg (get_local $rega) (i32.lt_s (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.lt_s (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x32)) (then ;; gt
-      (call $setReg (get_local $rega) (i32.gt_s (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.gt_s (get_local $a) (get_local $b)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x33)) (then ;; not
+      (call $push (i32.eqz (call $pop)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x34)) (then ;; and
-      (call $setReg (get_local $rega) (i32.and (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.and (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x35)) (then ;; or
-      (call $setReg (get_local $rega) (i32.or (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.or (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x36)) (then ;; xor
-      (call $setReg (get_local $rega) (i32.xor (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.xor (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x37)) (then ;; rot
-      (call $setReg (get_local $rega) (i32.rotl (call $getReg (get_local $regb)) (call $getReg (get_local $regc))))
+      (set_local $b (call $pop)) ;; b
+      (set_local $a (call $pop)) ;; a
+      (call $push (i32.rotr (get_local $a) (get_local $b)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x38)) (then ;; feq
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $push (f32.eq (get_local $fa) (get_local $fb)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x39)) (then ;; flt
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $push (f32.lt (get_local $fa) (get_local $fb)))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x3a)) (then ;; fgt
+      (set_local $fb (call $fpop)) ;; b
+      (set_local $fa (call $fpop)) ;; a
+      (call $push (f32.gt (get_local $fa) (get_local $fb)))
     ))
 
-    (set_global $reg0 (i32.add (get_global $reg0) (i32.const 4)))
+    (set_global $pc (i32.add (get_global $pc) (i32.const 1)))
     (get_local $opcode)
   )
 )
