@@ -13,22 +13,16 @@
         case "":
           break
         default:
+          if (opcodes.indexOf(words[0]) < 0) console.error("unknown command", words[0])
           let instr = [opcodes.indexOf(words[0])]
-          for (let i = 1; i < words.length; i++) {
-            let word = words[i]
-            if (word.slice(0, 1) === "r") {
-              instr.push(parseInt(word.slice(1)))
-            } else {
-              let data = eval(word)
-              instr[3] = data & 0xff
-              data = data >> 8
-              instr[2] = data & 0xff
-              data = data >> 8
-              instr[1] = instr[1] || 0
-              instr[1] = instr[1] | (data << 4)
+          if (words[1]) {
+            let val = eval(words[1])
+            for (let i = 0; i < 4; i++) {
+              instr.push(val & 0xff)
+              val = val >> 8
             }
           }
-          writeBytes(instr, 4)
+          writeBytes(instr)
           break
       }
 
@@ -54,10 +48,10 @@
 
   const _ = null
   const opcodes = [
-    "halt", "sleep", "vsync", _, "fwd", "rew", "fwdifz", "rewifz", "pushreg", "popreg", _, _, _, _, "jump", "noop",
-    "load8", "load16", "load32", _, "set", "copy", _, _, "store8", "store16", "store32", _, "mcopy", "fill", _, "memsize",
-    "add", "sub", "mult", "div", "rem", _, _, _, "fadd", "fsub", "fmult", "fdiv", _, _, _, _,
-    "eq", "lt", "gt", _, "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
+    "halt", "sleep", "vsync", _, "jump", "jumpifz", _, _, "call", "sys", _, "return", _, "here", "goto", "noop",
+    "const", "get", _, "load", "load16u", "load8u", "load16s", "load8s", "drop", "set", _, "store", "store16", "store8", "stacksize", "memsize",
+    "add", "sub", "mult", "div", "rem", _, _, "ftoi", "fadd", "fsub", "fmult", "fdiv", _, _, "uitof", "sitof",
+    "eq", "lt", "gt", "not", "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
   ]
 
   window.assemble = assemble

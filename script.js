@@ -2,7 +2,7 @@
   let cpu,
     ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
-    speed = 1,
+    speed = 1024 * 64,
     running = true,
     waitingforuser = false
 
@@ -11,6 +11,10 @@
     g = canvas.getContext("2d"),
     gmode = -1
 
+  let uint8 = new Uint8Array(4),
+    int32 = new Int32Array(uint8.buffer),
+    float32 = new Float32Array(uint8.buffer)
+
   async function init() {
     addEventListener("keydown", onUser)
     addEventListener("keyup", onUser)
@@ -18,17 +22,18 @@
     addEventListener("mouseup", onUser)
     addEventListener("mousemove", onUser)
 
-    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;asm\n"
+    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;asm\n\nhalt\n"
+    document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x0400"
     document.querySelector("#compileBtn").addEventListener("click", compileAsm)
+    document.querySelector("#runBtn").addEventListener("click", e => running = true)
+    document.querySelector("#stepBtn").addEventListener("click", e => cpu.run(1))
 
-    for (let i = 0x0; i < mem.length; i++) {
+    for (let i = 0; i < mem.length; i++) {
       mem[i] = 255 * Math.random()
     }
-    mem[0] = 0
-    mem[0x6fff] = 0
+    mem[0x400] = 0
     await loadCPU("cypu.wasm", { pcb: { ram: ram } })
     render()
-    window.cpu = cpu
     window.mem = mem
     console.log("cpu", cpu)
     console.log("mem", mem)
@@ -37,14 +42,22 @@
 
   async function loadCPU(path, imports) {
     let bin = await (await fetch(path)).arrayBuffer()
-    await WebAssembly.instantiate(bin, imports).then(wasm => {
-      cpu = wasm.instance.exports
-    })
+    let wasm = await WebAssembly.instantiate(bin, imports)
+    cpu = wasm.instance.exports
+    window.cpu = cpu
   }
 
   function render(t) {
+    let opcode
     if (running) {
-      let opcode = cpu.run(speed)
+      try {
+        opcode = cpu.run(speed)
+      } catch (err) {
+        console.error("CPU CRASH!! OH NOEZ!! O_O")
+        delete cpu
+        loadCPU("cypu.wasm", { pcb: { ram: ram } })
+        opcode = 0
+      }
       // console.log(cpu.getReg(0), opcode)
       switch (opcode) {
         case 0x00: // halt
@@ -52,9 +65,11 @@
           break
         case 0x01: // sleep
           running = false
+          let adr = cpu.getVS()
+          uint8.set(mem.slice(adr, adr + 4))
           setTimeout(() => {
             running = true
-          }, mem[cpu.getReg(0) - 2] * 256 + mem[cpu.getReg(0) - 1])
+          }, int32[0])
           break
 
         default:
@@ -112,9 +127,10 @@
 
     g.putImageData(img, 0, 0)
     updateMonitor()
+    updateStack()
 
-    // requestAnimationFrame(render)  
-    setTimeout(render, 256)
+    requestAnimationFrame(render)
+    // setTimeout(render, 256)
   }
 
   function renderbyte(madr, iadr, bpp) {
@@ -171,27 +187,66 @@
     let offset = eval(document.querySelector("#adrTxt").value)
     let bin = assemble(asm)
     mem.set(bin, offset)
-    cpu.setReg(0, offset)
-    running = true
+    cpu.setPC(offset)
+    cpu.setCS(0)
+    cpu.setVS(0)
+    console.log(dumpMem(offset, bin.length))
     localStorage.setItem("rom.asm", asm)
+    localStorage.setItem("?adr", document.querySelector("#adrTxt").value)
+  }
+
+  function dumpMem(adr, len, pc) {
+    adr = Math.max(0, adr)
+    // for (let i = 1; i <= 4; i++) {
+    //   if (opcodes[mem[adr - i]] === "const") {
+    //     adr = adr - i
+    //     i = 5
+    //   }
+    // }
+    let txt = ""
+    let end = adr + len
+    while (adr < end) {
+      txt += (adr == pc ? "> " : "  ")
+      txt += ("000000" + adr.toString(16)).slice(-5) + " "
+      txt += ("00" + mem[adr].toString(16)).slice(-2) + " "
+      txt += (opcodes[mem[adr]] || "") + " "
+      if (opcodes[mem[adr]] === "const") {
+        uint8.set(mem.slice(adr + 1, adr + 5))
+        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        adr += 4
+      }
+      txt += "\n"
+      adr++
+    }
+    return txt
+  }
+
+  function dumpStack(len) {
+    let adr = cpu.getVS()
+    let cs = cpu.getCS()
+    let txt = ""
+    while (len > 0) {
+      if (cs === adr) {
+        txt += "--------\n"
+        cs = -1
+      }
+      uint8.set(mem.slice(adr - 4, adr))
+      if (adr > 0) txt += "0x" + ("00000000" + int32[0].toString(16)).slice(-8) + " " + int32[0] + " "
+      adr -= 4
+      if (float32[0]) txt += float32[0]
+      if (cs < 0) cs = int32[0]
+      len--
+      if (adr <= 0) len = 0
+      txt += "\n"
+    }
+    return txt
   }
 
   function updateMonitor() {
-    let pc = cpu.getReg(0)
-    let adr = Math.max(0, pc - 16)
-    let len = 14
-    let txt = ""
-    while (len--) {
-      txt += (adr == pc ? "> " : "  ")
-      txt += ("000000" + adr.toString(16)).slice(-5) + " "
-      txt += ("0000" + mem[adr + 0].toString(16)).slice(-2) + " "
-      txt += ("0000" + mem[adr + 1].toString(16)).slice(-2) + " "
-      txt += ("0000" + mem[adr + 2].toString(16)).slice(-2) + " "
-      txt += ("0000" + mem[adr + 3].toString(16)).slice(-2) + " "
-      txt += opcodes[mem[adr]] || ""
-      txt += "\n"
-      adr += 4
-    }
-    document.querySelector("#monitorPre").textContent = txt
+    document.querySelector("#monitorPre").textContent = dumpMem(cpu.getPC() - 6, 16, cpu.getPC())
+  }
+
+  function updateStack() {
+    document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(16)
   }
 })()

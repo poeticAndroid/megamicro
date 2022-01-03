@@ -16,13 +16,20 @@
     <span style="color:#0f0">/</span><span style="color:#f00">/</span><span style="color:#00f">/</span>
   </h1>
   <canvas width="1024" height="576"></canvas>
-  <textarea name="asm" id="asmTxt" cols="64" rows="16">;;asm</textarea>
   <article>
     <p>
-      <input id="adrTxt" value="0x0000" />
+      <input id="adrTxt" value="0x0400" />
       <button id="compileBtn">Compile</button>
+      <button id="runBtn">Run</button>
+      <button id="stepBtn">Step</button>
     </p>
+    <textarea name="asm" id="asmTxt" cols="64" rows="13">;;asm</textarea>
+  </article>
+  <article>
     <pre id="monitorPre">monitor</pre>
+  </article>
+  <article>
+    <pre id="stackPre">stack</pre>
   </article>
   <script src="script.js"></script>
   <script src="assembler.js"></script>

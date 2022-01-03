@@ -2,8 +2,8 @@
   (import "pcb" "ram" (memory 1))
 
   (global $pc (mut i32) (i32.const 0x400)) ;; program counter
-  (global $cs (mut i32) (i32.const 0x8)) ;; call stack counter
-  (global $vs (mut i32) (i32.const 0x8)) ;; value stack counter
+  (global $cs (mut i32) (i32.const 0x0)) ;; call stack counter
+  (global $vs (mut i32) (i32.const 0x0)) ;; value stack counter
 
   (func $getPC (result i32) (get_global $pc) )
   (export "getPC" (func $getPC))
@@ -25,6 +25,10 @@
     (set_global $vs (i32.add (get_global $vs) (i32.const 4)))
   )
   (func $pop (result i32)
+    (if (i32.lt_s (get_global $vs) (i32.const 4)) (then
+      (set_global $vs (i32.const 0))
+      (call $push (i32.const 0))
+    ))
     (set_global $vs (i32.sub (get_global $vs) (i32.const 4)))
     (i32.load (get_global $vs))
   )
@@ -33,6 +37,10 @@
     (set_global $vs (i32.add (get_global $vs) (i32.const 4)))
   )
   (func $fpop (result f32)
+    (if (i32.lt_s (get_global $vs) (i32.const 4)) (then
+      (set_global $vs (i32.const 0))
+      (call $fpush (f32.const 0))
+    ))
     (set_global $vs (i32.sub (get_global $vs) (i32.const 4)))
     (f32.load (get_global $vs))
   )
@@ -45,7 +53,9 @@
     (set_local $paramstart (i32.add (get_global $vs) (i32.const 8)))
     (set_local $paramend (get_local $paramstart))
     (block(loop (br_if 1 (i32.eqz (get_local $params)))
-      (set_local $paramstart (i32.sub (get_local $paramstart) (i32.const 4)))
+      (if (i32.ge_s (get_local $paramstart) (i32.const 4)) (then
+        (set_local $paramstart (i32.sub (get_local $paramstart) (i32.const 4)))
+      ))
       (i32.store (get_local $paramstart) (call $pop))
       (set_local $params (i32.sub (get_local $params) (i32.const 1)))
       (br 0)
@@ -60,6 +70,9 @@
   (func $return (param $results i32)
     (local $resultstart i32)
     (set_local $resultstart (i32.sub (get_global $vs) (i32.mul (get_local $results) (i32.const 4))))
+    (if (i32.lt_s (get_global $vs) (i32.const 0)) (then
+      (set_local $resultstart (i32.const 0))
+    ))
     (set_global $vs (get_global $cs))
     (set_global $cs (call $pop))
     (set_global $pc (call $pop))
@@ -98,6 +111,9 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x00)) (then ;; halt
       (set_global $pc (i32.sub (get_global $pc) (i32.const 1)))
     ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x02)) (then ;; sleep
+      (drop (call $pop))
+    ))
     (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; jump
       (set_global $pc (i32.add (get_global $pc) (call $pop)))
     ))
@@ -121,9 +137,6 @@
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x0b)) (then ;; return
       (call $return (call $pop))
-    ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x0c)) (then ;; stacksize
-      (call $push (get_global $vs))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x0d)) (then ;; here
       (call $push (get_global $pc))
@@ -155,7 +168,7 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x17)) (then ;; load8s
       (call $push (i32.load8_s (call $pop)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x18)) (then ;; pop
+    (if (i32.eq (get_local $opcode) (i32.const 0x18)) (then ;; drop
       (drop (call $pop))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x19)) (then ;; set
@@ -177,6 +190,9 @@
       (set_local $b (call $pop)) ;; val
       (set_local $a (call $pop)) ;; adr
       (i32.store8 (get_local $a) (get_local $b))
+    ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x1e)) (then ;; stacksize
+      (call $push (get_global $vs))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x1f)) (then ;; memsize
       (call $push (i32.mul (i32.const 0x10000) (memory.size)))
