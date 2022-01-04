@@ -111,7 +111,7 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x00)) (then ;; halt
       (set_global $pc (i32.sub (get_global $pc) (i32.const 1)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x02)) (then ;; sleep
+    (if (i32.eq (get_local $opcode) (i32.const 0x01)) (then ;; sleep
       (drop (call $pop))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x04)) (then ;; jump
