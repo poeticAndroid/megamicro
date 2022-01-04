@@ -16,6 +16,9 @@ textarea {
   color: inherit;
   padding: .5em;
 }
+input {
+  max-width: 5em;
+}
 article {
   display: inline-block;
   text-align: left;

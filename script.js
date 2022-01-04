@@ -2,7 +2,9 @@
   let cpu,
     ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
-    speed = 1024 * 64,
+    speed = 1,
+    fps = 0,
+    fpssec = 0,
     running = true,
     waitingforuser = false
 
@@ -24,9 +26,12 @@
 
     document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;asm\n\nhalt\n"
     document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x0400"
+    document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "0"
+    document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()
     document.querySelector("#compileBtn").addEventListener("click", compileAsm)
-    document.querySelector("#runBtn").addEventListener("click", e => running = true)
+    document.querySelector("#stopBtn").addEventListener("click", e => running = false)
     document.querySelector("#stepBtn").addEventListener("click", e => cpu.run(1))
+    document.querySelector("#runBtn").addEventListener("click", e => running = true)
 
     for (let i = 0; i < mem.length; i++) {
       mem[i] = 255 * Math.random()
@@ -70,9 +75,6 @@
           setTimeout(() => {
             running = true
           }, int32[0])
-          break
-
-        default:
           break
       }
     }
@@ -126,8 +128,15 @@
     }
 
     g.putImageData(img, 0, 0)
-    updateMonitor()
+    updateMonitor(cpu.getPC())
     updateStack()
+
+    fps++
+    if (fpssec !== Math.floor(t / 1000)) {
+      document.querySelector("#fps").textContent = fps + " fps"
+      fps = 0
+      fpssec = Math.floor(t / 1000)
+    }
 
     requestAnimationFrame(render)
     // setTimeout(render, 256)
@@ -180,6 +189,12 @@
       waitingforuser = false
       running = true
     }
+  }
+
+  function changeSpeed(e) {
+    let s = eval(document.querySelector("#speedTxt").value)
+    speed = Math.pow(2, s)
+    localStorage.setItem("?speed", document.querySelector("#speedTxt").value)
   }
 
   function compileAsm(e) {
@@ -242,8 +257,16 @@
     return txt
   }
 
-  function updateMonitor() {
-    document.querySelector("#monitorPre").textContent = dumpMem(cpu.getPC() - 6, 16, cpu.getPC())
+  function updateMonitor(pc) {
+    let txt = ""
+    let i = 32
+    while (!txt.includes(">"))
+      txt = dumpMem(pc - i++, 64, pc)
+    txt = txt.slice(0, txt.indexOf(">"))
+    txt = txt.split("\n").slice(-6).join("\n")
+    txt += dumpMem(pc, 64, pc)
+    txt = txt.split("\n").slice(0, 17).join("\n")
+    document.querySelector("#monitorPre").textContent = txt
   }
 
   function updateStack() {
