@@ -25,8 +25,8 @@
     (set_global $vs (i32.add (get_global $vs) (i32.const 4)))
   )
   (func $pop (result i32)
-    (if (i32.lt_s (get_global $vs) (i32.const 4)) (then
-      (set_global $vs (i32.const 0))
+    (if (i32.le_s (get_global $vs) (get_global $cs)) (then
+      (set_global $vs (get_global $cs))
       (call $push (i32.const 0))
     ))
     (set_global $vs (i32.sub (get_global $vs) (i32.const 4)))
@@ -37,8 +37,8 @@
     (set_global $vs (i32.add (get_global $vs) (i32.const 4)))
   )
   (func $fpop (result f32)
-    (if (i32.lt_s (get_global $vs) (i32.const 4)) (then
-      (set_global $vs (i32.const 0))
+    (if (i32.le_s (get_global $vs) (get_global $cs)) (then
+      (set_global $vs (get_global $cs))
       (call $fpush (f32.const 0))
     ))
     (set_global $vs (i32.sub (get_global $vs) (i32.const 4)))
