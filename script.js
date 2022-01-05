@@ -81,7 +81,7 @@
           break
       }
     }
-    let mode = mem[0x6fff] % 0x8
+    let mode = mem[0x6b14] & 0x7
     let bpp = 8, pw = 1, ph = 1
     let w = canvas.width, h = canvas.height
     switch (mode) {
