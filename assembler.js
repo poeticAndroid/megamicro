@@ -1,40 +1,60 @@
 (() => {
-  let filepos = 0
+  let inpos = 0
+  let outpos = 0
+  let tokens = []
   let bin = new Uint8Array(1024)
 
-  function assemble(asm) {
-    filepos = 0
-    let lines = asm.split("\n")
-    for (let line of lines) {
-      line += ";"
-      line = line.substring(0, line.indexOf(";"))
-      let words = line.trim().split(/\s+/)
-      switch (words[0]) {
-        case "":
-          break
-        default:
-          if (opcodes.indexOf(words[0]) < 0) console.error("unknown command", words[0])
-          let instr = [opcodes.indexOf(words[0])]
-          if (words[1]) {
-            let val = eval(words[1])
-            for (let i = 0; i < 4; i++) {
-              instr.push(val & 0xff)
-              val = val >> 8
-            }
-          }
-          writeBytes(instr)
-          break
-      }
+  let uint8 = new Uint8Array(4),
+    int32 = new Int32Array(uint8.buffer),
+    float32 = new Float32Array(uint8.buffer)
 
-    }
+  function assemble(asm) {
+    inpos = 0
+    outpos = 0
+    labels = {}
+    refs = {}
+
+    asm = asm.replaceAll(/;;.*\n/g, "\n").replaceAll("(", " ( ").replaceAll(")", " ) ").trim()
+    tokens = asm.split(/\s+/)
+    tokens.push(")")
+    encode()
+
     return trimSize(bin)
   }
 
+  function encode() {
+    let token
+    let bytes = []
+    while (token = readToken()) {
+      let opcode = opcodes.indexOf(token)
+      if (token === ")") {
+        return writeBytes(bytes)
+      } else if (token === "(") {
+        encode()
+      } else if (opcode >= 0) {
+        bytes.push(opcode)
+      } else {
+        let val = eval(token)
+        if (token.includes(".")) float32[0] = val
+        else int32[0] = val
+        if (bytes[bytes.length - 1] !== opcodes.indexOf("const"))
+          bytes.push(opcodes.indexOf("const"))
+        for (let i = 0; i < uint8.length; i++) {
+          bytes.push(uint8[i])
+        }
+      }
+    }
+  }
+
+  function readToken() {
+    return tokens[inpos++]
+  }
+
   function writeBytes(data, len = data.length) {
-    if (filepos + len >= bin.length) bin = doubleSize(bin)
+    if (outpos + len >= bin.length) bin = doubleSize(bin)
     let i = 0
     while (i < len) {
-      bin[filepos++] = data[i++] || 0
+      bin[outpos++] = data[i++] || 0
     }
   }
   function doubleSize(oldArr) {
@@ -42,7 +62,7 @@
     newArr.set(oldArr)
     return newArr
   }
-  function trimSize(oldArr, size = filepos) {
+  function trimSize(oldArr, size = outpos) {
     return oldArr.slice(0, size)
   }
 

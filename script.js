@@ -24,7 +24,7 @@
     addEventListener("mouseup", onUser)
     addEventListener("mousemove", onUser)
 
-    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;asm\n\nhalt\n"
+    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;cyber asm\n\n(halt)\n"
     document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x0400"
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "0"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()

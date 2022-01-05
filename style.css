@@ -8,6 +8,7 @@ html {
 canvas {
   background-color: black;
   border: 1px solid #666;
+  cursor: none;
   image-rendering: pixelated;
   padding: .5em;
 }
