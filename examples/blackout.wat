@@ -2,8 +2,8 @@
 
 main:
 (@vars
-  $adr (const 0x6fff)
-  $loops (const 0x100)
+  $adr (0x7000)
+  $loops (0x100)
 )
 
 (@while ($loops) @do(

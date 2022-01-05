@@ -2,7 +2,7 @@
 
 main:
 (@vars
-  $adr (const 0x7000)
+  $adr (0x7000)
 )
 
 (@while (lt ($adr) (0x10000)) @do(
@@ -10,7 +10,7 @@ main:
   (set $adr (add ($adr) (1)))
 )@end)
 
-(set $adr (0x6fff))
+(set $adr (0x7000))
 
 (@while (true) @do(
   (@while (lt ($adr) (0x10000)) @do(
