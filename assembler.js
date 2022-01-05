@@ -28,6 +28,7 @@
   function encode() {
     let token
     let bytes = []
+    let whil, cond, then, els, end
     while (token = readToken()) {
       let opcode = opcodes.indexOf(token)
       if (token === ")") {
@@ -58,6 +59,38 @@
           unrefs[label] = unrefs[label] || []
           unrefs[label].push({ pos: outpos - 5, add: -5 })
         }
+      } else if (token === "@while") {
+        whil = true
+        cond = outpos
+      } else if (token === "@if") {
+        whil = false
+        cond = outpos
+      } else if (token === "@do") {
+        writeBytes([opcodes.indexOf("const")])
+        writeBytes(uint8)
+        writeBytes([opcodes.indexOf("jumpifz")])
+        then = outpos
+      } else if (token === "@else") {
+        writeBytes([opcodes.indexOf("const")])
+        writeBytes(uint8)
+        writeBytes([opcodes.indexOf("jump")])
+        then = outpos
+        int32[0] = outpos - then
+        for (let i = 0; i < uint8.length; i++) {
+          bin[then - 5 + i] = uint8[i]
+        }
+      } else if (token === "@end") {
+        if (whil) {
+          int32[0] = cond - (outpos + 6)
+          writeBytes([opcodes.indexOf("const")])
+          writeBytes(uint8)
+          writeBytes([opcodes.indexOf("jump")])
+        }
+        int32[0] = outpos - then
+        for (let i = 0; i < uint8.length; i++) {
+          bin[then - 5 + i] = uint8[i]
+        }
+        end = outpos
       } else {
         let val = eval(token)
         if (token.includes(".")) float32[0] = val
