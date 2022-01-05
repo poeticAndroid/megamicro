@@ -9,13 +9,15 @@
     float32 = new Float32Array(uint8.buffer)
 
   let labels = {},
-    unrefs = {}
+    unrefs = {},
+    locals = []
 
   function assemble(asm) {
     inpos = 0
     outpos = 0
     labels = {}
     unrefs = {}
+    locals = []
 
     asm = asm.replaceAll(/;;.*\n/g, "\n").replaceAll("(", " ( ").replaceAll(")", " ) ").trim()
     tokens = asm.split(/\s+/)
@@ -28,7 +30,8 @@
   function encode() {
     let token
     let bytes = []
-    let whil, cond, then, els, end
+    let whil, cond, then, end
+    let varstate = 0 // 0=reference, 1=declaration, 2=assignment
     while (token = readToken()) {
       let opcode = opcodes.indexOf(token)
       if (token === ")") {
@@ -37,6 +40,7 @@
         encode()
       } else if (opcode >= 0) {
         bytes.push(opcode)
+        varstate = 2
       } else if (token.slice(-1) === ":") {
         let label = token.replace(":", "")
         labels[label] = outpos
@@ -91,6 +95,26 @@
           bin[then - 5 + i] = uint8[i]
         }
         end = outpos
+      } else if (token === "@vars") {
+        locals = []
+        varstate = 1
+      } else if (token.slice(0, 1) === "$") {
+        switch (varstate) {
+          case 1: // declaration
+            locals.push(token)
+            break
+          case 2: // assignment
+            int32[0] = locals.indexOf(token)
+            writeBytes([opcodes.indexOf("const")])
+            writeBytes(uint8)
+            break
+          default: // reference
+            int32[0] = locals.indexOf(token)
+            writeBytes([opcodes.indexOf("const")])
+            writeBytes(uint8)
+            writeBytes([opcodes.indexOf("get")])
+            break
+        }
       } else {
         let val = eval(token)
         if (token.includes(".")) float32[0] = val

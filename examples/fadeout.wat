@@ -1,19 +1,21 @@
 ;;cyber asm
 
 main:
-(const 0x6fff) ;; get(0)
-(const 0x100) ;; get(1)
+(@vars
+  $adr (const 0x6fff)
+  $loops (const 0x100)
+)
 
-(@while (get(1)) @do(
-  (@while (lt (get(0)) (0x10000)) @do(
-    (@if (load8u(get(0))) @do(
-      (store8 (get(0)) (sub (load8u(get(0))) (1)))
+(@while ($loops) @do(
+  (@while (lt ($adr) (0x10000)) @do(
+    (@if (load8u($adr)) @do(
+      (store8 ($adr) (sub (load8u($adr)) (1)))
     )@end)
-    (set (0) (add (get(0)) (1)))
+    (set $adr (add ($adr) (1)))
   )@end)
 
-  (set (0) (0x7000))
-  (set (1) (sub (get(1)) (1)))
+  (set $adr (0x7000))
+  (set $loops (sub ($loops) (1)))
   (vsync)
 )@end)
 
