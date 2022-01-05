@@ -8,11 +8,14 @@
     int32 = new Int32Array(uint8.buffer),
     float32 = new Float32Array(uint8.buffer)
 
+  let labels = {},
+    unrefs = {}
+
   function assemble(asm) {
     inpos = 0
     outpos = 0
     labels = {}
-    refs = {}
+    unrefs = {}
 
     asm = asm.replaceAll(/;;.*\n/g, "\n").replaceAll("(", " ( ").replaceAll(")", " ) ").trim()
     tokens = asm.split(/\s+/)
@@ -33,6 +36,28 @@
         encode()
       } else if (opcode >= 0) {
         bytes.push(opcode)
+      } else if (token.slice(-1) === ":") {
+        let label = token.replace(":", "")
+        labels[label] = outpos
+        if (unrefs[label]) {
+          let o
+          while (o = unrefs[label].pop()) {
+            int32[0] = outpos - o.pos + o.add
+            for (let i = 0; i < uint8.length; i++) {
+              bin[o.pos + i] = uint8[i]
+            }
+          }
+        }
+      } else if (token === "@jump") {
+        let label = readToken()
+        int32[0] = labels[label] - (outpos + 6)
+        writeBytes([opcodes.indexOf("const")])
+        writeBytes(uint8)
+        writeBytes([opcodes.indexOf("jump")])
+        if (!labels[label]) {
+          unrefs[label] = unrefs[label] || []
+          unrefs[label].push({ pos: outpos - 5, add: -5 })
+        }
       } else {
         let val = eval(token)
         if (token.includes(".")) float32[0] = val

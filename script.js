@@ -3,9 +3,9 @@
     ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
     speed = 1,
-    fps = 0,
+    fps = 9000,
     fpssec = 0,
-    running = true,
+    running = false,
     waitingforuser = false
 
   let img,
@@ -24,7 +24,7 @@
     addEventListener("mouseup", onUser)
     addEventListener("mousemove", onUser)
 
-    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;cyber asm\n\n(halt)\n"
+    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;cyber asm\n\n(return (0) (1))\n"
     document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x0400"
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "0"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()
@@ -35,8 +35,11 @@
 
     for (let i = 0; i < mem.length; i++) {
       mem[i] = 255 * Math.random()
+      if (i > 8) {
+        mem[i] = mem[i] & mem[1]
+        mem[i] = mem[i] | mem[2]
+      }
     }
-    mem[0x400] = 0
     await loadCPU("cypu.wasm", { pcb: { ram: ram } })
     render()
     window.mem = mem
