@@ -78,11 +78,11 @@
         writeBytes([opcodes.indexOf("const")])
         writeBytes(uint8)
         writeBytes([opcodes.indexOf("jump")])
-        then = outpos
         int32[0] = outpos - then
         for (let i = 0; i < uint8.length; i++) {
           bin[then - 5 + i] = uint8[i]
         }
+        then = outpos
       } else if (token === "@end") {
         if (whil) {
           int32[0] = cond - (outpos + 6)
