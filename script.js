@@ -14,15 +14,16 @@
     gmode = -1
 
   let uint8 = new Uint8Array(4),
+    int16 = new Int16Array(uint8.buffer),
     int32 = new Int32Array(uint8.buffer),
     float32 = new Float32Array(uint8.buffer)
 
   async function init() {
     addEventListener("keydown", onUser)
     addEventListener("keyup", onUser)
-    addEventListener("mousedown", onUser)
-    addEventListener("mouseup", onUser)
-    addEventListener("mousemove", onUser)
+    canvas.addEventListener("mousedown", onUser)
+    canvas.addEventListener("mouseup", onUser)
+    canvas.addEventListener("mousemove", onUser)
 
     document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;cyber asm\n\n(return (0) (1))\n"
     document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x0400"
@@ -55,16 +56,20 @@
     window.cpu = cpu
   }
 
-  function render(t) {
+  function render(t = 0) {
     let opcode
     if (running) {
       try {
         opcode = cpu.run(speed)
       } catch (err) {
         console.error("CPU CRASH!! OH NOEZ!! O_O")
-        delete cpu
-        loadCPU("cypu.wasm", { pcb: { ram: ram } })
-        opcode = 0
+        running = false
+        return setTimeout(() => {
+          delete cpu
+          loadCPU("cypu.wasm", { pcb: { ram: ram } }).then(
+            render()
+          )
+        }, 16384)
       }
       // console.log(cpu.getReg(0), opcode)
       switch (opcode) {
@@ -188,10 +193,23 @@
   }
 
   function onUser(e) {
+    if (e.type === "mousemove") {
+      int16[0] = e.offsetX
+      int16[1] = e.offsetY
+      mem.set(uint8, 0x6b20)
+    }
+    if (e.type === "mousedown" || e.type === "mouseup") {
+      mem[0x6b24] = e.buttons
+    }
+
     if (waitingforuser) {
       waitingforuser = false
       running = true
     }
+  }
+
+  function storeInput() {
+
   }
 
   function changeSpeed(e) {
