@@ -256,11 +256,13 @@
         cs = -1
       }
       uint8.set(mem.slice(adr - 4, adr))
-      if (adr > 0) txt += "0x" + ("00000000" + int32[0].toString(16)).slice(-8) + " " + int32[0] + " "
-      adr -= 4
-      if (float32[0]) txt += float32[0]
+      if (adr > 0) {
+        txt += "0x" + ("00000000" + int32[0].toString(16)).slice(-8) + " " + int32[0] + " "
+        if (float32[0]) txt += float32[0]
+      }
       if (cs < 0) cs = int32[0]
       len--
+      adr -= 4
       if (adr <= 0) len = 0
       txt += "\n"
     }

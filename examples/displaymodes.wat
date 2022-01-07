@@ -5,7 +5,7 @@ main:
 )
 
 (@while (true) @do(
-  (store8 (0x6b14) (add (load8u(0x6b14)) (1)))
+  (store8 (0xb214) (add (load8u(0xb214)) (1)))
   (sleep (0x400))
 )@end)
 
