@@ -2,7 +2,7 @@
 
 main:
 (@vars
-  $adr (0x7000)
+  $adr (0xb800)
   $loops (0x100)
 )
 
@@ -14,7 +14,7 @@ main:
     (set $adr (add ($adr) (1)))
   )@end)
 
-  (set $adr (0x7000))
+  (set $adr (0xb800))
   (set $loops (sub ($loops) (1)))
   (vsync)
 )@end)

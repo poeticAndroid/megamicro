@@ -3,6 +3,7 @@
     ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
     speed = 1,
+    vsyncfps = 9000,
     fps = 9000,
     fpssec = 0,
     running = false,
@@ -84,51 +85,39 @@
             running = true
           }, int32[0])
           break
+        case 0x02:
+          vsyncfps++
+          break
       }
     }
-    let mode = mem[0x6b14] & 0x7
-    let bpp = 8, pw = 1, ph = 1
-    let w = canvas.width, h = canvas.height
-    switch (mode) {
-      case 0x0:
-      case 0x1:
-        bpp = 8; pw = 4; ph = 4
-        w = 256; h = 144
-        break
 
-      case 0x2:
-        bpp = 4; pw = 4; ph = 2
-        w = 256; h = 144 * 2
-        break
-      case 0x3:
-        bpp = 4; pw = 2; ph = 4
-        w = 256 * 2; h = 144
-        break
-
-      case 0x4:
-      case 0x5:
-        bpp = 2; pw = 2; ph = 2
-        w = 512; h = 288
-        break
-
-      case 0x6:
-        bpp = 1; pw = 2; ph = 1
-        w = 512; h = 288 * 2
-        break
-      case 0x7:
-        bpp = 1; pw = 1; ph = 2
-        w = 512 * 2; h = 288
-        break
-    }
+    // rendering
+    let mode = mem[0xb214],
+      bpp = Math.pow(2, mode & 0x3)
     if (gmode !== mode) {
-      gmode = mode
+      let pw = 1, ph = 1
+      let w, h, px
+
+      px = (18 * 1024 * 8) / bpp
+      if (bpp & 0xa) {
+        pw = 1 + (mode & 0x10) / 16
+        ph = 3 - pw
+      }
+      w = ((mode & 0x3) > 1 ? 256 : 512) / pw
+      h = px / w
+      while (w * pw < 1024) {
+        pw *= 2
+        ph *= 2
+      }
+
       canvas.width = w; canvas.height = h
       canvas.style.width = (w * pw) + "px"
       canvas.style.height = (h * ph) + "px"
       g.fillRect(0, 0, canvas.width, canvas.height)
       img = g.getImageData(0, 0, canvas.width, canvas.height)
+      gmode = mode
     }
-    let start = 0x7000
+    let start = 0xb800
     let end = 0x10000
     let i = 0
     for (let m = start; m < end; m++) {
@@ -141,8 +130,9 @@
 
     fps++
     if (fpssec !== Math.floor(t / 1000)) {
-      document.querySelector("#fps").textContent = fps + " fps"
+      document.querySelector("#fps").textContent = vsyncfps + "/" + fps + " fps"
       fps = 0
+      vsyncfps = 0
       fpssec = Math.floor(t / 1000)
     }
 
@@ -194,12 +184,11 @@
 
   function onUser(e) {
     if (e.type === "mousemove") {
-      int16[0] = e.offsetX
-      int16[1] = e.offsetY
-      mem.set(uint8, 0x6b20)
+      mem[0xb220] = Math.floor(e.offsetX / 4)
+      mem[0xb221] = Math.floor(e.offsetY / 4)
     }
     if (e.type === "mousedown" || e.type === "mouseup") {
-      mem[0x6b24] = e.buttons
+      mem[0xb222] = e.buttons
     }
 
     if (waitingforuser) {

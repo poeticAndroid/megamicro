@@ -2,7 +2,7 @@
 
 main:
 (@vars
-  $adr (0x7000)
+  $adr (0xb800)
 )
 
 (@while (lt ($adr) (0x10000)) @do(
@@ -10,7 +10,7 @@ main:
   (set $adr (add ($adr) (1)))
 )@end)
 
-(set $adr (0x7000))
+(set $adr (0xb800))
 
 (@while (true) @do(
   (@while (lt ($adr) (0x10000)) @do(
@@ -18,7 +18,7 @@ main:
     (set $adr (add ($adr) (1)))
   )@end)
 
-  (set $adr (0x7000))
+  (set $adr (0xb800))
   (vsync)
 )@end)
 
