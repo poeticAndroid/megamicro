@@ -155,7 +155,12 @@
       (set_global $pc (i32.add (get_global $pc) (i32.const 4)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x11)) (then ;; get
-      (call $push (i32.load (i32.add (get_global $cs) (i32.mul (call $pop) (i32.const 4)))))
+      (set_local $a (call $pop)) ;; index
+      (if (i32.lt_s (get_local $a) (i32.const 0)) (then
+        (call $push (i32.load (i32.add (get_global $vs) (i32.mul (get_local $a) (i32.const 4)))))
+      )(else
+        (call $push (i32.load (i32.add (get_global $cs) (i32.mul (get_local $a) (i32.const 4)))))
+      ))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x13)) (then ;; load
       (call $push (i32.load (call $pop)))
@@ -178,7 +183,11 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x19)) (then ;; set
       (set_local $b (call $pop)) ;; val
       (set_local $a (call $pop)) ;; index
-      (i32.store (i32.add (get_global $cs) (i32.mul (get_local $a) (i32.const 4))) (get_local $b))
+      (if (i32.lt_s (get_local $a) (i32.const 0)) (then
+        (i32.store (i32.add (get_global $vs) (i32.mul (get_local $a) (i32.const 4))) (get_local $b))
+      )(else
+        (i32.store (i32.add (get_global $cs) (i32.mul (get_local $a) (i32.const 4))) (get_local $b))
+      ))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x1b)) (then ;; store
       (set_local $b (call $pop)) ;; val
