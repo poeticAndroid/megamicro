@@ -115,6 +115,22 @@
             writeBytes([opcodes.indexOf("get")])
             break
         }
+      } else if (token === "@skipto") {
+        let min = eval(readToken())
+        let len = min - outpos
+        if (len >= 0) {
+          let a = []
+          a.length = len
+          writeBytes(a)
+        } else {
+          console.error("@skipto: already past", min)
+        }
+      } else if (token === "@bytes") {
+        while (token = readToken() && token !== ")") {
+          let val = eval(token)
+          bytes.push(val)
+        }
+        return writeBytes(bytes)
       } else {
         let val = eval(token)
         if (token.includes(".")) float32[0] = val
