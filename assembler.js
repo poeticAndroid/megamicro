@@ -30,14 +30,67 @@
   function encode() {
     let token
     let bytes = []
-    let whil, cond, then, end
+    let iff = -1, whil = -1, cond, then, end
+    let label, params = -1, results = -1
     let varstate = 0 // 0=reference, 1=declaration, 2=assignment
     while (token = readToken()) {
       let opcode = opcodes.indexOf(token)
       if (token === ")") {
+        if (params >= 0 || results >= 0) {
+          if (params >= 0) {
+            int32[0] = labels[label] - (outpos + 11)
+            writeBytes([opcodes.indexOf("const")])
+            writeBytes(uint8)
+          }
+          int32[0] = Math.max(params, results)
+          writeBytes([opcodes.indexOf("const")])
+          writeBytes(uint8)
+          writeBytes([opcodes.indexOf(params >= 0 ? "call" : "return")])
+          if (params >= 0) {
+            if (!labels[label]) {
+              unrefs[label] = unrefs[label] || []
+              unrefs[label].push({ pos: outpos - 10, add: -10 })
+            }
+          }
+        }
         return writeBytes(bytes)
       } else if (token === "(") {
+        if (params >= 0) params++
+        if (results >= 0) results++
+        if (whil >= 0) whil++
+        if (iff >= 0) iff++
         encode()
+        if (iff === 1 || whil === 1) {
+          int32[0] = 0
+          writeBytes([opcodes.indexOf("const")])
+          writeBytes(uint8)
+          writeBytes([opcodes.indexOf("jumpifz")])
+          then = outpos
+        }
+        if (iff === 2 || whil === 2) {
+          if (whil > 0) {
+            int32[0] = cond - (outpos + 6)
+            writeBytes([opcodes.indexOf("const")])
+            writeBytes(uint8)
+            writeBytes([opcodes.indexOf("jump")])
+          }
+          int32[0] = 0
+          writeBytes([opcodes.indexOf("const")])
+          writeBytes(uint8)
+          writeBytes([opcodes.indexOf("jump")])
+          int32[0] = outpos - then
+          for (let i = 0; i < uint8.length; i++) {
+            bin[then - 5 + i] = uint8[i]
+          }
+          then = outpos
+        }
+        if (iff === 3) {
+          int32[0] = outpos - then
+          for (let i = 0; i < uint8.length; i++) {
+            bin[then - 5 + i] = uint8[i]
+          }
+          end = outpos
+        }
       } else if (opcode >= 0) {
         bytes.push(opcode)
         varstate = 2
@@ -63,38 +116,17 @@
           unrefs[label] = unrefs[label] || []
           unrefs[label].push({ pos: outpos - 5, add: -5 })
         }
+      } else if (token === "@call") {
+        label = readToken()
+        params = 0
+      } else if (token === "@return") {
+        results = 0
       } else if (token === "@while") {
-        whil = true
+        whil = 0
         cond = outpos
       } else if (token === "@if") {
-        whil = false
+        iff = 0
         cond = outpos
-      } else if (token === "@do") {
-        writeBytes([opcodes.indexOf("const")])
-        writeBytes(uint8)
-        writeBytes([opcodes.indexOf("jumpifz")])
-        then = outpos
-      } else if (token === "@else") {
-        writeBytes([opcodes.indexOf("const")])
-        writeBytes(uint8)
-        writeBytes([opcodes.indexOf("jump")])
-        int32[0] = outpos - then
-        for (let i = 0; i < uint8.length; i++) {
-          bin[then - 5 + i] = uint8[i]
-        }
-        then = outpos
-      } else if (token === "@end") {
-        if (whil) {
-          int32[0] = cond - (outpos + 6)
-          writeBytes([opcodes.indexOf("const")])
-          writeBytes(uint8)
-          writeBytes([opcodes.indexOf("jump")])
-        }
-        int32[0] = outpos - then
-        for (let i = 0; i < uint8.length; i++) {
-          bin[then - 5 + i] = uint8[i]
-        }
-        end = outpos
       } else if (token === "@vars") {
         locals = []
         varstate = 1
@@ -166,7 +198,7 @@
 
   const _ = null
   const opcodes = [
-    "halt", "sleep", "vsync", _, "jump", "jumpifz", _, _, "call", "sys", _, "return", _, "here", "goto", "noop",
+    "halt", "sleep", "vsync", _, "jump", "jumpifz", _, _, "call", "sys", _, "return", "reset", "here", "goto", "noop",
     "const", "get", _, "load", "load16u", "load8u", "load16s", "load8s", "drop", "set", _, "store", "store16", "store8", "stacksize", "memsize",
     "add", "sub", "mult", "div", "rem", _, _, "ftoi", "fadd", "fsub", "fmult", "fdiv", _, _, "uitof", "sitof",
     "eq", "lt", "gt", "not", "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
