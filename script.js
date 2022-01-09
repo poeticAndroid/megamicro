@@ -7,7 +7,8 @@
     fps = 9000,
     fpssec = 0,
     running = false,
-    waitingforuser = false
+    waitingforuser = false,
+    sleep = false
 
   let img,
     canvas = document.querySelector("canvas"),
@@ -15,7 +16,6 @@
     gmode = -1
 
   let uint8 = new Uint8Array(4),
-    int16 = new Int16Array(uint8.buffer),
     int32 = new Int32Array(uint8.buffer),
     float32 = new Float32Array(uint8.buffer)
 
@@ -31,7 +31,7 @@
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "0"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()
     document.querySelector("#compileBtn").addEventListener("click", compileAsm)
-    document.querySelector("#stopBtn").addEventListener("click", e => running = false)
+    document.querySelector("#stopBtn").addEventListener("click", e => { running = false; clearTimeout(sleep) })
     document.querySelector("#stepBtn").addEventListener("click", e => cpu.run(1))
     document.querySelector("#runBtn").addEventListener("click", e => running = true)
 
@@ -39,7 +39,7 @@
       mem[i] = 255 * Math.random()
       if (i > 8) {
         mem[i] = mem[i] & mem[1]
-        mem[i] = mem[i] | mem[2]
+        mem[i] = mem[i] ^ mem[2]
       }
     }
     await loadCPU("cypu.wasm", { pcb: { ram: ram } })
@@ -81,7 +81,7 @@
           running = false
           let adr = cpu.getVS()
           uint8.set(mem.slice(adr, adr + 4))
-          setTimeout(() => {
+          sleep = setTimeout(() => {
             running = true
           }, int32[0])
           break
