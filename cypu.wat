@@ -138,6 +138,10 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x0b)) (then ;; return
       (call $return (call $pop))
     ))
+    (if (i32.eq (get_local $opcode) (i32.const 0x0c)) (then ;; reset
+      (set_global $cs (i32.const 0))
+      (set_global $vs (i32.const 0))
+    ))
     (if (i32.eq (get_local $opcode) (i32.const 0x0d)) (then ;; here
       (call $push (get_global $pc))
     ))
