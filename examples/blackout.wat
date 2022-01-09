@@ -1,10 +1,9 @@
 ;;cyber asm
 
 main:
-(@vars
-  $adr (0xb800)
-  $loops (0x100)
-)
+(@vars $adr $loops)
+(set $adr (0xb800))
+(set $loops (0x100))
 
 (@while ($loops) (
   (@while (lt ($adr) (0x10000)) (
@@ -19,5 +18,5 @@ main:
   (vsync)
 ) )
 
-(return (0) (1))
+(@return (0))
 

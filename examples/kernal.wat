@@ -3,50 +3,39 @@
 ;; kernal
 
 (syscall:
-  (@vars
-    $call (0)
-    $arg1 (0)
-    $arg2 (0)
-    $arg3 (0)
-    $arg4 (0)
-    $arg5 (0)
-  )
+  (@vars $call $arg1 $arg2 $arg3 $arg4 $arg5)
 
   (@if (eq ($call) (0x10)) (
-    (return (@call pset ($arg1) ($arg2) ($arg3)) (0))
-  ) )
+    (@return (@call pset ($arg1) ($arg2) ($arg3)) (0))
+  ))
 
   reset:  (reset)
   (@vars $adr (0xb200))
   (@while (lt ($adr) (0x10000)) (
     (store ($adr) (0))
     (set $adr (add ($adr) (4)))
-  ) )
+  ))
 
   (@jump reset)
 )
 
 (pset:
   (@vars $x $y $c)
-  (@if (lt ($x) (0)) ( (return (0)) ) )
-  (@if (lt ($y) (0)) ( (return (0)) ) )
+  (@if (lt ($x) (0)) ( (@return (0)) ))
+  (@if (lt ($y) (0)) ( (@return (0)) ))
 
 
   (@return)
 )
 
 (dispinfo:
-  (@vars
-    $bpp (0)
-    $width (0)
-    $height (0)
-  )
+  (@vars $bpp $width $height )
   (set $bpp (and (load8u (0xb214)) (0x3)))
 )
 
 (pow:
   (@vars $a $b $z)
-  (set $z (0))
+  (set $z (1))
   (@while (gt ($b) (0)) (
     (set $z (mult ($z) ($a)))
     (set $b (sub ($b) (1)))
@@ -1200,7 +1189,4 @@
   0b00000000
   0b00000000
   0b00000000
-
-
-
 )

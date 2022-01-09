@@ -130,6 +130,9 @@
       } else if (token === "@vars") {
         locals = []
         varstate = 1
+        int32[0] = 0
+        writeBytes([opcodes.indexOf("const")])
+        writeBytes(uint8)
       } else if (token.slice(0, 1) === "$") {
         switch (varstate) {
           case 1: // declaration

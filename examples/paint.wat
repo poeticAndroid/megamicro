@@ -1,12 +1,8 @@
 ;;cyber asm
 
 main:
-(@vars
-  $x (0)
-  $y (0)
-  $btn (0)
-  $px (0xb800)
-)
+(@vars $x $y $btn $px)
+(set $px (0xb800))
 
 (store8 (0xb214) (2)) ;; display mode 2
 
@@ -37,5 +33,5 @@ main:
   (vsync)
 ) )
 
-(return (0) (1))
+(@return (0))
 

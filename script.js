@@ -28,7 +28,7 @@
     canvas.addEventListener("mouseup", onUser)
     canvas.addEventListener("mousemove", onUser)
 
-    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;cyber asm\n\n(return (0) (1))\n"
+    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;cyber asm\n\nmain:\n(@vars $a)\n(@return (0))\n"
     document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x0400"
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "0"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()

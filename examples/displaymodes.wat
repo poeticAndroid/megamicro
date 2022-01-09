@@ -7,5 +7,5 @@ main:
   (sleep (0x400))
 ) )
 
-(return (0) (1))
+(@return (0))
 
