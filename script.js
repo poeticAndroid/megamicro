@@ -1,6 +1,6 @@
 (() => {
   let cpu,
-    ram = new WebAssembly.Memory({ initial: 1 }),
+    ram = new WebAssembly.Memory({ initial: 4 }),
     mem = new Uint8Array(ram.buffer),
     speed = 1,
     vsyncfps = 9000,
@@ -13,6 +13,7 @@
   let img,
     canvas = document.querySelector("canvas"),
     g = canvas.getContext("2d"),
+    maxwidth = 1024,
     gmode = -1
 
   let uint8 = new Uint8Array(4),
@@ -20,6 +21,7 @@
     float32 = new Float32Array(uint8.buffer)
 
   async function init() {
+    addEventListener("resize", resize); resize()
     addEventListener("keydown", onUser)
     addEventListener("keyup", onUser)
     canvas.addEventListener("mousedown", onUser)
@@ -105,7 +107,7 @@
       }
       w = ((mode & 0x3) > 1 ? 256 : 512) / pw
       h = px / w
-      while (w * pw < 1024) {
+      while (w * pw < maxwidth) {
         pw *= 2
         ph *= 2
       }
@@ -283,5 +285,14 @@
 
   function updateStack() {
     document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(16)
+  }
+
+  function resize(e) {
+    if (window.innerWidth < 1070 || window.innerHeight < 700) {
+      maxwidth = 512
+    } else {
+      maxwidth = 1024
+    }
+    gmode = -1
   }
 })()
