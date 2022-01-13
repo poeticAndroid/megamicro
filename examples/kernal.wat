@@ -24,13 +24,19 @@
   (@if (lt ($x) (0)) ( (@return (0)) ))
   (@if (lt ($y) (0)) ( (@return (0)) ))
 
+  ;;todo
 
   (@return)
 )
 
 (dispinfo:
-  (@vars $bpp $width $height )
-  (set $bpp (and (load8u (0xb214)) (0x3)))
+  (@vars $wide $bpp $width $height $px )
+  (set $wide (rot (and (load8u (0xb214)) (0x10)) ) (4))
+  (set $bpp (@call pow (2) (and (load8u (0xb214)) (0x3))) )
+  (@if (and (load8u (0xb214)) (1)) (
+    (set $wide ())
+  ))
+  ;;todo
 )
 
 (pow:

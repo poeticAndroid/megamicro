@@ -1,11 +1,11 @@
 ;;cyber asm
 
-main:
+(main:
 
-(@while (true) (
-  (store8 (0xb214) (add (load8u(0xb214)) (1)))
-  (sleep (0x400))
-) )
+  (@while (true) (
+    (store8 (0xb214) (add (load8u(0xb214)) (1)))
+    (sleep (1000))
+  ))
 
-(@return (0))
-
+  (@return (0))
+)
