@@ -6,7 +6,7 @@ CPU instructions
 x0 | halt                          | const:val       | add:n a b       | eq:bool a b
 x1 | sleep ms                      | get:val index   | sub:n a b       | lt:bool a b
 x2 | vsync                         |                 | mult:n a b      | gt:bool a b
-x3 |                               | load:val adr    | div:n a b       | not:bool a
+x3 |                               | load:val adr    | div:n a b       | eqz:bool a
 x4 | jump offset                   | load16u:val adr | rem:n a b       | and:bool a b
 x5 | jumpifz val offset            | load8u:val adr  |                 | or:bool a b
 x6 |                               | load16s:val adr |                 | xor:bool a b

@@ -283,7 +283,7 @@
       (set_local $a (call $pop)) ;; a
       (call $push (i32.gt_s (get_local $a) (get_local $b)))
     ))
-    (if (i32.eq (get_local $opcode) (i32.const 0x33)) (then ;; not
+    (if (i32.eq (get_local $opcode) (i32.const 0x33)) (then ;; eqz
       (call $push (i32.eqz (call $pop)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x34)) (then ;; and
