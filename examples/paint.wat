@@ -14,14 +14,14 @@
   (set $px (0))
 
   (@while (true) ( ;; paint!
-    (@if (not ($btn)) (
+    (@if (eqz ($btn)) (
       (store8 (add (0xb800) ($px)) (0x0))
     ))
     (set $x (div (load8u(0xb220)) (2)) )
     (set $y (div (load8u(0xb221)) (1)) )
     (set $btn (load8u(0xb222)) )
     (set $px (add ($x) (mult ($y) (0x80))) )
-    (@if (or (lt ($px) (0)) (not (lt ($px) (0x4800)))) (
+    (@if (or (lt ($px) (0)) (eqz (lt ($px) (0x4800)))) (
       (set $px (0))
     ))
     (@if ($btn) (

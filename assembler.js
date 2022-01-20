@@ -204,7 +204,7 @@
     "halt", "sleep", "vsync", _, "jump", "jumpifz", _, _, "call", "sys", _, "return", "reset", "here", "goto", "noop",
     "const", "get", _, "load", "load16u", "load8u", "load16s", "load8s", "drop", "set", _, "store", "store16", "store8", "stacksize", "memsize",
     "add", "sub", "mult", "div", "rem", _, _, "ftoi", "fadd", "fsub", "fmult", "fdiv", _, _, "uitof", "sitof",
-    "eq", "lt", "gt", "not", "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
+    "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
   ]
 
   window.assemble = assemble
