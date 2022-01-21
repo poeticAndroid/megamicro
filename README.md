@@ -1,4 +1,4 @@
-Cyberbit 16
+Cyberbit ST
 -----------
 
 I accidentally started a new fantasy project that I'm probably never gonna finish..
