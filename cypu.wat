@@ -70,10 +70,8 @@
   (func $return (param $results i32)
     (local $resultstart i32)
     (set_local $resultstart (i32.sub (get_global $vs) (i32.mul (get_local $results) (i32.const 4))))
-    (if (i32.lt_s (get_global $vs) (i32.const 0)) (then
-      (set_local $resultstart (i32.const 0))
-    ))
     (set_global $vs (get_global $cs))
+    (set_global $cs (i32.const 0))
     (set_global $cs (call $pop))
     (set_global $pc (call $pop))
     (block(loop (br_if 1 (i32.eqz (get_local $results)))
@@ -304,7 +302,7 @@
     (if (i32.eq (get_local $opcode) (i32.const 0x37)) (then ;; rot
       (set_local $b (call $pop)) ;; b
       (set_local $a (call $pop)) ;; a
-      (call $push (i32.rotr (get_local $a) (get_local $b)))
+      (call $push (i32.rotl (get_local $a) (get_local $b)))
     ))
     (if (i32.eq (get_local $opcode) (i32.const 0x38)) (then ;; feq
       (set_local $fb (call $fpop)) ;; b
