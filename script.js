@@ -102,7 +102,7 @@
 
       px = (18 * 1024 * 8) / bpp
       if (bpp & 0xa) {
-        pw = 1 + (mode & 0x10) / 16
+        pw = 1 + (mode & 0x4) / 4
         ph = 3 - pw
       }
       w = ((mode & 0x3) > 1 ? 256 : 512) / pw
