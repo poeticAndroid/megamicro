@@ -256,6 +256,7 @@
       if (cs === adr) {
         txt += "--------\n"
         cs = -1
+        len--
       }
       uint8.set(mem.slice(adr - 4, adr))
       if (adr > 0) {
@@ -284,7 +285,7 @@
   }
 
   function updateStack() {
-    document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(15)
+    document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(10)
   }
 
   function resize(e) {
