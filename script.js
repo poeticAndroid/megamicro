@@ -284,7 +284,7 @@
   }
 
   function updateStack() {
-    document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(16)
+    document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(15)
   }
 
   function resize(e) {

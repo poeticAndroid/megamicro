@@ -6,23 +6,47 @@
   (@vars $call $arg1 $arg2 $arg3 $arg4 $arg5)
 
   (@if (eq ($call) (0x10)) (
-    (@return (@call pset ($arg1) ($arg2) ($arg3)) (0))
+    (return (@call pset ($arg1) ($arg2) ($arg3)) (0))
   ))
+)
 
-  reset:  (reset)
-  (@vars $adr (0xb200))
+(reset:
+  (reset)
+  (@vars $adr)
+  (sleep (0x400))
+  (set $adr (0xb200))
   (@while (lt ($adr) (0x10000)) (
     (store ($adr) (0))
     (set $adr (add ($adr) (4)))
   ))
+  (sleep (0x400))
 
+  (sys (42) (0x10000) (1))
   (@jump reset)
 )
 
 (pset:
-  (@vars $x $y $c)
-  (@if (lt ($x) (0)) ( (@return (0)) ))
-  (@if (lt ($y) (0)) ( (@return (0)) ))
+  (@vars $x $y $c
+    $adr $bit
+  )
+  (@if (lt ($x) (0)) ( (@return) ))
+  (@if (lt ($y) (0)) ( (@return) ))
+
+  ;; mode 1
+  (@if (gt ($x) (511)) ( (@return) ))
+  (@if (gt ($y) (143)) ( (@return) ))
+  (set $adr (add ($x) (mult (512) ($y))) )
+  (set $bit (mult (2) (rem ($adr) (4) ) ))
+  (set $adr (add (0xb800) (div ($adr) (4) ) ) )
+
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-2)) )
+    (and (-4) )
+    (xor ($c) )
+    (rot (sub (8-2) ($bit)) )
+  )
+
 
   ;;todo
 

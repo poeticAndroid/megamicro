@@ -1,33 +1,23 @@
 ;;cyber asm
 
+;; requires kernal at 0x400
+
 (main:
-  (@vars $x $y $btn $px)
+  (@vars $x $y $btn)
 
-  (store8 (0xb214) (2)) ;; display mode 2
-
-  (set $px (0xb800))
-  (@while (lt ($px) (0x10000)) ( ;; clear screen
-    (store ($px) (0))
-    (set $px (add ($px) (4)))
-  ))
-
-  (set $px (0))
+  (store8 (0xb214) (1)) ;; display mode 2
 
   (@while (true) ( ;; paint!
     (@if (eqz ($btn)) (
-      (store8 (add (0xb800) ($px)) (0x0))
+      (sys (0x10) ($x) ($y) (0) (0x400) (4))
     ))
-    (set $x (div (load8u(0xb220)) (2)) )
+    (set $x (add (load8u(0xb220)) (128)) )
     (set $y (div (load8u(0xb221)) (1)) )
     (set $btn (load8u(0xb222)) )
-    (set $px (add ($x) (mult ($y) (0x80))) )
-    (@if (or (lt ($px) (0)) (eqz (lt ($px) (0x4800)))) (
-      (set $px (0))
-    ))
     (@if ($btn) (
-      (store8 (add (0xb800) ($px)) (0xff))
+      (sys (0x10) ($x) ($y) (2) (0x400) (4))
     )(
-      (store8 (add (0xb800) ($px)) (0xf))
+      (sys (0x10) ($x) ($y) (1) (0x400) (4))
     ))
 
     (vsync)
