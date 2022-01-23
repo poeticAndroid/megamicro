@@ -156,10 +156,33 @@
 (printchar:
   (@vars $char
     $x1 $y1 $x2 $y2 $x $y $adr $bits)
+  (@if (eq ($char) (0x0a)) ( ;; newline
+    (store8 (0xb280) (0) )
+    (store8 (0xb281) (add (load8u (0xb281)) (1) ) )
+    (@return)
+  ))
+  (@if (eq ($char) (0x09)) ( ;; tab
+    (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
+    (@while (rem (load8u (0xb280)) (8)) (
+      (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
+    ))
+    (@return)
+  ))
   (@if (lt ($char) (0x20)) (@return))
   (set $x1 (mult (load8u (0xb280)) (8) ))
-  (set $y1 (mult (load8u (0xb281)) (8) ))
+  (@if (gt ($x1) (@call scrnwidth)) (
+    (store8 (0xb280) (0) )
+    (store8 (0xb281) (add (load8u (0xb281)) (1) ) )
+    (set $x1 (0))
+  ))
   (set $x2 (add ($x1) (8)))
+  (set $y1 (mult (load8u (0xb281)) (8) ))
+  (@while (gt ($y1) (@call scrnheight)) (
+    (store8 (0xb281) (sub (load8u (0xb281)) (1) ) )
+    (set $y1 (sub ($y1) (8)))
+    (set $adr (add ($adr) (8)))
+  ))
+  (@call scroll ($adr))
   (set $y2 (add ($y1) (8)))
   (set $adr (add (0xae00) (mult (and ($char) (127)) (8))))
   (set $y ($y1))
@@ -175,6 +198,32 @@
     (set $y (add ($y) (1)))
   ))
   (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
+  (@return)
+)
+
+(scroll:
+  (@vars $px
+    $adr $offset $end)
+  (@if (eqz ($px)) (@return))
+  (set $adr (0xb800))
+  (set $offset (mult ($px) (@call scrnbytew)))
+  (set $end (sub (0x10000) ($offset) ))
+  (@while (lt ($adr) ($end)) (
+    (store ($adr) (load (add ($adr) ($offset))))
+    (set $adr (add ($adr) (4)))
+  ))
+  (set $end (@call scrnheight))
+  (set $px (@call scrnwidth))
+  (set $offset (32))
+  (@while ($offset) (
+    (@call pset ($px) ($end) (load8u (0xb282)))
+    (set $px (sub ($px) (1)))
+    (set $offset (sub ($offset) (1)))
+  ))
+  (@while (lt ($adr) (0xfffc)) (
+    (store ($adr) (load (0xfffc)))
+    (set $adr (add ($adr) (4)))
+  ))
   (@return)
 )
 
@@ -231,6 +280,29 @@
   ;; mode 7
   (@return (143))
 )
+
+
+(scrnbytew:
+  (jump (mult (and (7) (load8u (0xb214))) (0xb) ))
+  ;; mode 0
+  (@return (512/8))
+  ;; mode 1
+  (@return (512/4))
+  ;; mode 2
+  (@return (256/2))
+  ;; mode 3
+  (@return (256/1))
+
+  ;; mode 4
+  (@return (512/8))
+  ;; mode 5
+  (@return (256/4))
+  ;; mode 6
+  (@return (256/2))
+  ;; mode 7
+  (@return (128/1))
+)
+
 
 (pow:
   (@vars $a $b $z)
