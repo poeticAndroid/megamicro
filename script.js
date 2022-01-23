@@ -185,11 +185,9 @@
   }
 
   function onUser(e) {
-    if (e.type === "mousemove") {
-      mem[0xb220] = Math.floor(e.offsetX / 4)
-      mem[0xb221] = Math.floor(e.offsetY / 4)
-    }
-    if (e.type === "mousedown" || e.type === "mouseup") {
+    if (e.type.slice(0, 5) === "mouse") {
+      mem[0xb220] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
+      mem[0xb221] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
       mem[0xb222] = e.buttons
     }
 
@@ -197,10 +195,6 @@
       waitingforuser = false
       running = true
     }
-  }
-
-  function storeInput() {
-
   }
 
   function changeSpeed(e) {
