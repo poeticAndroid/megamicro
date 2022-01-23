@@ -9,8 +9,8 @@ Call codes
 -------|--------|---------------
 **x0** | reboot | pset x y c
 **x1** |        | rect x y w h c
-**x2** |        |
-**x3** |        |
+**x2** |        | printchar c
+**x3** |        | printstr s
 **x4** |        |
 **x5** |        |
 **x6** |        |

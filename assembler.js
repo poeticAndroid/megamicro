@@ -161,9 +161,8 @@
           console.error("@skipto: already past", min)
         }
       } else if (token === "@bytes") {
-        while (token = readToken() && token !== ")") {
-          let val = eval(token)
-          bytes.push(val)
+        while ((token = readToken()) && token !== ")") {
+          bytes.push(eval(token))
         }
         return writeBytes(bytes)
       } else {
@@ -184,7 +183,7 @@
   }
 
   function writeBytes(data, len = data.length) {
-    if (outpos + len >= bin.length) bin = doubleSize(bin)
+    while (outpos + len >= bin.length) bin = doubleSize(bin)
     let i = 0
     while (i < len) {
       bin[outpos++] = data[i++] || 0

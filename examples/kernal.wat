@@ -8,6 +8,7 @@
   (@if (eq ($call) (0x00)) ( (return (@call reboot ) (0)) ))
 
   (@if (eq ($call) (0x10)) ( (return (@call pset ($arg1) ($arg2) ($arg3)) (0)) ))
+  (@if (eq ($call) (0x12)) ( (return (@call printchar ($arg1)) (0)) ))
 
   (@if (eq ($call) (0x19)) ( (return (@call scrndepth ) (1)) ))
   (@if (eq ($call) (0x1a)) ( (return (@call scrnwidth ) (1)) ))
@@ -149,6 +150,31 @@
     (xor (and ($c) (255)) ) ;; colors-1
     (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
   )
+  (@return)
+)
+
+(printchar:
+  (@vars $char
+    $x1 $y1 $x2 $y2 $x $y $adr $bits)
+  (@if (lt ($char) (0x20)) (@return))
+  (set $x1 (mult (load8u (0xb280)) (8) ))
+  (set $y1 (mult (load8u (0xb281)) (8) ))
+  (set $x2 (add ($x1) (8)))
+  (set $y2 (add ($y1) (8)))
+  (set $adr (add (0xae00) (mult (and ($char) (127)) (8))))
+  (set $y ($y1))
+  (@while (lt ($y) ($y2)) (
+    (set $bits (rot (load8u ($adr)) (-8) ))
+    (set $x ($x1))
+    (@while (lt ($x) ($x2)) (
+      (set $bits (rot ($bits) (1) ))
+      (@call pset ($x) ($y) (load8u (add (0xb282) (and ($bits) (1)) )))
+      (set $x (add ($x) (1)))
+    ))
+    (set $adr (add ($adr) (1)))
+    (set $y (add ($y) (1)))
+  ))
+  (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
   (@return)
 )
 
