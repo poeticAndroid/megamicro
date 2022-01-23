@@ -3,7 +3,8 @@
 ;; requires kernal at 0x400
 
 (main:
-  (@vars $x $y $mx $my $btn)
+  (@vars $argv
+    $x $y $mx $my $btn)
 
   (store8 (0xb214) (7)) ;; display mode 6
 
@@ -30,5 +31,5 @@
     (vsync)
   ))
 
-  (@return (0))
+  (@return (0)) ;; return to dos with no error
 )
