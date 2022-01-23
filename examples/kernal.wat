@@ -5,12 +5,16 @@
 (syscall:
   (@vars $call $arg1 $arg2 $arg3 $arg4 $arg5)
 
-  (@if (eq ($call) (0x10)) (
-    (return (@call pset ($arg1) ($arg2) ($arg3)) (0))
-  ))
+  (@if (eq ($call) (0x00)) ( (return (@call reboot ) (0)) ))
+
+  (@if (eq ($call) (0x10)) ( (return (@call pset ($arg1) ($arg2) ($arg3)) (0)) ))
+
+  (@if (eq ($call) (0x19)) ( (return (@call scrndepth ) (1)) ))
+  (@if (eq ($call) (0x1a)) ( (return (@call scrnwidth ) (1)) ))
+  (@if (eq ($call) (0x1b)) ( (return (@call scrnheight ) (1)) ))
 )
 
-(reset:
+(reboot:
   (reset)
   (@vars $adr)
   (sleep (0x400))
@@ -22,7 +26,7 @@
   (sleep (0x400))
 
   (sys (0) (0x10000) (1))
-  (@jump reset)
+  (@jump reboot)
 )
 
 (pset:
@@ -32,7 +36,7 @@
   (@if (lt ($x) (0)) ( (@return) ))
   (@if (lt ($y) (0)) ( (@return) ))
 
-  (jump (mult (and (7) (load8u (0xb214))) (0xc0) ))
+  (jump (mult (and (7) (load8u (0xb214))) (0xc6) ))
   ;; mode 0
   (@if (gt ($x) (511)) ( (@return) )) ;; width-1
   (@if (gt ($y) (287)) ( (@return) )) ;; height-1
@@ -43,7 +47,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-1)) ) ;; 8 - bits/pixel
     (and (-2) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (1)) ) ;; colors-1
     (rot (sub (8-1) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -57,7 +61,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-2)) ) ;; 8 - bits/pixel
     (and (-4) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (3)) ) ;; colors-1
     (rot (sub (8-2) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -71,7 +75,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-4)) ) ;; 8 - bits/pixel
     (and (-16) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (15)) ) ;; colors-1
     (rot (sub (8-4) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -85,7 +89,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-8)) ) ;; 8 - bits/pixel
     (and (-256) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (255)) ) ;; colors-1
     (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -100,7 +104,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-1)) ) ;; 8 - bits/pixel
     (and (-2) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (1)) ) ;; colors-1
     (rot (sub (8-1) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -114,7 +118,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-2)) ) ;; 8 - bits/pixel
     (and (-4) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (3)) ) ;; colors-1
     (rot (sub (8-2) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -128,7 +132,7 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-4)) ) ;; 8 - bits/pixel
     (and (-16) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (15)) ) ;; colors-1
     (rot (sub (8-4) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
@@ -142,25 +146,64 @@
     (load8u ($adr))
     (rot (sub ($bit) (8-8)) ) ;; 8 - bits/pixel
     (and (-256) ) ;; -colors
-    (xor ($c) )
+    (xor (and ($c) (255)) ) ;; colors-1
     (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
   )
   (@return)
-
-
-  ;;todo
-
-  (@return)
 )
 
-(dispinfo:
-  (@vars $wide $bpp $width $height $px )
-  (set $wide (rot (and (load8u (0xb214)) (0x10)) ) (4))
-  (set $bpp (@call pow (2) (and (load8u (0xb214)) (0x3))) )
-  (@if (and (load8u (0xb214)) (1)) (
-    (set $wide ())
-  ))
-  ;;todo
+(scrndepth:
+  (jump (mult (and (3) (load8u (0xb214))) (0xb) ))
+  ;; modes 0 and 4
+  (@return (1))
+  ;; modes 1 and 5
+  (@return (3))
+  ;; modes 2 and 6
+  (@return (15))
+  ;; modes 3 and 7
+  (@return (255))
+)
+
+(scrnwidth:
+  (jump (mult (and (7) (load8u (0xb214))) (0xb) ))
+  ;; mode 0
+  (@return (511))
+  ;; mode 1
+  (@return (511))
+  ;; mode 2
+  (@return (255))
+  ;; mode 3
+  (@return (255))
+
+  ;; mode 4
+  (@return (511))
+  ;; mode 5
+  (@return (255))
+  ;; mode 6
+  (@return (255))
+  ;; mode 7
+  (@return (127))
+)
+
+(scrnheight:
+  (jump (mult (and (7) (load8u (0xb214))) (0xb) ))
+  ;; mode 0
+  (@return (287))
+  ;; mode 1
+  (@return (143))
+  ;; mode 2
+  (@return (143))
+  ;; mode 3
+  (@return (71))
+
+  ;; mode 4
+  (@return (287))
+  ;; mode 5
+  (@return (287))
+  ;; mode 6
+  (@return (143))
+  ;; mode 7
+  (@return (143))
 )
 
 (pow:
