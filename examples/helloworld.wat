@@ -1,4 +1,4 @@
-;;petie asm
+;;Peti asm
 
 ;; requires kernal at 0x400
 

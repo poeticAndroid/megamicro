@@ -1,4 +1,4 @@
-;;petie asm
+;;Peti asm
 
 ;; kernal
 
@@ -367,7 +367,7 @@
   (@return (add (8) (here)))
 )
 ;; 0x0
-(@string 0x20 "\t\b/// Petie 0.1 ///\n\n")
+(@string 0x20 "\t/// Peti 0.2 ///\n\n")
 ;; 0x20
 (@string 0x10 "\nReady.\n")
 ;; 0x30

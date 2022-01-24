@@ -1,4 +1,4 @@
-;;petie asm
+;;Peti asm
 
 (main:
 
