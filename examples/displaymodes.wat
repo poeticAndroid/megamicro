@@ -1,4 +1,4 @@
-;;cyber asm
+;;petie asm
 
 (main:
 

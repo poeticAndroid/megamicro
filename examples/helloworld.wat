@@ -1,4 +1,4 @@
-;;cyber asm
+;;petie asm
 
 ;; requires kernal at 0x400
 
