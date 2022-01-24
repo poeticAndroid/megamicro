@@ -165,6 +165,15 @@
           bytes.push(eval(token))
         }
         return writeBytes(bytes)
+      } else if (token === "@string") {
+        let str = ""
+        let len = eval(readToken())
+        while ((token = readToken()) && token !== ")") {
+          str += token + " "
+        }
+        let encoder = new TextEncoder()
+        bytes = encoder.encode(eval(str))
+        return writeBytes(bytes, len)
       } else {
         let val = eval(token)
         if (token.includes(".")) float32[0] = val

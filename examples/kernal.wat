@@ -9,6 +9,7 @@
 
   (@if (eq ($call) (0x10)) ( (return (@call pset ($arg1) ($arg2) ($arg3)) (0)) ))
   (@if (eq ($call) (0x12)) ( (return (@call printchar ($arg1)) (0)) ))
+  (@if (eq ($call) (0x13)) ( (return (@call printstr ($arg1)) (0)) ))
 
   (@if (eq ($call) (0x19)) ( (return (@call scrndepth ) (1)) ))
   (@if (eq ($call) (0x1a)) ( (return (@call scrnwidth ) (1)) ))
@@ -24,9 +25,8 @@
     (store ($adr) (0))
     (set $adr (add ($adr) (4)))
   ))
-  (store8 (0xb283) (-1)) ;; text fg color
-  (sleep (0x400))
 
+  (@call intro)
   (@if (eq (load8u (0x10000)) (0x10) ) (
     (sys (0) (0x10000) (1))
   ))
@@ -34,7 +34,17 @@
   (@jump reboot)
 )
 
+(intro:
+  (store8 (0xb283) (-1)) ;; text fg color
+  (store8 (0xb240) (1)) ;; display mode
+  (@call printstr (@call memstart))
+  (store8 (0xb240) (0)) ;; display mode
+  (sleep (0x400))
+  (@return)
+)
+
 (typist:
+  (@call printstr (add (@call memstart) (0x20) ))
   (@while (true) (
     (@while (eqz (load8u (0xb210))) (
       (vsync)
@@ -231,6 +241,15 @@
   (@return)
 )
 
+(printstr:
+  (@vars $str)
+  (@while (load8u ($str)) (
+    (@call printchar (load8u ($str)))
+    (set $str (add ($str) (1)))
+  ))
+  (@return)
+)
+
 (scroll:
   (@vars $px
     $adr $offset $end)
@@ -344,6 +363,14 @@
   (@return ($z))
 )
 
+(memstart: ;; must be the last function
+  (@return (add (8) (here)))
+)
+;; 0x0
+(@string 0x20 "\t\b/// Petie 0.1 ///\n\n")
+;; 0x20
+(@string 0x10 "\nReady.\n")
+;; 0x30
 
 (@skipto 0xaa00)
 (@bytes ;; system font
