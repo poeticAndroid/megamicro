@@ -1,6 +1,6 @@
 {
-  "name": "cyberbit-st",
-  "version": "0.0.1",
+  "name": "petie",
+  "version": "0.1.0",
   "description": "An attempt to create my own fantasy cpu",
   "main": "script.js",
   "scripts": {
