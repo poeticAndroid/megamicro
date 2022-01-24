@@ -6,7 +6,7 @@
   (@vars $argv
     $x $y $mx $my $btn)
 
-  (store8 (0xb214) (7)) ;; display mode 6
+  (store8 (0xb240) (7)) ;; display mode 6
 
   (@while (true) ( ;; paint!
     (@if (eqz ($btn)) (

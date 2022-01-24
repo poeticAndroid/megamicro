@@ -5,7 +5,7 @@
 (main:
   (@vars $argv
     )
-  (store8 (0xb214) (1)) ;; display mode
+  (store8 (0xb240) (1)) ;; display mode
   ;; (store8 (0xb282) (2)) ;; text bg color
   ;; (store8 (0xb283) (-1)) ;; text fg color
   

@@ -52,7 +52,7 @@
   (@if (lt ($x) (0)) ( (@return) ))
   (@if (lt ($y) (0)) ( (@return) ))
 
-  (jump (mult (and (7) (load8u (0xb214))) (0xc6) ))
+  (jump (mult (and (7) (load8u (0xb240))) (0xc6) ))
   ;; mode 0
   (@if (gt ($x) (511)) ( (@return) )) ;; width-1
   (@if (gt ($y) (287)) ( (@return) )) ;; height-1
@@ -258,7 +258,7 @@
 )
 
 (scrndepth:
-  (jump (mult (and (3) (load8u (0xb214))) (0xb) ))
+  (jump (mult (and (3) (load8u (0xb240))) (0xb) ))
   ;; modes 0 and 4
   (@return (1))
   ;; modes 1 and 5
@@ -270,7 +270,7 @@
 )
 
 (scrnwidth:
-  (jump (mult (and (7) (load8u (0xb214))) (0xb) ))
+  (jump (mult (and (7) (load8u (0xb240))) (0xb) ))
   ;; mode 0
   (@return (511))
   ;; mode 1
@@ -291,7 +291,7 @@
 )
 
 (scrnheight:
-  (jump (mult (and (7) (load8u (0xb214))) (0xb) ))
+  (jump (mult (and (7) (load8u (0xb240))) (0xb) ))
   ;; mode 0
   (@return (287))
   ;; mode 1
@@ -313,7 +313,7 @@
 
 
 (scrnbytew:
-  (jump (mult (and (7) (load8u (0xb214))) (0xb) ))
+  (jump (mult (and (7) (load8u (0xb240))) (0xb) ))
   ;; mode 0
   (@return (512/8))
   ;; mode 1

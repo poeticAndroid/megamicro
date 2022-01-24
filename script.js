@@ -99,7 +99,7 @@
     }
 
     // rendering
-    let mode = mem[0xb214],
+    let mode = mem[0xb240],
       bpp = Math.pow(2, mode & 0x3)
     if (gmode !== mode) {
       let pw = 1, ph = 1
