@@ -8,7 +8,8 @@
     fpssec = 0,
     running = false,
     waitingforuser = false,
-    sleep = false
+    sleep = false,
+    kbBuffer = []
 
   let img,
     canvas = document.querySelector("canvas"),
@@ -62,6 +63,10 @@
   function render(t = 0) {
     let opcode
     if (running) {
+      if (kbBuffer.length && mem[0xb210] === 0) {
+        mem[0xb211] = kbBuffer.shift()
+        mem[0xb210] = 1
+      }
       try {
         opcode = cpu.run(speed)
       } catch (err) {
@@ -190,6 +195,26 @@
       mem[0xb221] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
       mem[0xb222] = e.buttons
     }
+
+    if (e.type === "keydown") {
+      mem[0xb212] = e.keyCode
+      if (!e.ctrlKey && !e.metaKey) {
+        if (e.key === "Backspace") {
+          kbBuffer.push(0x08)
+        }
+        if (e.key === "Tab") {
+          kbBuffer.push(0x09)
+        }
+        if (e.key === "Enter") {
+          kbBuffer.push(0x0a)
+        }
+        if (e.key.length === 1) {
+          kbBuffer.push(e.key.charCodeAt(0))
+        }
+        // mem[0xb210] = 1
+      }
+    }
+    if (!running) kbBuffer.length = 0
 
     if (waitingforuser) {
       waitingforuser = false

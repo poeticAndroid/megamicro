@@ -24,10 +24,25 @@
     (store ($adr) (0))
     (set $adr (add ($adr) (4)))
   ))
+  (store8 (0xb283) (-1)) ;; text fg color
   (sleep (0x400))
 
-  (sys (0) (0x10000) (1))
+  (@if (eq (load8u (0x10000)) (0x10) ) (
+    (sys (0) (0x10000) (1))
+  ))
+  (@call typist)
   (@jump reboot)
+)
+
+(typist:
+  (@while (true) (
+    (@while (eqz (load8u (0xb210))) (
+      (vsync)
+    ))
+    (@call printchar (load8u (0xb211)) )
+    (store (0xb210) (0))
+  ))
+  (@return)
 )
 
 (pset:
@@ -156,9 +171,15 @@
 (printchar:
   (@vars $char
     $x1 $y1 $x2 $y2 $x $y $adr $bits)
-  (@if (eq ($char) (0x0a)) ( ;; newline
-    (store8 (0xb280) (0) )
-    (store8 (0xb281) (add (load8u (0xb281)) (1) ) )
+  (@if (eq ($char) (0x08)) ( ;; backspace
+    (store8 (0xb280) (sub (load8s (0xb280)) (1) ) )
+    (@if (lt (load8s (0xb280)) (0)) (
+      (store8 (0xb280) (div (@call scrnwidth) (8)))
+      (store8 (0xb281) (sub (load8s (0xb281)) (1) ) )
+      (@if (lt (load8s (0xb281)) (0)) (
+        (store16 (0xb280) (0) )
+      ))
+    ))
     (@return)
   ))
   (@if (eq ($char) (0x09)) ( ;; tab
@@ -166,6 +187,15 @@
     (@while (rem (load8u (0xb280)) (8)) (
       (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
     ))
+    (@return)
+  ))
+  (@if (eq ($char) (0x0a)) ( ;; newline
+    (store8 (0xb280) (0) )
+    (store8 (0xb281) (add (load8u (0xb281)) (1) ) )
+    (@return)
+  ))
+  (@if (eq ($char) (0x0d)) ( ;; carriage return
+    (store8 (0xb280) (0) )
     (@return)
   ))
   (@if (lt ($char) (0x20)) (@return))

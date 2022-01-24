@@ -4,7 +4,7 @@
 
 (main:
   (@vars $argv
-    )
+    $i)
   ;; (store8 (0xb282) (2)) ;; text bg color
   (store8 (0xb283) (-1)) ;; text fg color
   
@@ -22,7 +22,8 @@
   (sys (0x12) (0x21) (0x400) (2)) ;; !
   (sys (0x12) (0x0a) (0x400) (2)) ;; \n
 
-  (@while (lt (load8u (0xb281)) (36)) (
+  (set $i (256))
+  (@while ($i) (
     (sys (0x12) (0x09) (0x400) (2)) ;;  (tab)
     (sys (0x12) (0x48) (0x400) (2)) ;; H
     (sys (0x12) (0x65) (0x400) (2)) ;; e
@@ -36,6 +37,12 @@
     (sys (0x12) (0x6c) (0x400) (2)) ;; l
     (sys (0x12) (0x64) (0x400) (2)) ;; d
     (sys (0x12) (0x21) (0x400) (2)) ;; !
+    (set $i (sub ($i) (1)))
+  ))
+
+  (@while (lt ($i) (memsize)) (
+    (sys (0x12) (load8u ($i)) (0x400) (2))
+    (set $i (add ($i) (1)))
   ))
 
 
