@@ -14,7 +14,7 @@
   (sys (0x12) (0x08) (0x400) (2))
 
   (@while (true) (
-    (@while (eqz (load8u (0xb4f4))) (
+    (@while (eqz (load (0xb4f4))) (
       (vsync)
     ))
     (@if (lt (load8u (0xb4f5)) (0x20)) (

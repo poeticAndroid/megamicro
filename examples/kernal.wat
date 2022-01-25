@@ -46,7 +46,7 @@
 (typist:
   (@call printstr (add (@call memstart) (0x20) ))
   (@while (true) (
-    (@while (eqz (load8u (0xb4f4))) (
+    (@while (eqz (load (0xb4f4))) (
       (vsync)
     ))
     (@call printchar (load8u (0xb4f5)) )

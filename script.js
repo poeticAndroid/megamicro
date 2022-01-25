@@ -66,7 +66,7 @@
     if (running) {
       if (kbBuffer.length && mem[0xb4f4] === 0) {
         mem[0xb4f5] = kbBuffer.shift()
-        mem[0xb4f4] = 1
+        mem[0xb4f4] = Math.min(255, 1 + kbBuffer.length)
       }
       try {
         opcode = cpu.run(speed)
@@ -197,8 +197,13 @@
       mem[0xb4fb] = e.buttons
     }
 
+    if (e.type === "keyup") {
+      mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
+      console.log(e)
+    }
     if (e.type === "keydown") {
       mem[0xb4f6] = e.keyCode
+      mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
       if (!e.ctrlKey && !e.metaKey) {
         if (e.key === "Backspace") {
           kbBuffer.push(0x08)
@@ -209,10 +214,15 @@
         if (e.key === "Enter") {
           kbBuffer.push(0x0a)
         }
+        if (e.key === "Escape") {
+          kbBuffer.push(0x1b)
+        }
+        if (e.key === "Delete") {
+          kbBuffer.push(0x7f)
+        }
         if (e.key.length === 1) {
           kbBuffer.push(e.key.charCodeAt(0))
         }
-        // mem[0xb4f4] = 1
       }
     }
     if (!running) kbBuffer.length = 0
