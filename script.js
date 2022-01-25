@@ -48,6 +48,7 @@
     await loadCPU("cypu.wasm", { pcb: { ram: ram } })
     render()
     window.mem = mem
+    window.kbBuffer = kbBuffer
     console.log("cpu", cpu)
     console.log("mem", mem)
     console.log("img", img)
