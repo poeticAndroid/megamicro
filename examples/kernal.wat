@@ -20,7 +20,7 @@
   (reset)
   (@vars $adr)
   (sleep (0x400))
-  (set $adr (0xb200))
+  (set $adr (0xb400))
   (@while (lt ($adr) (0x10000)) (
     (store ($adr) (0))
     (set $adr (add ($adr) (4)))
@@ -35,10 +35,10 @@
 )
 
 (intro:
-  (store8 (0xb283) (-1)) ;; text fg color
-  (store8 (0xb240) (1)) ;; display mode
+  (store8 (0xafff) (-1)) ;; text fg color
+  (store8 (0xb4f8) (1)) ;; display mode
   (@call printstr (@call memstart))
-  (store8 (0xb240) (0)) ;; display mode
+  (store8 (0xb4f8) (0)) ;; display mode
   (sleep (0x400))
   (@return)
 )
@@ -46,11 +46,11 @@
 (typist:
   (@call printstr (add (@call memstart) (0x20) ))
   (@while (true) (
-    (@while (eqz (load8u (0xb210))) (
+    (@while (eqz (load8u (0xb4f4))) (
       (vsync)
     ))
-    (@call printchar (load8u (0xb211)) )
-    (store (0xb210) (0))
+    (@call printchar (load8u (0xb4f5)) )
+    (store (0xb4f4) (0))
   ))
   (@return)
 )
@@ -62,7 +62,7 @@
   (@if (lt ($x) (0)) ( (@return) ))
   (@if (lt ($y) (0)) ( (@return) ))
 
-  (jump (mult (and (7) (load8u (0xb240))) (0xc6) ))
+  (jump (mult (and (7) (load8u (0xb4f8))) (0xc6) ))
   ;; mode 0
   (@if (gt ($x) (511)) ( (@return) )) ;; width-1
   (@if (gt ($y) (287)) ( (@return) )) ;; height-1
@@ -182,62 +182,62 @@
   (@vars $char
     $x1 $y1 $x2 $y2 $x $y $adr $bits)
   (@if (eq ($char) (0x08)) ( ;; backspace
-    (store8 (0xb280) (sub (load8s (0xb280)) (1) ) )
-    (@if (lt (load8s (0xb280)) (0)) (
-      (store8 (0xb280) (div (@call scrnwidth) (8)))
-      (store8 (0xb281) (sub (load8s (0xb281)) (1) ) )
-      (@if (lt (load8s (0xb281)) (0)) (
-        (store16 (0xb280) (0) )
+    (store8 (0xaffc) (sub (load8s (0xaffc)) (1) ) )
+    (@if (lt (load8s (0xaffc)) (0)) (
+      (store8 (0xaffc) (div (@call scrnwidth) (8)))
+      (store8 (0xaffd) (sub (load8s (0xaffd)) (1) ) )
+      (@if (lt (load8s (0xaffd)) (0)) (
+        (store16 (0xaffc) (0) )
       ))
     ))
     (@return)
   ))
   (@if (eq ($char) (0x09)) ( ;; tab
-    (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
-    (@while (rem (load8u (0xb280)) (8)) (
-      (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
+    (store8 (0xaffc) (add (load8u (0xaffc)) (1) ) )
+    (@while (rem (load8u (0xaffc)) (8)) (
+      (store8 (0xaffc) (add (load8u (0xaffc)) (1) ) )
     ))
     (@return)
   ))
   (@if (eq ($char) (0x0a)) ( ;; newline
-    (store8 (0xb280) (0) )
-    (store8 (0xb281) (add (load8u (0xb281)) (1) ) )
+    (store8 (0xaffc) (0) )
+    (store8 (0xaffd) (add (load8u (0xaffd)) (1) ) )
     (@return)
   ))
   (@if (eq ($char) (0x0d)) ( ;; carriage return
-    (store8 (0xb280) (0) )
+    (store8 (0xaffc) (0) )
     (@return)
   ))
   (@if (lt ($char) (0x20)) (@return))
-  (set $x1 (mult (load8u (0xb280)) (8) ))
+  (set $x1 (mult (load8u (0xaffc)) (8) ))
   (@if (gt ($x1) (@call scrnwidth)) (
-    (store8 (0xb280) (0) )
-    (store8 (0xb281) (add (load8u (0xb281)) (1) ) )
+    (store8 (0xaffc) (0) )
+    (store8 (0xaffd) (add (load8u (0xaffd)) (1) ) )
     (set $x1 (0))
   ))
   (set $x2 (add ($x1) (8)))
-  (set $y1 (mult (load8u (0xb281)) (8) ))
+  (set $y1 (mult (load8u (0xaffd)) (8) ))
   (@while (gt ($y1) (@call scrnheight)) (
-    (store8 (0xb281) (sub (load8u (0xb281)) (1) ) )
+    (store8 (0xaffd) (sub (load8u (0xaffd)) (1) ) )
     (set $y1 (sub ($y1) (8)))
     (set $adr (add ($adr) (8)))
   ))
   (@call scroll ($adr))
   (set $y2 (add ($y1) (8)))
-  (set $adr (add (0xae00) (mult (and ($char) (127)) (8))))
+  (set $adr (add (0xb000) (mult (and ($char) (127)) (8))))
   (set $y ($y1))
   (@while (lt ($y) ($y2)) (
     (set $bits (rot (load8u ($adr)) (-8) ))
     (set $x ($x1))
     (@while (lt ($x) ($x2)) (
       (set $bits (rot ($bits) (1) ))
-      (@call pset ($x) ($y) (load8u (add (0xb282) (and ($bits) (1)) )))
+      (@call pset ($x) ($y) (load8u (add (0xaffe) (and ($bits) (1)) )))
       (set $x (add ($x) (1)))
     ))
     (set $adr (add ($adr) (1)))
     (set $y (add ($y) (1)))
   ))
-  (store8 (0xb280) (add (load8u (0xb280)) (1) ) )
+  (store8 (0xaffc) (add (load8u (0xaffc)) (1) ) )
   (@return)
 )
 
@@ -265,7 +265,7 @@
   (set $px (@call scrnwidth))
   (set $offset (32))
   (@while ($offset) (
-    (@call pset ($px) ($end) (load8u (0xb282)))
+    (@call pset ($px) ($end) (load8u (0xaffe)))
     (set $px (sub ($px) (1)))
     (set $offset (sub ($offset) (1)))
   ))
@@ -277,7 +277,7 @@
 )
 
 (scrndepth:
-  (jump (mult (and (3) (load8u (0xb240))) (0xb) ))
+  (jump (mult (and (3) (load8u (0xb4f8))) (0xb) ))
   ;; modes 0 and 4
   (@return (1))
   ;; modes 1 and 5
@@ -289,7 +289,7 @@
 )
 
 (scrnwidth:
-  (jump (mult (and (7) (load8u (0xb240))) (0xb) ))
+  (jump (mult (and (7) (load8u (0xb4f8))) (0xb) ))
   ;; mode 0
   (@return (511))
   ;; mode 1
@@ -310,7 +310,7 @@
 )
 
 (scrnheight:
-  (jump (mult (and (7) (load8u (0xb240))) (0xb) ))
+  (jump (mult (and (7) (load8u (0xb4f8))) (0xb) ))
   ;; mode 0
   (@return (287))
   ;; mode 1
@@ -332,7 +332,7 @@
 
 
 (scrnbytew:
-  (jump (mult (and (7) (load8u (0xb240))) (0xb) ))
+  (jump (mult (and (7) (load8u (0xb4f8))) (0xb) ))
   ;; mode 0
   (@return (512/8))
   ;; mode 1
@@ -372,7 +372,7 @@
 (@string 0x10 "\nReady.\n")
 ;; 0x30
 
-(@skipto 0xaa00)
+(@skipto 0xb000-0x400)
 (@bytes ;; system font
   ;; g00
   0b00000000

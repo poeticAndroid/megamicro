@@ -6,16 +6,16 @@
   (@vars $argv
     $x $y $mx $my $btn)
 
-  (store8 (0xb240) (7)) ;; display mode 6
+  (store8 (0xb4f8) (7)) ;; display mode 6
 
   (@while (true) ( ;; paint!
     (@if (eqz ($btn)) (
       (sys (0x10) ($x) ($y) (0) (0x400) (4))
       (sys (0x10) ($mx) ($my) (0) (0x400) (4))
     ))
-    (set $mx (div (load8u(0xb220)) (2)) )
-    (set $my (div (load8u(0xb221)) (1)) )
-    (set $btn (load8u(0xb222)) )
+    (set $mx (div (load8u(0xb4f9)) (2)) )
+    (set $my (div (load8u(0xb4fa)) (1)) )
+    (set $btn (load8u(0xb4fb)) )
 
     (@if (lt ($mx) ($x)) (set $x (sub ($x) (1))))
     (@if (gt ($mx) ($x)) (set $x (add ($x) (1))))

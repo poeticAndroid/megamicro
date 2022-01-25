@@ -64,9 +64,9 @@
   function render(t = 0) {
     let opcode
     if (running) {
-      if (kbBuffer.length && mem[0xb210] === 0) {
-        mem[0xb211] = kbBuffer.shift()
-        mem[0xb210] = 1
+      if (kbBuffer.length && mem[0xb4f4] === 0) {
+        mem[0xb4f5] = kbBuffer.shift()
+        mem[0xb4f4] = 1
       }
       try {
         opcode = cpu.run(speed)
@@ -100,7 +100,7 @@
     }
 
     // rendering
-    let mode = mem[0xb240],
+    let mode = mem[0xb4f8],
       bpp = Math.pow(2, mode & 0x3)
     if (gmode !== mode) {
       let pw = 1, ph = 1
@@ -192,13 +192,13 @@
 
   function onUser(e) {
     if (e.type.slice(0, 5) === "mouse") {
-      mem[0xb220] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
-      mem[0xb221] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
-      mem[0xb222] = e.buttons
+      mem[0xb4f9] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
+      mem[0xb4fa] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
+      mem[0xb4fb] = e.buttons
     }
 
     if (e.type === "keydown") {
-      mem[0xb212] = e.keyCode
+      mem[0xb4f6] = e.keyCode
       if (!e.ctrlKey && !e.metaKey) {
         if (e.key === "Backspace") {
           kbBuffer.push(0x08)
@@ -212,7 +212,7 @@
         if (e.key.length === 1) {
           kbBuffer.push(e.key.charCodeAt(0))
         }
-        // mem[0xb210] = 1
+        // mem[0xb4f4] = 1
       }
     }
     if (!running) kbBuffer.length = 0

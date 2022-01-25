@@ -5,8 +5,8 @@
 (main: ;; must be the first function
   (@vars $argv
     )
-  (store8 (0xb282) (2)) ;; text bg color
-  ;; (store8 (0xb283) (-1)) ;; text fg color
+  (store8 (0xaffe) (2)) ;; text bg color
+  ;; (store8 (0xafff) (-1)) ;; text fg color
   
   (sys (0x13) (@call memstart) (0x400) (2))
 
