@@ -46,6 +46,7 @@
       }
     }
     await loadCPU("cypu.wasm", { pcb: { ram: ram } })
+    hwClock()
     render()
     window.mem = mem
     window.kbBuffer = kbBuffer
@@ -199,7 +200,6 @@
 
     if (e.type === "keyup") {
       mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
-      console.log(e)
     }
     if (e.type === "keydown") {
       mem[0xb4f6] = e.keyCode
@@ -231,6 +231,18 @@
       waitingforuser = false
       running = true
     }
+  }
+
+  function hwClock() {
+    let now = new Date()
+    mem[0xb4e8] = now.getYear()
+    mem[0xb4e9] = now.getMonth()
+    mem[0xb4ea] = now.getDate()
+    mem[0xb4eb] = now.getDay()
+    mem[0xb4ec] = now.getHours()
+    mem[0xb4ed] = now.getMinutes()
+    mem[0xb4ee] = now.getSeconds()
+    setTimeout(hwClock, 1000 - now.getMilliseconds())
   }
 
   function changeSpeed(e) {
