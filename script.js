@@ -9,7 +9,12 @@
     running = false,
     waitingforuser = false,
     sleep = false,
+    kbEnabled = true,
     kbBuffer = []
+
+  let diskInitialized = false,
+    diskInput = [],
+    diskOutput = []
 
   let img,
     canvas = document.querySelector("canvas"),
@@ -37,6 +42,10 @@
     document.querySelector("#stopBtn").addEventListener("click", e => { running = false; clearTimeout(sleep) })
     document.querySelector("#stepBtn").addEventListener("click", e => cpu.run(1))
     document.querySelector("#runBtn").addEventListener("click", e => running = true)
+
+    document.querySelector("#asmTxt").addEventListener("focus", e => kbEnabled = false)
+    document.querySelector("#adrTxt").addEventListener("focus", e => kbEnabled = false)
+    document.querySelector("#speedTxt").addEventListener("focus", e => kbEnabled = false)
 
     for (let i = 0; i < mem.length; i++) {
       mem[i] = 255 * Math.random()
@@ -195,13 +204,13 @@
     if (e.type.slice(0, 5) === "mouse") {
       mem[0xb4f9] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
       mem[0xb4fa] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
-      mem[0xb4fb] = e.buttons
+      if (mem[0xb4fb] = e.buttons) kbEnabled = true
     }
 
     if (e.type === "keyup") {
       mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
     }
-    if (e.type === "keydown") {
+    if (e.type === "keydown" && kbEnabled) {
       mem[0xb4f6] = e.keyCode
       mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
       if (!e.ctrlKey && !e.metaKey) {
@@ -210,6 +219,7 @@
         }
         if (e.key === "Tab") {
           kbBuffer.push(0x09)
+          e.preventDefault()
         }
         if (e.key === "Enter") {
           kbBuffer.push(0x0a)
@@ -233,6 +243,10 @@
     }
   }
 
+  function handleDrive() {
+    //todo
+  }
+
   function hwClock() {
     let now = new Date()
     mem[0xb4e8] = now.getYear()
@@ -242,6 +256,7 @@
     mem[0xb4ec] = now.getHours()
     mem[0xb4ed] = now.getMinutes()
     mem[0xb4ee] = now.getSeconds()
+    mem[0xb4ef] = 0
     setTimeout(hwClock, 1000 - now.getMilliseconds())
   }
 
