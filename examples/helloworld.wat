@@ -8,7 +8,7 @@
   (store8 (0xaffe) (2)) ;; text bg color
   ;; (store8 (0xafff) (-1)) ;; text fg color
   
-  (sys (0x13) (@call memstart) (0x400) (2))
+  (sys (0x03) (@call memstart) (0x400) (2))
 
   (@return (0)) ;; return to dos with no error
 )

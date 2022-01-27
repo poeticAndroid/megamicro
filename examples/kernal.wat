@@ -5,15 +5,20 @@
 (syscall:
   (@vars $call $arg1 $arg2 $arg3 $arg4 $arg5)
 
+  ;; System
   (@if (eq ($call) (0x00)) ( (return (@call reboot ) (0)) ))
+  (@if (eq ($call) (0x02)) ( (return (@call printchar ($arg1)) (0)) ))
+  (@if (eq ($call) (0x03)) ( (return (@call printstr ($arg1)) (0)) ))
 
+  ;; Graphics
   (@if (eq ($call) (0x10)) ( (return (@call pset ($arg1) ($arg2) ($arg3)) (0)) ))
-  (@if (eq ($call) (0x12)) ( (return (@call printchar ($arg1)) (0)) ))
-  (@if (eq ($call) (0x13)) ( (return (@call printstr ($arg1)) (0)) ))
 
   (@if (eq ($call) (0x19)) ( (return (@call scrndepth ) (1)) ))
   (@if (eq ($call) (0x1a)) ( (return (@call scrnwidth ) (1)) ))
   (@if (eq ($call) (0x1b)) ( (return (@call scrnheight ) (1)) ))
+
+  ;; Math
+  (@if (eq ($call) (0x20)) ( (return (@call pow ($arg1) ($arg2) ) (1)) ))
 )
 
 (reboot:
@@ -44,7 +49,7 @@
 )
 
 (typist:
-  (@call printstr (add (@call memstart) (0x20) ))
+  (@call printstr (add (@call memstart) (0x40) ))
   (@while (true) (
     (@while (eqz (load (0xb4f4))) (
       (vsync)
@@ -367,10 +372,10 @@
   (@return (add (8) (here)))
 )
 ;; 0x0
-(@string 0x20 "\t /// Peti-9 ///\n\n")
-;; 0x20
+(@string 0x40 "\t /// Peti-9 ///\t\t\t /// Peti-9 ///\n\n")
+;; 0x40
 (@string 0x10 "\nReady.\n")
-;; 0x30
+;; 0x50
 
 (@skipto 0xb000-0x400)
 (@bytes ;; system font

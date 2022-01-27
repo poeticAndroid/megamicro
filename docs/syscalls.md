@@ -5,21 +5,21 @@
 Call codes
 ----------
 
-\      | 0x sys | 1x gfx
--------|--------|---------------
-**x0** | reboot | pset x y c
-**x1** |        | rect x y w h c
-**x2** |        | printchar c
-**x3** |        | printstr s
-**x4** |        |
-**x5** |        |
-**x6** |        |
-**x7** |        |
-**x8** |        | pget:c x y
-**x9** |        | scrndepth:c
-**xA** |        | scrnwidth:w
-**xB** |        | scrnheight:h
-**xC** |        |
-**xD** |        |
-**xE** |        |
-**xF** |        |
+\      | 0x System             | 1x Graphics     | 2x Math   | 3x Files
+-------|-----------------------|-----------------|-----------|------------------------
+**x0** | reboot                | pset x y c      | pow:n a b | *load:done file dest
+**x1** |                       | *rect x y w h c |           | *save:done file src len
+**x2** | printchar c           |                 |           | *delete:done file
+**x3** | printstr s            |                 |           |
+**x4** | *memcopy src dest len |                 |           | *info:done file dest
+**x5** |                       |                 |           |
+**x6** |                       |                 |           |
+**x7** |                       |                 |           |
+**x8** | *strtoint:int str     | *pget:c x y     |           | *list:done path dest
+**x9** | *inttostr int dest    | scrndepth:c     |           | *cd:done path
+**xA** | *readln dest          | scrnwidth:w     |           | *mkdir:done path
+**xB** |                       | scrnheight:h    |           |
+**xC** |                       |                 |           |
+**xD** |                       |                 |           |
+**xE** |                       |                 |           |
+**xF** |                       |                 |           |
