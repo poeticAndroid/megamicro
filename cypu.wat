@@ -106,218 +106,285 @@
     (local.set $opcode (i32.load8_u (global.get $pc)))
 
     ;; Flow
-    (if (i32.eq (local.get $opcode) (i32.const 0x00)) (then ;; halt
-      (global.set $pc (i32.sub (global.get $pc) (i32.const 1)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x01)) (then ;; sleep
-      (drop (call $pop))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x04)) (then ;; jump
-      (global.set $pc (i32.add (global.get $pc) (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x05)) (then ;; jumpifz
-      (local.set $b (call $pop)) ;; offset
-      (local.set $a (call $pop)) ;; val
-      (if (i32.eqz (local.get $a)) (then
-        (global.set $pc (i32.add (global.get $pc) (local.get $b)))
+    (if (i32.eqz (i32.and (local.get $opcode) (i32.const 0xf0))) (then
+      (if (i32.eqz (i32.and (local.get $opcode) (i32.const 0x08))) (then
+        (if (i32.eq (local.get $opcode) (i32.const 0x00)) (then ;; halt
+          (global.set $pc (i32.sub (global.get $pc) (i32.const 1)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x01)) (then ;; sleep
+          (drop (call $pop))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x04)) (then ;; jump
+          (global.set $pc (i32.add (global.get $pc) (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x05)) (then ;; jumpifz
+          (local.set $b (call $pop)) ;; offset
+          (local.set $a (call $pop)) ;; val
+          (if (i32.eqz (local.get $a)) (then
+            (global.set $pc (i32.add (global.get $pc) (local.get $b)))
+          ))
+          (br 2)
+        ))
+      )(else
+        (if (i32.eq (local.get $opcode) (i32.const 0x08)) (then ;; call
+          (local.set $b (call $pop)) ;; params
+          (local.set $a (call $pop)) ;; offset
+          (call $call (local.get $a) (local.get $b))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x09)) (then ;; sys
+          (local.set $b (call $pop)) ;; params
+          (local.set $a (call $pop)) ;; adr
+          (call $sys (local.get $a) (local.get $b))
+          (global.set $pc (i32.sub (global.get $pc) (i32.const 1)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x0b)) (then ;; return
+          (call $return (call $pop))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x0c)) (then ;; reset
+          (global.set $cs (i32.const 0))
+          (global.set $vs (i32.const 0))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x0d)) (then ;; here
+          (call $push (global.get $pc))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x0e)) (then ;; goto
+          (global.set $pc (i32.sub (call $pop) (i32.const 1)))
+          (br 2)
+        ))
       ))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x08)) (then ;; call
-      (local.set $b (call $pop)) ;; params
-      (local.set $a (call $pop)) ;; offset
-      (call $call (local.get $a) (local.get $b))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x09)) (then ;; sys
-      (local.set $b (call $pop)) ;; params
-      (local.set $a (call $pop)) ;; adr
-      (call $sys (local.get $a) (local.get $b))
-      (global.set $pc (i32.sub (global.get $pc) (i32.const 1)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x0b)) (then ;; return
-      (call $return (call $pop))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x0c)) (then ;; reset
-      (global.set $cs (i32.const 0))
-      (global.set $vs (i32.const 0))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x0d)) (then ;; here
-      (call $push (global.get $pc))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x0e)) (then ;; goto
-      (global.set $pc (i32.sub (call $pop) (i32.const 1)))
     ))
 
     ;; Memory
-    (if (i32.eq (local.get $opcode) (i32.const 0x10)) (then ;; const
-      (call $push (i32.load (i32.add (global.get $pc) (i32.const 1))))
-      (global.set $pc (i32.add (global.get $pc) (i32.const 4)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x11)) (then ;; get
-      (local.set $a (call $pop)) ;; index
-      (if (i32.lt_s (local.get $a) (i32.const 0)) (then
-        (call $push (i32.load (i32.add (global.get $vs) (i32.mul (local.get $a) (i32.const 4)))))
+    (if (i32.eq (i32.and (local.get $opcode) (i32.const 0xf0)) (i32.const 0x10)) (then
+      (if (i32.eqz (i32.and (local.get $opcode) (i32.const 0x08))) (then
+        (if (i32.eq (local.get $opcode) (i32.const 0x10)) (then ;; const
+          (call $push (i32.load (i32.add (global.get $pc) (i32.const 1))))
+          (global.set $pc (i32.add (global.get $pc) (i32.const 4)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x11)) (then ;; get
+          (local.set $a (call $pop)) ;; index
+          (if (i32.lt_s (local.get $a) (i32.const 0)) (then
+            (call $push (i32.load (i32.add (global.get $vs) (i32.mul (local.get $a) (i32.const 4)))))
+          )(else
+            (call $push (i32.load (i32.add (global.get $cs) (i32.mul (local.get $a) (i32.const 4)))))
+          ))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x13)) (then ;; load
+          (call $push (i32.load (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x14)) (then ;; load16u
+          (call $push (i32.load16_u (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x15)) (then ;; load8u
+          (call $push (i32.load8_u (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x16)) (then ;; load16s
+          (call $push (i32.load16_s (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x17)) (then ;; load8s
+          (call $push (i32.load8_s (call $pop)))
+          (br 2)
+        ))
       )(else
-        (call $push (i32.load (i32.add (global.get $cs) (i32.mul (local.get $a) (i32.const 4)))))
+        (if (i32.eq (local.get $opcode) (i32.const 0x18)) (then ;; drop
+          (drop (call $pop))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x19)) (then ;; set
+          (local.set $b (call $pop)) ;; val
+          (local.set $a (call $pop)) ;; index
+          (if (i32.lt_s (local.get $a) (i32.const 0)) (then
+            (i32.store (i32.add (global.get $vs) (i32.mul (local.get $a) (i32.const 4))) (local.get $b))
+          )(else
+            (i32.store (i32.add (global.get $cs) (i32.mul (local.get $a) (i32.const 4))) (local.get $b))
+          ))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x1b)) (then ;; store
+          (local.set $b (call $pop)) ;; val
+          (local.set $a (call $pop)) ;; adr
+          (i32.store (local.get $a) (local.get $b))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x1c)) (then ;; store16
+          (local.set $b (call $pop)) ;; val
+          (local.set $a (call $pop)) ;; adr
+          (i32.store16 (local.get $a) (local.get $b))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x1d)) (then ;; store8
+          (local.set $b (call $pop)) ;; val
+          (local.set $a (call $pop)) ;; adr
+          (i32.store8 (local.get $a) (local.get $b))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x1e)) (then ;; stacksize
+          (call $push (global.get $vs))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x1f)) (then ;; memsize
+          (call $push (i32.mul (i32.const 0x10000) (memory.size)))
+          (br 2)
+        ))
       ))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x13)) (then ;; load
-      (call $push (i32.load (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x14)) (then ;; load16u
-      (call $push (i32.load16_u (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x15)) (then ;; load8u
-      (call $push (i32.load8_u (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x16)) (then ;; load16s
-      (call $push (i32.load16_s (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x17)) (then ;; load8s
-      (call $push (i32.load8_s (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x18)) (then ;; drop
-      (drop (call $pop))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x19)) (then ;; set
-      (local.set $b (call $pop)) ;; val
-      (local.set $a (call $pop)) ;; index
-      (if (i32.lt_s (local.get $a) (i32.const 0)) (then
-        (i32.store (i32.add (global.get $vs) (i32.mul (local.get $a) (i32.const 4))) (local.get $b))
-      )(else
-        (i32.store (i32.add (global.get $cs) (i32.mul (local.get $a) (i32.const 4))) (local.get $b))
-      ))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x1b)) (then ;; store
-      (local.set $b (call $pop)) ;; val
-      (local.set $a (call $pop)) ;; adr
-      (i32.store (local.get $a) (local.get $b))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x1c)) (then ;; store16
-      (local.set $b (call $pop)) ;; val
-      (local.set $a (call $pop)) ;; adr
-      (i32.store16 (local.get $a) (local.get $b))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x1d)) (then ;; store8
-      (local.set $b (call $pop)) ;; val
-      (local.set $a (call $pop)) ;; adr
-      (i32.store8 (local.get $a) (local.get $b))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x1e)) (then ;; stacksize
-      (call $push (global.get $vs))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x1f)) (then ;; memsize
-      (call $push (i32.mul (i32.const 0x10000) (memory.size)))
     ))
 
     ;; Math
-    (if (i32.eq (local.get $opcode) (i32.const 0x20)) (then ;; add
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.add (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x21)) (then ;; sub
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.sub (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x22)) (then ;; mult
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.mul (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x23)) (then ;; div
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.div_s (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x24)) (then ;; rem
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.rem_s (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x27)) (then ;; ftoi
-      (call $push (i32.trunc_f32_s (call $fpop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x28)) (then ;; fadd
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $fpush (f32.add (local.get $fa) (local.get $fb)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x29)) (then ;; fsub
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $fpush (f32.sub (local.get $fa) (local.get $fb)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x2a)) (then ;; fmult
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $fpush (f32.mul (local.get $fa) (local.get $fb)))
-    )) 
-    (if (i32.eq (local.get $opcode) (i32.const 0x2b)) (then ;; fdiv
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $fpush (f32.div (local.get $fa) (local.get $fb)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x2e)) (then ;; uitof
-      (call $fpush (f32.convert_i32_u (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x2f)) (then ;; sitof
-      (call $fpush (f32.convert_i32_s (call $pop)))
+    (if (i32.eq (i32.and (local.get $opcode) (i32.const 0xf0)) (i32.const 0x20)) (then
+      (if (i32.eqz (i32.and (local.get $opcode) (i32.const 0x08))) (then
+        (if (i32.eq (local.get $opcode) (i32.const 0x20)) (then ;; add
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.add (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x21)) (then ;; sub
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.sub (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x22)) (then ;; mult
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.mul (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x23)) (then ;; div
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.div_s (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x24)) (then ;; rem
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.rem_s (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x27)) (then ;; ftoi
+          (call $push (i32.trunc_f32_s (call $fpop)))
+          (br 2)
+        ))
+      )(else
+        (if (i32.eq (local.get $opcode) (i32.const 0x28)) (then ;; fadd
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $fpush (f32.add (local.get $fa) (local.get $fb)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x29)) (then ;; fsub
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $fpush (f32.sub (local.get $fa) (local.get $fb)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x2a)) (then ;; fmult
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $fpush (f32.mul (local.get $fa) (local.get $fb)))
+          (br 2)
+        )) 
+        (if (i32.eq (local.get $opcode) (i32.const 0x2b)) (then ;; fdiv
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $fpush (f32.div (local.get $fa) (local.get $fb)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x2e)) (then ;; uitof
+          (call $fpush (f32.convert_i32_u (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x2f)) (then ;; sitof
+          (call $fpush (f32.convert_i32_s (call $pop)))
+          (br 2)
+        ))
+      ))
     ))
 
     ;; Logic
-    (if (i32.eq (local.get $opcode) (i32.const 0x30)) (then ;; eq
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.eq (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x31)) (then ;; lt
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.lt_s (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x32)) (then ;; gt
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.gt_s (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x33)) (then ;; eqz
-      (call $push (i32.eqz (call $pop)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x34)) (then ;; and
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.and (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x35)) (then ;; or
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.or (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x36)) (then ;; xor
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.xor (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x37)) (then ;; rot
-      (local.set $b (call $pop)) ;; b
-      (local.set $a (call $pop)) ;; a
-      (call $push (i32.rotl (local.get $a) (local.get $b)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x38)) (then ;; feq
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $push (f32.eq (local.get $fa) (local.get $fb)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x39)) (then ;; flt
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $push (f32.lt (local.get $fa) (local.get $fb)))
-    ))
-    (if (i32.eq (local.get $opcode) (i32.const 0x3a)) (then ;; fgt
-      (local.set $fb (call $fpop)) ;; b
-      (local.set $fa (call $fpop)) ;; a
-      (call $push (f32.gt (local.get $fa) (local.get $fb)))
+    (if (i32.eq (i32.and (local.get $opcode) (i32.const 0xf0)) (i32.const 0x30)) (then
+      (if (i32.eqz (i32.and (local.get $opcode) (i32.const 0x08))) (then
+        (if (i32.eq (local.get $opcode) (i32.const 0x30)) (then ;; eq
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.eq (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x31)) (then ;; lt
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.lt_s (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x32)) (then ;; gt
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.gt_s (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x33)) (then ;; eqz
+          (call $push (i32.eqz (call $pop)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x34)) (then ;; and
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.and (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x35)) (then ;; or
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.or (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x36)) (then ;; xor
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.xor (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x37)) (then ;; rot
+          (local.set $b (call $pop)) ;; b
+          (local.set $a (call $pop)) ;; a
+          (call $push (i32.rotl (local.get $a) (local.get $b)))
+          (br 2)
+        ))
+      )(else
+        (if (i32.eq (local.get $opcode) (i32.const 0x38)) (then ;; feq
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $push (f32.eq (local.get $fa) (local.get $fb)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x39)) (then ;; flt
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $push (f32.lt (local.get $fa) (local.get $fb)))
+          (br 2)
+        ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x3a)) (then ;; fgt
+          (local.set $fb (call $fpop)) ;; b
+          (local.set $fa (call $fpop)) ;; a
+          (call $push (f32.gt (local.get $fa) (local.get $fb)))
+          (br 2)
+        ))
+      ))
     ))
 
     (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
