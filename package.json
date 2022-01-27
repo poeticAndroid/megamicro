@@ -4,8 +4,8 @@
   "description": "An attempt to create my own fantasy cpu",
   "main": "script.js",
   "scripts": {
-    "build": "wat2wasm cypu.wat",
-    "watch": "sane \"npm run build\" . --glob=cypu.wat"
+    "build": "wat2wasm cpu.wat",
+    "watch": "sane \"npm run build\" . --glob=cpu.wat"
   },
   "keywords": [
     "fantasy-console",

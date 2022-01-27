@@ -54,7 +54,7 @@
         mem[i] = mem[i] ^ mem[2]
       }
     }
-    await loadCPU("cypu.wasm", { pcb: { ram: ram } })
+    await loadCPU("cpu.wasm", { pcb: { ram: ram } })
     hwClock()
     render()
     window.mem = mem
