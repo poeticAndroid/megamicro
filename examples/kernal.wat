@@ -23,8 +23,15 @@
 
 (reboot:
   (reset)
-  (@vars $adr)
+  (@vars $adr $val)
   (sleep (0x400))
+  (set $adr (0xb400))
+  (set $val (0x00010203))
+  (@while (lt ($adr) (0x10000)) (
+    (store ($adr) ($val))
+    (set $val (add ($val) (0x04040404)))
+    (set $adr (add ($adr) (4)))
+  ))
   (set $adr (0xb400))
   (@while (lt ($adr) (0x10000)) (
     (store ($adr) (0))
@@ -40,6 +47,7 @@
 )
 
 (intro:
+  (store (0xaffc) (0)) ;; text fg color
   (store8 (0xafff) (-1)) ;; text fg color
   (store8 (0xb4f8) (1)) ;; display mode
   (@call printstr (@call memstart))
