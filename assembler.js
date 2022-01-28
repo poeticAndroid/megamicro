@@ -24,7 +24,7 @@
     tokens.push(")")
     encode()
 
-    return trimSize(bin)
+    return window.bin= trimSize(bin)
   }
 
   function encode() {
