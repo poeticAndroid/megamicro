@@ -11,6 +11,8 @@
   (@if (eq ($call) (0x03)) ( (return (@call printstr ($arg1)) (0)) ))
   (@if (eq ($call) (0x04)) ( (return (@call memcopy ($arg1) ($arg2) ($arg3)) (0)) ))
   (@if (eq ($call) (0x05)) ( (return (@call fill ($arg1) ($arg2) ($arg3)) (0)) ))
+  (@if (eq ($call) (0x08)) ( (return (@call strtoint ($arg1) ($arg2)) (1)) ))
+  (@if (eq ($call) (0x09)) ( (return (@call inttostr ($arg1) ($arg2) ($arg3)) (0)) ))
 
   ;; Graphics
   (@if (eq ($call) (0x10)) ( (return (@call pset ($arg1) ($arg2) ($arg3)) (0)) ))
@@ -50,6 +52,10 @@
   (store8 (0xb4f8) (1)) ;; display mode
   (@call printstr (@call memstart))
   (store8 (0xb4f8) (0)) ;; display mode
+  (@call inttostr (sub (memsize) (0x10000)) (10) (add (@call memstart) (0x90) ) )
+  (@call printstr (add (@call memstart) (0x90) ))
+  (@call printstr (add (@call memstart) (0x70) ))
+  (@call printchar (0x0a))
   (sleep (0x400))
   (@return)
 )
@@ -324,6 +330,79 @@
   (@return)
 )
 
+(strtoint:
+  (@vars $str $base
+    $int $fact $i $digs)
+  (set $digs (add (@call memstart) (0x50)))
+  (set $fact (1))
+  (@if (eq (load8u ($str)) (0x2d) ) ( ;; minus
+    (set $fact (-1))
+    (set $str (add ($str) (1)))
+  ))
+  (@while (load8u ($str)) (
+    (@if (eq ($base) (10) ) (
+      (@if (eq (load8u ($str)) (0x62) ) ( ;; b
+        (set $base (2))
+      ))
+      (@if (eq (load8u ($str)) (0x6f) ) ( ;; o
+        (set $base (8))
+      ))
+      (@if (eq (load8u ($str)) (0x78) ) ( ;; x
+        (set $base (16))
+      ))
+    ))
+    (set $i (0))
+    (@while (lt ($i) ($base) ) (
+      (@if (or 
+        (eq (load8u ($str)) (load8u (add ($digs) ($i) )) )
+        (eq (add (load8u ($str)) (0x20) ) (load8u (add ($digs) ($i) )) )
+      ) (
+        (set $int (mult ($int) ($base) ))
+        (set $int (add ($int) ($i) ))
+        (set $i ($base))
+      ))
+      (set $i (add ($i) (1) ))
+    ))
+    (@if (eq ($i) ($base)) (
+      (@return (mult ($int) ($fact)))
+    ))
+    (set $str (add ($str) (1)))
+  ))
+  (@return (mult ($int) ($fact)))
+)
+
+(inttostr:
+  (@vars $int $base $dest
+    $start $len $digs)
+  (set $digs (add (@call memstart) (0x50)))
+  (@if (lt ($int) (0) ) ( ;; minus
+    (store8 ($dest) (0x2d) )
+    (set $dest (add ($dest) (1) ))
+    (set $int (mult ($int) (-1) ))
+  ))
+  (set $start ($dest))
+  (@while ($int) (
+    (store8 ($dest) (load8u (add ($digs) (rem ($int) ($base) ) ) ) )
+    (set $dest (add ($dest) (1) ))
+    (set $int (div ($int) ($base) ))
+  ))
+  (@if (eq ($start) ($dest) ) (
+    (store8 ($dest) (0x30) )
+    (set $dest (add ($dest) (1) ))
+  ))
+  (store8 ($dest) (0) )
+  (set $len (div (sub ($dest) ($start) ) (2) ) )
+  (@while ($len) (
+    (set $dest (sub ($dest) (1) ))
+    (set $int (load8u ($dest)))
+    (store8 ($dest) (load8u ($start) ) )
+    (store8 ($start) ($int) )
+    (set $start (add ($start) (1) ))
+    (set $len (sub ($len) (1) ))
+  ))
+  (@return)
+)
+
 (scroll:
   (@vars $px
     $adr $offset $end)
@@ -441,8 +520,13 @@
   (@return (add (8) (here)))
 )
 ;; 0x0
-(@string 0x40 "\t /// Peti-9 ///\t\t\t /// Peti-9 ///\n\n")
+(@string 0x40 "\t /// Peti-9 ///\t\t\t /// Peti-9 ///\n\n\n")
 ;; 0x40
 (@string 0x10 "\nReady.\n")
 ;; 0x50
-
+(@string 0x20 "0123456789abcdefghijklmnopqrstuvwxyz")
+;; 0x70
+(@string 0x20 " bytes free.\n")
+;; 0x90
+(@string 0x100 "{temporary string}")
+;; 0x190
