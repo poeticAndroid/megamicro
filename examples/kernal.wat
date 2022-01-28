@@ -9,6 +9,8 @@
   (@if (eq ($call) (0x00)) ( (return (@call reboot ) (0)) ))
   (@if (eq ($call) (0x02)) ( (return (@call printchar ($arg1)) (0)) ))
   (@if (eq ($call) (0x03)) ( (return (@call printstr ($arg1)) (0)) ))
+  (@if (eq ($call) (0x04)) ( (return (@call memcopy ($arg1) ($arg2) ($arg3)) (0)) ))
+  (@if (eq ($call) (0x05)) ( (return (@call fill ($arg1) ($arg2) ($arg3)) (0)) ))
 
   ;; Graphics
   (@if (eq ($call) (0x10)) ( (return (@call pset ($arg1) ($arg2) ($arg3)) (0)) ))
@@ -32,11 +34,7 @@
     (set $val (add ($val) (0x04040404)))
     (set $adr (add ($adr) (4)))
   ))
-  (set $adr (0xb400))
-  (@while (lt ($adr) (0x10000)) (
-    (store ($adr) (0))
-    (set $adr (add ($adr) (4)))
-  ))
+  (@call fill (0) (0xb400) (0x10000-0xb400))
 
   (@call intro)
   (@if (eq (load8u (0x10000)) (0x10) ) (
@@ -271,6 +269,57 @@
   (@while (load8u ($str)) (
     (@call printchar (load8u ($str)))
     (set $str (add ($str) (1)))
+  ))
+  (@return)
+)
+
+(memcopy:
+  (@vars $src $dest $len)
+  (@if (gt ($src) ($dest)) (
+    (@while (gt ($len) (3)) (
+      (store ($dest) (load ($src)))
+      (set $src (add ($src) (4)))
+      (set $dest (add ($dest) (4)))
+      (set $len (sub ($len) (4)))
+    ))
+    (@while ($len) (
+      (store8 ($dest) (load ($src)))
+      (set $src (add ($src) (1)))
+      (set $dest (add ($dest) (1)))
+      (set $len (sub ($len) (1)))
+    ))
+  ))
+  (@if (lt ($src) ($dest)) (
+    (set $src (add ($src) ($len)))
+    (set $dest (add ($dest) ($len)))
+    (@while (gt ($len) (3)) (
+      (set $src (sub ($src) (4)))
+      (set $dest (sub ($dest) (4)))
+      (store ($dest) (load ($src)))
+      (set $len (sub ($len) (4)))
+    ))
+    (@while ($len) (
+      (set $src (sub ($src) (1)))
+      (set $dest (sub ($dest) (1)))
+      (store8 ($dest) (load ($src)))
+      (set $len (sub ($len) (1)))
+    ))
+  ))
+  (@return)
+)
+
+(fill:
+  (@vars $val $dest $len)
+  (@while (gt ($len) (3)) (
+    (store ($dest) ($val))
+    (set $dest (add ($dest) (4)))
+    (set $len (sub ($len) (4)))
+  ))
+  (@while ($len) (
+    (store8 ($dest) ($val))
+    (set $val (rot ($val) (8)))
+    (set $dest (add ($dest) (1)))
+    (set $len (sub ($len) (1)))
   ))
   (@return)
 )

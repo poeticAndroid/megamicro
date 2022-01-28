@@ -34,7 +34,23 @@
     canvas.addEventListener("mouseup", onUser)
     canvas.addEventListener("mousemove", onUser)
 
-    document.querySelector("#asmTxt").value = localStorage.getItem("rom.asm") || ";;Peti asm\n\n(main:\n  (@vars $a)\n  \n  (@return (0))\n)\n"
+    document.querySelector("#asmTxt").value = localStorage.getItem("program.asm") || `;;Peti asm
+    ;; https://github.com/poeticAndroid/peti
+
+    (main: ;; must be the first function
+      (@vars $argv
+        )
+      (sys (0x03) (@call memstart) (0x400) (2)) ;; printstr syscall
+    
+      (@return (0)) ;; return to dos with no error
+    )
+    
+    (memstart: ;; must be the last function
+      (@return (add (8) (here)))
+    )
+
+    (@string 0xe "Hello world!\\n")
+    `.replaceAll("\n    ", "\n")
     document.querySelector("#adrTxt").value = localStorage.getItem("?adr") || "0x10000"
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "16"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()
@@ -294,7 +310,7 @@
     cpu.setCS(0)
     cpu.setVS(0)
     console.log(dumpMem(offset, bin.length))
-    localStorage.setItem("rom.asm", asm)
+    localStorage.setItem("program.asm", asm)
     localStorage.setItem("?adr", document.querySelector("#adrTxt").value)
   }
 
