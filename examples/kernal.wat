@@ -520,7 +520,7 @@
   (@return (add (8) (here)))
 )
 ;; 0x0
-(@string 0x40 "\t /// Peti-9 ///\t\t\t /// Peti-9 ///\n\n\n")
+(@string 0x40 "\t /// Peti8\x20 ///\t\t\t /// Peti R ///\n\n\n")
 ;; 0x40
 (@string 0x10 "\nReady.\n")
 ;; 0x50
