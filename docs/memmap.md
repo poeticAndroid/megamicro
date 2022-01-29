@@ -7,7 +7,7 @@
 **0xb000**  | system font  | _(1 KB)_        |                  |
 ...         |              |                 |                  |
 **0xb4e8**  | year         | month           | date             | weekday
-**0xb4ec**  | hour         | minute          | second           | set
+**0xb4ec**  | hour         | minute          | second           | set*
 **0xb4f0**  | disk open*   | disk input new* | disk output new* |
 **0xb4f4**  | char queue   | key char        | key code         | key mods
 **0xb4f8**  | display mode | mouse x         | mouse y          | mouse buttons
