@@ -47,16 +47,27 @@
 )
 
 (intro:
+  (@vars
+    $sec $ins)
   (store (0xaffc) (0)) ;; text fg color
   (store8 (0xafff) (-1)) ;; text fg color
   (store8 (0xb4f8) (1)) ;; display mode
   (@call printstr (@call memstart))
   (store8 (0xb4f8) (0)) ;; display mode
+  (set $sec (load8u (0xb4ee)))
+  (@while (eq ($sec) (load8u (0xb4ee)) ) (noop))
+  (set $sec (load8u (0xb4ee)))
+  (@while (eq ($sec) (load8u (0xb4ee)) ) (
+    (set $ins (add ($ins) (15) ))
+  ))
+  (@call inttostr ($ins) (10) (add (@call memstart) (0x90) ) )
+  (@call printstr (add (@call memstart) (0x90) ))
+  (@call printstr (add (@call memstart) (0x190) )) ;; ips
   (@call inttostr (sub (memsize) (0x10000)) (10) (add (@call memstart) (0x90) ) )
   (@call printstr (add (@call memstart) (0x90) ))
-  (@call printstr (add (@call memstart) (0x70) ))
+  (@call printstr (add (@call memstart) (0x70) )) ;; bytes free
   (@call printchar (0x0a))
-  (sleep (0x400))
+  (sleep (0x100))
   (@return)
 )
 
@@ -530,3 +541,5 @@
 ;; 0x90
 (@string 0x100 "{temporary string}")
 ;; 0x190
+(@string 0x20 " ips.\n")
+;; 0x1b0
