@@ -128,6 +128,10 @@
           ))
           (br 2)
         ))
+        (if (i32.eq (local.get $opcode) (i32.const 0x07)) (then ;; cpuver
+          (call $push (i32.const 1))
+          (br 2)
+        ))
       )(else
         (if (i32.eq (local.get $opcode) (i32.const 0x08)) (then ;; call
           (local.set $b (call $pop)) ;; params

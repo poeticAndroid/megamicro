@@ -10,7 +10,7 @@ CPU instructions
 **x4** | jump offset                   | load16u:val adr | rem:n a b       | and:bool a b
 **x5** | jumpifz val offset            | load8u:val adr  |                 | or:bool a b
 **x6** |                               | load16s:val adr |                 | xor:bool a b
-**x7** |                               | load8s:val adr  | ftoi:int float  | rot:bool a b
+**x7** | cpuver:ver                    | load8s:val adr  | ftoi:int float  | rot:bool a b
 **x8** | call:results... offset params | drop val        | fadd:n a b      | feq:bool a b
 **x9** | sys:results... adr params     | set index val   | fsub:n a b      | flt:bool a b
 **xA** |                               |                 | fmult:n a b     | fgt:bool a b

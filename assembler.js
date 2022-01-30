@@ -24,7 +24,7 @@
     tokens.push(")")
     encode()
 
-    return window.bin= trimSize(bin)
+    return window.bin = trimSize(bin)
   }
 
   function encode() {
@@ -209,7 +209,7 @@
 
   const _ = null
   const opcodes = [
-    "halt", "sleep", "vsync", _, "jump", "jumpifz", _, _, "call", "sys", _, "return", "reset", "here", "goto", "noop",
+    "halt", "sleep", "vsync", _, "jump", "jumpifz", _, "cpuver", "call", "sys", _, "return", "reset", "here", "goto", "noop",
     "const", "get", _, "load", "load16u", "load8u", "load16s", "load8s", "drop", "set", _, "store", "store16", "store8", "stacksize", "memsize",
     "add", "sub", "mult", "div", "rem", _, _, "ftoi", "fadd", "fsub", "fmult", "fdiv", _, _, "uitof", "sitof",
     "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
