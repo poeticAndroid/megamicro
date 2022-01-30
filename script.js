@@ -35,7 +35,7 @@
     canvas.addEventListener("mousemove", onUser)
 
     document.querySelector("#asmTxt").value = localStorage.getItem("program.asm") || `;;Peti asm
-    ;; https://github.com/poeticAndroid/peti
+    ;; docs at https://github.com/poeticAndroid/peti
 
     (main: ;; must be the first function
       (@vars $argv

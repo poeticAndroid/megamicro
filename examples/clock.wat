@@ -3,6 +3,7 @@
 (main: ;; must be the first function
   (@vars $argv
     $i $cache)
+  (set $i (-1))
   (set $cache (add (@call memstart) (0x400) ) )
   (@while (true) (
     (@while (lt ($i) (7) ) (
@@ -36,3 +37,4 @@
 )
 (@string 0x100 "Jan\0Feb\0Mar\0Apr\0May\0Jun\0Jul\0Aug\0Sep\0Oct\0Nov\0Dec\0")
 (@string 0x100 "Sun\0Mon\0Tue\0Wed\0Thu\0Fri\0Sat\0")
+(@string 0x400 "\0")
