@@ -49,7 +49,7 @@
 (intro:
   (@vars
     $sec $ins)
-  (store (0xaffc) (0)) ;; text fg color
+  (store (0xaffc) (0))
   (store8 (0xafff) (-1)) ;; text fg color
   (store8 (0xb4f8) (1)) ;; display mode
   (@call printstr (@call memstart))
@@ -80,141 +80,10 @@
   (sys (0x02) (0x81) (0x400) (2))
   (sys (0x02) (0x08) (0x400) (2))
   (@while (true) (
-    (@while (eqz (load (0xb4f4))) (
-      (vsync)
-    ))
-    (@if (lt (load8u (0xb4f5)) (0x20)) (
-      (sys (0x02) (0x20) (0x400) (2))
-      (sys (0x02) (0x08) (0x400) (2))
-    ))
-    (@call printchar (load8u (0xb4f5)) )
-    (sys (0x02) (add (0x82) (load8u (0xb4f7)) ) (0x400) (2))
-    (sys (0x02) (0x08) (0x400) (2))
-    (store (0xb4f4) (0))
+    (@call printchar (0x3e))
+    (@call printchar (0x20))
+    (@call readln (0x100) (add (@call memstart) (0x90) ))
   ))
-  (@return)
-)
-
-(pset:
-  (@vars $x $y $c
-    $adr $bit
-  )
-  (@if (lt ($x) (0)) ( (@return) ))
-  (@if (lt ($y) (0)) ( (@return) ))
-
-  (jump (mult (and (7) (load8u (0xb4f8))) (0xc6) ))
-  ;; mode 0
-  (@if (gt ($x) (511)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (287)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (512) ($y))) ) ;; width
-  (set $bit (mult (1) (rem ($adr) (8) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (8) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-1)) ) ;; 8 - bits/pixel
-    (and (-2) ) ;; -colors
-    (xor (and ($c) (1)) ) ;; colors-1
-    (rot (sub (8-1) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-  ;; mode 1
-  (@if (gt ($x) (511)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (512) ($y))) ) ;; width
-  (set $bit (mult (2) (rem ($adr) (4) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (4) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-2)) ) ;; 8 - bits/pixel
-    (and (-4) ) ;; -colors
-    (xor (and ($c) (3)) ) ;; colors-1
-    (rot (sub (8-2) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-  ;; mode 2
-  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
-  (set $bit (mult (4) (rem ($adr) (2) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (2) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-4)) ) ;; 8 - bits/pixel
-    (and (-16) ) ;; -colors
-    (xor (and ($c) (15)) ) ;; colors-1
-    (rot (sub (8-4) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-  ;; mode 3
-  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (71)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
-  (set $bit (mult (8) (rem ($adr) (1) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (1) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-8)) ) ;; 8 - bits/pixel
-    (and (-256) ) ;; -colors
-    (xor (and ($c) (255)) ) ;; colors-1
-    (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-
-  ;; mode 4
-  (@if (gt ($x) (511)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (287)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (512) ($y))) ) ;; width
-  (set $bit (mult (1) (rem ($adr) (8) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (8) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-1)) ) ;; 8 - bits/pixel
-    (and (-2) ) ;; -colors
-    (xor (and ($c) (1)) ) ;; colors-1
-    (rot (sub (8-1) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-  ;; mode 5
-  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (287)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
-  (set $bit (mult (2) (rem ($adr) (4) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (4) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-2)) ) ;; 8 - bits/pixel
-    (and (-4) ) ;; -colors
-    (xor (and ($c) (3)) ) ;; colors-1
-    (rot (sub (8-2) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-  ;; mode 6
-  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
-  (set $bit (mult (4) (rem ($adr) (2) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (2) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-4)) ) ;; 8 - bits/pixel
-    (and (-16) ) ;; -colors
-    (xor (and ($c) (15)) ) ;; colors-1
-    (rot (sub (8-4) ($bit)) ) ;; 8 - bits/pixel
-  )
-  (@return)
-  ;; mode 7
-  (@if (gt ($x) (127)) ( (@return) )) ;; width-1
-  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
-  (set $adr (add ($x) (mult (128) ($y))) ) ;; width
-  (set $bit (mult (8) (rem ($adr) (1) ) )) ;; bits/pixel, pixels/byte
-  (set $adr (add (0xb800) (div ($adr) (1) ) ) ) ;; pixels/byte
-  (store8 ($adr)
-    (load8u ($adr))
-    (rot (sub ($bit) (8-8)) ) ;; 8 - bits/pixel
-    (and (-256) ) ;; -colors
-    (xor (and ($c) (255)) ) ;; colors-1
-    (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
-  )
   (@return)
 )
 
@@ -414,6 +283,175 @@
   (@return)
 )
 
+(readln:
+  (@vars $max $dest
+    $len)
+  (store8 ($dest) (0))
+  (@while (lt ($len) ($max)) (
+    (@call printchar (0x20))
+    (@call printchar (0x08))
+    (store8 (0xaffe) (xor (load8u (0xaffe)) (-1) ) )
+    (@call printchar (0x20) )
+    (store8 (0xaffe) (xor (load8u (0xaffe)) (-1) ) )
+    (@call printchar (0x08) )
+    (@while (eqz (load (0xb4f4))) (
+      (vsync)
+    ))
+    (@if (lt (load8u (0xb4f5)) (0x20)) (
+      (@call printchar (0x20))
+      (@call printchar (0x08))
+      (@if (eq (load8u (0xb4f5)) (0x08)) (
+        (@if (gt ($len) (0)) (
+          (set $len (sub ($len) (1)))
+          (store8 (add ($dest) ($len) ) (0))
+          (@call printchar (0x08))
+        )(
+          (@call printchar (0x07)) ;; bell
+        ))
+      ))
+      (@if (eq (load8u (0xb4f5)) (0x0a)) (
+        (set $len ($max))
+      ))
+    )(
+      (@if (lt ($len) (sub ($max) (1) )) (
+        (store8 (add ($dest) ($len) ) (load8u (0xb4f5)))
+        (set $len (add ($len) (1)))
+        (store8 (add ($dest) ($len) ) (0))
+        (@call printchar (load8u (0xb4f5)) )
+      )(
+        (@call printchar (0x07)) ;; bell
+      ))
+    ))
+    (store (0xb4f4) (0))
+  ))
+
+  (@call printchar (0x0a))
+  (@return)
+)
+
+(pset:
+  (@vars $x $y $c
+    $adr $bit
+  )
+  (@if (lt ($x) (0)) ( (@return) ))
+  (@if (lt ($y) (0)) ( (@return) ))
+
+  (jump (mult (and (7) (load8u (0xb4f8))) (0xc6) ))
+  ;; mode 0
+  (@if (gt ($x) (511)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (287)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (512) ($y))) ) ;; width
+  (set $bit (mult (1) (rem ($adr) (8) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (8) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-1)) ) ;; 8 - bits/pixel
+    (and (-2) ) ;; -colors
+    (xor (and ($c) (1)) ) ;; colors-1
+    (rot (sub (8-1) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+  ;; mode 1
+  (@if (gt ($x) (511)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (512) ($y))) ) ;; width
+  (set $bit (mult (2) (rem ($adr) (4) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (4) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-2)) ) ;; 8 - bits/pixel
+    (and (-4) ) ;; -colors
+    (xor (and ($c) (3)) ) ;; colors-1
+    (rot (sub (8-2) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+  ;; mode 2
+  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
+  (set $bit (mult (4) (rem ($adr) (2) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (2) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-4)) ) ;; 8 - bits/pixel
+    (and (-16) ) ;; -colors
+    (xor (and ($c) (15)) ) ;; colors-1
+    (rot (sub (8-4) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+  ;; mode 3
+  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (71)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
+  (set $bit (mult (8) (rem ($adr) (1) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (1) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-8)) ) ;; 8 - bits/pixel
+    (and (-256) ) ;; -colors
+    (xor (and ($c) (255)) ) ;; colors-1
+    (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+
+  ;; mode 4
+  (@if (gt ($x) (511)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (287)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (512) ($y))) ) ;; width
+  (set $bit (mult (1) (rem ($adr) (8) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (8) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-1)) ) ;; 8 - bits/pixel
+    (and (-2) ) ;; -colors
+    (xor (and ($c) (1)) ) ;; colors-1
+    (rot (sub (8-1) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+  ;; mode 5
+  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (287)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
+  (set $bit (mult (2) (rem ($adr) (4) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (4) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-2)) ) ;; 8 - bits/pixel
+    (and (-4) ) ;; -colors
+    (xor (and ($c) (3)) ) ;; colors-1
+    (rot (sub (8-2) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+  ;; mode 6
+  (@if (gt ($x) (255)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (256) ($y))) ) ;; width
+  (set $bit (mult (4) (rem ($adr) (2) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (2) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-4)) ) ;; 8 - bits/pixel
+    (and (-16) ) ;; -colors
+    (xor (and ($c) (15)) ) ;; colors-1
+    (rot (sub (8-4) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+  ;; mode 7
+  (@if (gt ($x) (127)) ( (@return) )) ;; width-1
+  (@if (gt ($y) (143)) ( (@return) )) ;; height-1
+  (set $adr (add ($x) (mult (128) ($y))) ) ;; width
+  (set $bit (mult (8) (rem ($adr) (1) ) )) ;; bits/pixel, pixels/byte
+  (set $adr (add (0xb800) (div ($adr) (1) ) ) ) ;; pixels/byte
+  (store8 ($adr)
+    (load8u ($adr))
+    (rot (sub ($bit) (8-8)) ) ;; 8 - bits/pixel
+    (and (-256) ) ;; -colors
+    (xor (and ($c) (255)) ) ;; colors-1
+    (rot (sub (8-8) ($bit)) ) ;; 8 - bits/pixel
+  )
+  (@return)
+)
+
 (scroll:
   (@vars $px
     $adr $offset $end)
@@ -533,7 +571,7 @@
 ;; 0x0
 (@string 0x40 "\t /// Peti8\x20 ///\t\t\t /// Peti R ///\n\n\n")
 ;; 0x40
-(@string 0x10 "\nReady.\n")
+(@string 0x10 "\nReady.\n\n")
 ;; 0x50
 (@string 0x20 "0123456789abcdefghijklmnopqrstuvwxyz")
 ;; 0x70

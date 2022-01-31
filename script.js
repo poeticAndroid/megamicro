@@ -258,9 +258,6 @@
           if (e.key === "Escape") {
             kbBuffer.push(0x1b)
           }
-          if (e.key === "Delete") {
-            kbBuffer.push(0x7f)
-          }
           if (e.key.length === 1) {
             kbBuffer.push(e.key.charCodeAt(0))
           }

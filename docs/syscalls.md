@@ -16,10 +16,12 @@ Call codes
 **x6** |                        |                 |           |
 **x7** |                        |                 |           |
 **x8** | strtoint:int str base  | *pget:c x y     |           | *list:done path dest
-**x9** | inttostr int base dest | scrndepth:c     |           | *cd:done path
-**xA** | *readln dest           | scrnwidth:w     |           | *mkdir:done path
+**x9** | inttostr int base dest | scrndepth:c     |           | *mkdir:done path
+**xA** |                        | scrnwidth:w     |           | *cd:done path
 **xB** |                        | scrnheight:h    |           |
-**xC** |                        |                 |           |
+**xC** | readln max dest        |                 |           |
 **xD** |                        |                 |           |
 **xE** |                        |                 |           |
 **xF** |                        |                 |           |
+
+*not yet implemented
