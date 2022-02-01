@@ -1,3 +1,6 @@
+Display modes
+=============
+
 **Display memory:** 18 KB
 
 Mode  | Bits per pixel | Pixels per byte | Total pixels | Colors | Width | Height | Pixel ratio
