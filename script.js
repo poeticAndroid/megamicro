@@ -161,6 +161,8 @@
       canvas.width = w; canvas.height = h
       canvas.style.width = (w * pw) + "px"
       canvas.style.height = (h * ph) + "px"
+      if (mode === 4) canvas.style.backgroundColor = "#241"
+      else canvas.style.backgroundColor = "#000"
       g.fillRect(0, 0, canvas.width, canvas.height)
       img = g.getImageData(0, 0, canvas.width, canvas.height)
       gmode = mode
@@ -169,7 +171,7 @@
     let end = 0x10000
     let i = 0
     for (let m = start; m < end; m++) {
-      i += renderbyte(m, i, bpp)
+      i += renderbyte(m, i, bpp, mode & 4)
     }
 
     g.putImageData(img, 0, 0)
@@ -188,7 +190,7 @@
     // setTimeout(render, 256)
   }
 
-  function renderbyte(madr, iadr, bpp) {
+  function renderbyte(madr, iadr, bpp, alt) {
     let byte = mem[madr]
     let ppb = 8 / bpp
     let mask = Math.pow(2, bpp) - 1
@@ -210,6 +212,10 @@
         gs--; gm = gm >> 1
       }
     }
+    if (alt && bpp === 4) {
+      bm = 15; rm = 15; gm = 15
+      bs = 0; rs = 0; gs = 4
+    }
     if (bpp === 2) {
       bm = 1; rm = 2; gm = 3
       gs = 2; rs = 0
@@ -217,15 +223,26 @@
     if (bpp === 1) {
       bm = 1; rm = 1; gm = 1
     }
-    for (let i = 0; i < ppb; i++) {
-      iadr -= 4
-      // let c = byte & mask
-      img.data[iadr + 2] = 255 * ((byte & bm) / bm)
-      byte = byte >> bs
-      img.data[iadr + 0] = 255 * ((byte & rm) / rm)
-      byte = byte >> rs
-      img.data[iadr + 1] = 255 * ((byte & gm) / gm)
-      byte = byte >> gs
+    if (alt && bpp === 1) {
+      for (let i = 0; i < ppb; i++) {
+        iadr -= 4
+        img.data[iadr + 2] = (byte & bm) ? 3 : 15
+        byte = byte >> bs
+        img.data[iadr + 0] = (byte & rm) ? 7 : 31
+        byte = byte >> rs
+        img.data[iadr + 1] = (byte & gm) ? 15 : 63
+        byte = byte >> gs
+      }
+    } else {
+      for (let i = 0; i < ppb; i++) {
+        iadr -= 4
+        img.data[iadr + 2] = 255 * ((byte & bm) / bm)
+        byte = byte >> bs
+        img.data[iadr + 0] = 255 * ((byte & rm) / rm)
+        byte = byte >> rs
+        img.data[iadr + 1] = 255 * ((byte & gm) / gm)
+        byte = byte >> gs
+      }
     }
     return ppb * 4
   }
