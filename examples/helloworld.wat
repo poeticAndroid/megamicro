@@ -3,7 +3,7 @@
 (main: ;; must be the first function
   (@vars $argv
     )
-  (sys (0x03) (@call memstart) (0x400) (2)) ;; printstr syscall
+  (sys (0x03) (@call memstart) (-1) (0x400) (3)) ;; printstr syscall
 
   (@return (0)) ;; return to dos with no error
 )

@@ -13,7 +13,7 @@
       (@if (eqz (load8u (add (@call memstart) (0x301) )) ) (
         (sys (0x02) (0x30) (0x400) (2)) ;; printchar syscall
       ))
-      (sys (0x03) (add (@call memstart) (0x300) ) (0x400) (2)) ;; printstr syscall
+      (sys (0x03) (add (@call memstart) (0x300) ) (-1) (0x400) (3)) ;; printstr syscall
       (set $i (add ($i) (1) ) )
     ))
     (set $i (sub ($i) (1) ) )

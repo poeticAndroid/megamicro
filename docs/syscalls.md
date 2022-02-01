@@ -13,7 +13,7 @@ Call codes
 **x0** | reboot                 | pset x y c      | pow:n a b | *load:done file dest
 **x1** |                        | *rect x y w h c |           | *save:done file src len
 **x2** | printchar c            |                 |           | *delete:done file
-**x3** | printstr s             |                 |           |
+**x3** | printstr s max         |                 |           |
 **x4** | memcopy src dest len   |                 |           | *info:done file dest
 **x5** | fill val dest len      |                 |           |
 **x6** |                        |                 |           |

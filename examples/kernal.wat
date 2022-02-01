@@ -8,7 +8,7 @@
   ;; System
   (@if (eq ($call) (0x00)) ( (return (@call reboot ) (0)) ))
   (@if (eq ($call) (0x02)) ( (return (@call printchar ($arg1)) (0)) ))
-  (@if (eq ($call) (0x03)) ( (return (@call printstr ($arg1)) (0)) ))
+  (@if (eq ($call) (0x03)) ( (return (@call printstr ($arg1) ($arg2)) (0)) ))
   (@if (eq ($call) (0x04)) ( (return (@call memcopy ($arg1) ($arg2) ($arg3)) (0)) ))
   (@if (eq ($call) (0x05)) ( (return (@call fill ($arg1) ($arg2) ($arg3)) (0)) ))
   (@if (eq ($call) (0x08)) ( (return (@call strtoint ($arg1) ($arg2)) (1)) ))
@@ -52,7 +52,7 @@
   (store (0xaffc) (0))
   (store8 (0xafff) (-1)) ;; text fg color
   (store8 (0xb4f8) (1)) ;; display mode
-  (@call printstr (@call memstart))
+  (@call printstr (@call memstart) (-1))
   (store8 (0xb4f8) (0)) ;; display mode
   (set $sec (load8u (0xb4ee)))
   (@while (eq ($sec) (load8u (0xb4ee)) ) (noop))
@@ -61,11 +61,11 @@
     (set $ins (add ($ins) (15) ))
   ))
   (@call inttostr ($ins) (10) (add (@call memstart) (0x90) ) )
-  (@call printstr (add (@call memstart) (0x90) ))
-  (@call printstr (add (@call memstart) (0x190) )) ;; ips
+  (@call printstr (add (@call memstart) (0x90) ) (-1))
+  (@call printstr (add (@call memstart) (0x190) ) (-1)) ;; ips
   (@call inttostr (sub (memsize) (0x10000)) (10) (add (@call memstart) (0x90) ) )
-  (@call printstr (add (@call memstart) (0x90) ))
-  (@call printstr (add (@call memstart) (0x70) )) ;; bytes free
+  (@call printstr (add (@call memstart) (0x90) ) (-1))
+  (@call printstr (add (@call memstart) (0x70) ) (-1)) ;; bytes free
   (@call printchar (0x0a))
   (sleep (0x100))
   (@return)
@@ -76,7 +76,7 @@
     (store (0xb4f4) (0))
     (vsync)
   ))
-  (@call printstr (add (@call memstart) (0x40) ))
+  (@call printstr (add (@call memstart) (0x40) ) (-1))
   (sys (0x02) (0x81) (0x400) (2))
   (sys (0x02) (0x08) (0x400) (2))
   (@while (true) (
@@ -151,9 +151,10 @@
 )
 
 (printstr:
-  (@vars $str)
-  (@while (load8u ($str)) (
+  (@vars $str $max)
+  (@while (and (eqz (eqz ($max))) (eqz (eqz (load8u ($str)) ))) (
     (@call printchar (load8u ($str)))
+    (set $max (sub ($max) (1)))
     (set $str (add ($str) (1)))
   ))
   (@return)
