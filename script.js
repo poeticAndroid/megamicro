@@ -162,7 +162,7 @@
       canvas.width = w; canvas.height = h
       canvas.style.width = (w * pw) + "px"
       canvas.style.height = (h * ph) + "px"
-      if (mode === 4) canvas.style.backgroundColor = "#241"
+      if ((mode & 7) === 4) canvas.style.backgroundColor = "#241"
       else canvas.style.backgroundColor = "#000"
       g.fillRect(0, 0, canvas.width, canvas.height)
       img = g.getImageData(0, 0, canvas.width, canvas.height)
@@ -227,11 +227,11 @@
     if (alt && bpp === 1) {
       for (let i = 0; i < ppb; i++) {
         iadr -= 4
-        img.data[iadr + 2] = (byte & bm) ? 3 : 31
+        img.data[iadr + 2] = (byte & bm) ? 3 : 15
         byte = byte >> bs
-        img.data[iadr + 0] = (byte & rm) ? 7 : 63
+        img.data[iadr + 0] = (byte & rm) ? 7 : 31
         byte = byte >> rs
-        img.data[iadr + 1] = (byte & gm) ? 15 : 127
+        img.data[iadr + 1] = (byte & gm) ? 15 : 63
         byte = byte >> gs
       }
     } else {

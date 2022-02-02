@@ -6,8 +6,8 @@
   (@vars $argv
     )
   (store8 (0xb4f8) (1)) ;; display mode
-  ;; (store8 (0xaffe) (2)) ;; text bg color
-  ;; (store8 (0xafff) (-1)) ;; text fg color
+  (store8 (0xaffe) (1)) ;; text bg color
+  (store8 (0xafff) (-1)) ;; text fg color
   
   (sys (0x02) (0x0a) (0x400) (2))
   (sys (0x02) (0x83) (0x400) (2))
