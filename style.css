@@ -8,7 +8,7 @@ html {
 canvas {
   background-color: black;
   border: 1px solid #666;
-  cursor: none;
+  cursor: crosshair;
   image-rendering: pixelated;
   padding: .5em;
 }

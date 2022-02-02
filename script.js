@@ -33,6 +33,7 @@
     canvas.addEventListener("mousedown", onUser)
     canvas.addEventListener("mouseup", onUser)
     canvas.addEventListener("mousemove", onUser)
+    canvas.addEventListener("mouseout", e => canvas.style.cursor = "crosshair")
 
     document.querySelector("#asmTxt").value = localStorage.getItem("program.asm") || `;;Peti asm
     ;; docs at https://github.com/poeticAndroid/peti
@@ -251,7 +252,10 @@
     if (e.type.slice(0, 5) === "mouse") {
       mem[0xb4f9] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
       mem[0xb4fa] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
-      if (mem[0xb4fb] = e.buttons) kbEnabled = true
+      if (mem[0xb4fb] = e.buttons) {
+        kbEnabled = true
+        canvas.style.cursor = "none"
+      }
     }
 
     if (e.type === "keyup") {
