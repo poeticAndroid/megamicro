@@ -1,6 +1,6 @@
 (() => {
   let cpu,
-    ram = new WebAssembly.Memory({ initial: 4 }),
+    ram = new WebAssembly.Memory({ initial: 2 }),
     mem = new Uint8Array(ram.buffer),
     speed = 1,
     vsyncfps = 9000,
@@ -227,11 +227,11 @@
     if (alt && bpp === 1) {
       for (let i = 0; i < ppb; i++) {
         iadr -= 4
-        img.data[iadr + 2] = (byte & bm) ? 3 : 15
+        img.data[iadr + 2] = (byte & bm) ? 3 : 31
         byte = byte >> bs
-        img.data[iadr + 0] = (byte & rm) ? 7 : 31
+        img.data[iadr + 0] = (byte & rm) ? 7 : 63
         byte = byte >> rs
-        img.data[iadr + 1] = (byte & gm) ? 15 : 63
+        img.data[iadr + 1] = (byte & gm) ? 15 : 127
         byte = byte >> gs
       }
     } else {
