@@ -171,8 +171,10 @@
         while ((token = readToken()) && token !== ")") {
           str += token + " "
         }
-        let encoder = new TextEncoder()
-        bytes = encoder.encode(eval(str))
+        str = eval(str)
+        for (let i = 0; i < len; i++) {
+          bytes.push(str.charCodeAt(i))
+        }
         return writeBytes(bytes, len)
       } else {
         let val = eval(token)
