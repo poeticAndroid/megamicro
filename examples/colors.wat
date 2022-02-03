@@ -5,7 +5,7 @@
     $mode $cols $i)
   (sys (0x03) (add (@call memstart) (0x10)) (-1) (0x400) (3))
   (@while (true) (
-    (@while (eqz (load (0xb4f4))) (
+    (@while (eqz (load8u (0xb4f4))) (
       (vsync)
     ))
     (set $mode (and (sub (load8u (0xb4f5) ) (0x30) ) (0x7) ) )
@@ -18,7 +18,7 @@
     (set $i (0))
     (@while (lt ($i) ($cols) ) (
       (store8 (0xaffe) ($i))
-      (store8 (0xafff) (add ($i) (129) ))
+      (store8 (0xafff) (xor ($i) (-1) ))
       (@call printhex ($i) (@if (eq (and ($mode) (3)) (3)) (2) (1) ) )
       (set $i (add ($i) (1) ))
     ))
