@@ -13,8 +13,10 @@
     kbBuffer = []
 
   let diskInitialized = false,
-    diskInput = [],
-    diskOutput = []
+    diskReq = [],
+    diskResp = [],
+    diskCwd = ["/", "/", "/", "/"],
+    diskBusy, diskWrite
 
   let img,
     canvas = document.querySelector("canvas"),
@@ -108,6 +110,26 @@
       if (kbBuffer.length && mem[0xb4f4] === 0) {
         mem[0xb4f5] = kbBuffer.shift()
         mem[0xb4f4] = Math.min(255, 1 + kbBuffer.length)
+      }
+      if (mem[0xb4f0]) {
+        if (mem[0xb4f1]) {
+          diskReq.push(mem.slice(0xb600, 0xb600 + mem[0xb4f1]))
+          mem[0xb4f1] = 0
+        }
+        if (!mem[0xb4f2] && diskResp.length) {
+          if (diskResp.length) {
+            mem[0xb4f2] = diskResp[0].length
+            mem.set(diskResp.shift(), 0xb700)
+          } else if (!diskBusy && !diskWrite) {
+            mem[0xb4f0] = 0
+          }
+        }
+        handleDrive(mem[0xb4f0] - 1)
+      } else {
+        diskReq.length = 0
+        diskResp.length = 0
+        diskBusy = false
+        diskWrite = null
       }
       try {
         opcode = cpu.run(speed)
@@ -296,8 +318,113 @@
     }
   }
 
-  function handleDrive() {
-    //todo
+  function handleDrive(driveNum = 0) {
+    if (diskWrite) {
+      let hex = ""
+      let buf
+      while (buf = diskReq.shift()) {
+        for (let i = 0; i < buf.length; i++) {
+          hex += ("0" + buf[i].toString(16)).slice(-2)
+        }
+      }
+      localStorage.setItem(diskWrite, localStorage.getItem(diskWrite) + hex)
+      return
+    }
+    req = diskReq.shift()
+    if (!req) return
+    let cmd = ""
+    for (let i = 0; i < req.length; i++) {
+      cmd += String.fromCharCode(req[i])
+    }
+    cmd = cmd.trim().split(/\s+/)
+    let file = "drive" + driveNum + ":" + diskPath("" + diskCwd[driveNum] + cmd[1])
+    diskBusy = true
+    switch (cmd[0]) {
+      case "load":
+        let data = localStorage.getItem(file)
+        if (data) {
+          diskStatus("ok  " + (data.length / 2))
+          for (let b = 0; b < data.length; b += 512) {
+            let buf = new Uint8Array(Math.min(256, (data.length - b) / 2))
+            for (let i = 0; i < buf.length; i++) {
+              buf[i] = parseInt(data.slice(b, b + 2), 16)
+            }
+            diskResp.push(buf)
+          }
+        } else {
+          diskStatus("err file not found " + file)
+        }
+        break
+
+      case "save":
+        diskWrite = file
+        localStorage.setItem(diskWrite, "")
+        diskStatus("ok  " + cmd[0] + " " + file)
+        break
+
+      case "delete":
+        localStorage.removeItem(file)
+        diskStatus("ok  " + cmd[0] + " " + file)
+        break
+
+      case "info":
+        diskStatus("not yet implemented " + cmd[0] + " " + file)
+        break
+
+      case "list":
+        diskStatus("not yet implemented  " + cmd[0] + " " + file)
+        break
+
+      case "mkdir":
+        diskStatus("ok  " + cmd[0] + " " + file)
+        break
+
+      case "cd":
+        diskCwd[driveNum] = file.splice(file.indexOf("/")) + "/"
+        diskStatus("ok  " + cmd[0] + " " + file)
+        break
+
+      default:
+        diskStatus("err unknown command " + cmd[0])
+    }
+
+
+    if (!diskInitialized) {
+      mem.fill(0, 0xb4f0, 0xb4f4)
+      mem.fill(0, 0xb600, 0xb800)
+      diskBusy = false
+      diskCwd[driveNum] = "/"
+      return
+    }
+  }
+
+  function diskPath(path) {
+    let dirs = path.split("/")
+    let valid = []
+    if (!dirs[dirs.length - 1]) dirs.pop()
+    for (let dir of dirs) {
+      if (dir === ".") {
+      } else if (dir === "..") {
+        valid.pop()
+      } else if (dir) {
+        let name = (dir.replaceAll(" ", "_") + ".").split(".")
+        valid.push(name[0].toLowerCase().slice(0, 8) + ".".slice(0, name[1].length) + name[1].toLowerCase().slice(0, 3))
+      } else {
+        valid = []
+      }
+    }
+    return "/" + valid.join("/")
+  }
+
+  function diskStatus(str) {
+    str += "\n"
+    let len = Math.min(256, str.length)
+    let buf = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      buf[i] = str.charCodeAt(i)
+    }
+    diskResp.push(buf)
+    diskBusy = false
   }
 
   function hwClock() {

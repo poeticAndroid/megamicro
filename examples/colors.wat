@@ -10,7 +10,7 @@
     ))
     (set $mode (and (sub (load8u (0xb4f5) ) (0x30) ) (0x7) ) )
     (store8 (0xb4f8) ($mode))
-    (store8 (0xaffd) (100))
+    ;; (store8 (0xaffd) (100))
     (sys (0x03) (@call memstart) (-1) (0x400) (3))
     (@call printhex ($mode) (1))
     (sys (0x02) (0x0a) (0x400) (2))
@@ -19,7 +19,7 @@
     (@while (lt ($i) ($cols) ) (
       (store8 (0xaffe) ($i))
       (store8 (0xafff) (xor ($i) (-1) ))
-      (@call printhex ($i) (@if (eq (and ($mode) (3)) (3)) (2) (1) ) )
+      (@call printhex ($i) (1) )
       (set $i (add ($i) (1) ))
     ))
     (store8 (0xaffe) (0))
