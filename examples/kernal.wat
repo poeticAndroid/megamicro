@@ -284,6 +284,22 @@
   (@return)
 )
 
+(strlen:
+  (@vars $str $max
+    $len)
+  (set $str (sub ($str) (1)))
+  (set $len (sub ($len) (1)))
+  (@while ($max) (
+    (set $str (add ($str) (1)))
+    (set $len (add ($len) (1)))
+    (set $max (sub ($max) (1)))
+    (@if (eqz (load8u ($str))) (
+      (set $max (0))
+    ))
+  ))
+  (@return ($len))
+)
+
 (readln:
   (@vars $max $dest
     $len)
@@ -564,6 +580,51 @@
     (set $b (sub ($b) (1)))
   ) )
   (@return ($z))
+)
+
+(load:
+  (@vars $file $dest
+    $drive $len)
+  (store (0xb4f0) (0))
+  (@while (and (eqz (eq (load8u ($file)) (0))) (eqz (eq (load8u ($file)) (0x3a)))) (
+    (set $file (add ($file) (1)) )
+  ))
+  (set $file (sub ($file) (1)) )
+  (set $drive (sub (load8u ($file)) (0x2f)) )
+  (set $file (add ($file) (2)) )
+  (vsync)
+  (store (0xb600) (0x64616f6c)) ;; load
+  (store (0xb604) (0x20202020)) ;; spaces
+  (@call memcopy ($file) (0xb608) (255-8))
+  (store8u (0xb6ff) (0))
+  (store8u (0xb4f1) (@call strlen (0xb600)))
+  (store8u (0xb4f0) ($drive))
+  (@while (eqz (load8u (0xb4f2))) (
+    (@if (eqz (load8u (0xb4f0))) (
+      (store (0xb4f0) (0))
+      (@return (0))
+    ))
+  ))
+  (@if (eqz (eq (load (0xb700)) (0x20206b6f))) ( ;; not ok
+    (store (0xb4f0) (0))
+    (@return (0))
+  ))
+  (set $len (@call strtoint (0xb704) (10)) )
+  (store8 (0xb4f2) (0))
+  (@while (gt ($len) (0)) (
+    (@while (eqz (load8u (0xb4f2))) (
+      (@if (eqz (load8u (0xb4f0))) (
+        (store (0xb4f0) (0))
+        (@return (0))
+      ))
+    ))
+    (@call memcopy (0xb700) ($dest) (load8u (0xb4f2)))
+    (set $dest (add ($dest) (load8u (0xb4f2))))
+    (set $len (sub ($len) (load8u (0xb4f2))))
+    (store8 (0xb4f2) (0))
+  ))
+  (store (0xb4f0) (0))
+  (@return (1))
 )
 
 (memstart: ;; must be the last function

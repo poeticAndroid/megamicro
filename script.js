@@ -343,11 +343,11 @@
       case "load":
         let data = localStorage.getItem(file)
         if (data) {
-          diskStatus("ok  " + (data.length / 2))
-          for (let b = 0; b < data.length; b += 512) {
-            let buf = new Uint8Array(Math.min(256, (data.length - b) / 2))
+          diskStatus("ok  " + (data.length / 2) + " bytes")
+          for (let b = 0; b < data.length; b += 510) {
+            let buf = new Uint8Array(Math.min(255, (data.length - b) / 2))
             for (let i = 0; i < buf.length; i++) {
-              buf[i] = parseInt(data.slice(b, b + 2), 16)
+              buf[i] = parseInt(data.slice(b + i * 2, b + 2 + i * 2), 16)
             }
             diskResp.push(buf)
           }
@@ -418,7 +418,7 @@
 
   function diskStatus(str) {
     str += "\n"
-    let len = Math.min(256, str.length)
+    let len = Math.min(255, str.length)
     let buf = new Uint8Array(len)
     for (let i = 0; i < len; i++) {
       buf[i] = str.charCodeAt(i)
