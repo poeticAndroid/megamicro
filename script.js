@@ -116,7 +116,7 @@
           diskReq.push(mem.slice(0xb600, 0xb600 + mem[0xb4f1]))
           mem[0xb4f1] = 0
         }
-        if (!mem[0xb4f2] && diskResp.length) {
+        if (!mem[0xb4f2]) {
           if (diskResp.length) {
             mem[0xb4f2] = diskResp[0].length
             mem.set(diskResp.shift(), 0xb700)
@@ -339,6 +339,7 @@
     cmd = cmd.trim().split(/\s+/)
     let file = "drive" + driveNum + ":" + diskPath("" + diskCwd[driveNum] + cmd[1])
     diskBusy = true
+    console.log("drive", driveNum, cmd.join(" "))
     switch (cmd[0]) {
       case "load":
         let data = localStorage.getItem(file)
@@ -359,29 +360,29 @@
       case "save":
         diskWrite = file
         localStorage.setItem(diskWrite, "")
-        diskStatus("ok  " + cmd[0] + " " + file)
+        diskStatus("ok  0 bytes")
         break
 
       case "delete":
         localStorage.removeItem(file)
-        diskStatus("ok  " + cmd[0] + " " + file)
+        diskStatus("ok  0 bytes")
         break
 
       case "info":
-        diskStatus("not yet implemented " + cmd[0] + " " + file)
+        diskStatus("not yet implemented " + cmd[0])
         break
 
       case "list":
-        diskStatus("not yet implemented  " + cmd[0] + " " + file)
+        diskStatus("not yet implemented  " + cmd[0])
         break
 
       case "mkdir":
-        diskStatus("ok  " + cmd[0] + " " + file)
+        diskStatus("ok  0 bytes")
         break
 
       case "cd":
         diskCwd[driveNum] = file.splice(file.indexOf("/")) + "/"
-        diskStatus("ok  " + cmd[0] + " " + file)
+        diskStatus("ok  0 bytes")
         break
 
       default:
@@ -394,6 +395,7 @@
       mem.fill(0, 0xb600, 0xb800)
       diskBusy = false
       diskCwd[driveNum] = "/"
+      diskInitialized = true
       return
     }
   }
@@ -417,6 +419,7 @@
   }
 
   function diskStatus(str) {
+    console.log("disk status", str)
     str += "\n"
     let len = Math.min(255, str.length)
     let buf = new Uint8Array(len)

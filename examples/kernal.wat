@@ -23,6 +23,15 @@
 
   ;; Math
   (@if (eq ($call) (0x20)) ( (return (@call pow ($arg1) ($arg2) ) (1)) ))
+
+  ;; Files
+  (@if (eq ($call) (0x30)) ( (return (@call load ($arg1) ($arg2) ) (1)) ))
+  (@if (eq ($call) (0x31)) ( (return (@call save ($arg1) ($arg2) ($arg3) ) (1)) ))
+  (@if (eq ($call) (0x32)) ( (return (@call delete ($arg1) ) (1)) ))
+  (@if (eq ($call) (0x34)) ( (return (@call info ($arg1) ($arg2) ) (1)) ))
+  (@if (eq ($call) (0x38)) ( (return (@call list ($arg1) ($arg2) ) (1)) ))
+  (@if (eq ($call) (0x39)) ( (return (@call mkdir ($arg1) ) (1)) ))
+  (@if (eq ($call) (0x3a)) ( (return (@call cd ($arg1) ) (1)) ))
 )
 
 (reboot:
@@ -582,7 +591,7 @@
   (@return ($z))
 )
 
-(load:
+(access:
   (@vars $file $dest
     $drive $len)
   (store (0xb4f0) (0))
@@ -593,12 +602,10 @@
   (set $drive (sub (load8u ($file)) (0x2f)) )
   (set $file (add ($file) (2)) )
   (vsync)
-  (store (0xb600) (0x64616f6c)) ;; load
-  (store (0xb604) (0x20202020)) ;; spaces
   (@call memcopy ($file) (0xb608) (255-8))
-  (store8u (0xb6ff) (0))
-  (store8u (0xb4f1) (@call strlen (0xb600)))
-  (store8u (0xb4f0) ($drive))
+  (store8 (0xb6ff) (0))
+  (store8 (0xb4f1) (@call strlen (0xb600) (255)))
+  (store8 (0xb4f0) ($drive))
   (@while (eqz (load8u (0xb4f2))) (
     (@if (eqz (load8u (0xb4f0))) (
       (store (0xb4f0) (0))
@@ -625,6 +632,102 @@
   ))
   (store (0xb4f0) (0))
   (@return (1))
+)
+
+(load:
+  (@vars $file $dest)
+  (store (0xb600) (0x64616f6c)) ;; load
+  (store (0xb604) (0x20202020)) ;; spaces
+  (@return (@call access ($file) ($dest)))
+)
+
+(save:
+  (@vars $file $src $len
+    $drive)
+  (store (0xb4f0) (0))
+  (@while (and (eqz (eq (load8u ($file)) (0))) (eqz (eq (load8u ($file)) (0x3a)))) (
+    (set $file (add ($file) (1)) )
+  ))
+  (set $file (sub ($file) (1)) )
+  (set $drive (sub (load8u ($file)) (0x2f)) )
+  (set $file (add ($file) (2)) )
+  (vsync)
+  (store (0xb600) (0x65766173)) ;; save
+  (store (0xb604) (0x20202020)) ;; spaces
+  (@call memcopy ($file) (0xb608) (255-8))
+  (store8 (0xb6ff) (0))
+  (store8 (0xb4f1) (@call strlen (0xb600) (255)))
+  (store8 (add (0xb600) (load8u (0xb4f1))) (0x20))
+  (@call inttostr ($len) (10) (add (0xb601) (load8u (0xb4f1))))
+  (store8 (0xb4f1) (@call strlen (0xb600) (255)))
+
+  (store8 (0xb4f0) ($drive))
+  (@while (eqz (load8u (0xb4f2))) (
+    (@if (eqz (load8u (0xb4f0))) (
+      (store (0xb4f0) (0))
+      (@return (0))
+    ))
+  ))
+  (@if (eqz (eq (load (0xb700)) (0x20206b6f))) ( ;; not ok
+    (store (0xb4f0) (0))
+    (@return (0))
+  ))
+  (store8 (0xb4f2) (0))
+  (@while (gt ($len) (0)) (
+    (@while (load8u (0xb4f1)) (
+      (@if (eqz (load8u (0xb4f0))) (
+        (store (0xb4f0) (0))
+        (@return (0))
+      ))
+    ))
+    (@call memcopy ($src) (0xb600) (255))
+    (@if (gt ($len) (255)) (
+      (store8 (0xb4f1) (255))
+      (set $src (add ($src) (255)))
+      (set $len (sub ($len) (255)))
+    )(
+      (store8 (0xb4f1) ($len))
+      (set $src (add ($src) ($len)))
+      (set $len (sub ($len) ($len)))
+    ))
+  ))
+  (store (0xb4f0) (0))
+  (@return (1))
+)
+
+(delete:
+  (@vars $file)
+  (store (0xb600) (0x656c6564)) ;; dele
+  (store (0xb604) (0x20206574)) ;; te spaces
+  (@return (@call access ($file) (0xb700)))
+)
+
+(info:
+  (@vars $file $dest)
+  (store (0xb600) (0x6f666e69)) ;; info
+  (store (0xb604) (0x20202020)) ;; spaces
+  (@return (@call access ($file) ($dest)))
+)
+
+(list:
+  (@vars $file $dest)
+  (store (0xb600) (0x7473696c)) ;; list
+  (store (0xb604) (0x20202020)) ;; spaces
+  (@return (@call access ($file) ($dest)))
+)
+
+(mkdir:
+  (@vars $file)
+  (store (0xb600) (0x69646b6d)) ;; mkdi
+  (store (0xb604) (0x20202072)) ;; r spaces
+  (@return (@call access ($file) (0xb700)))
+)
+
+(cd:
+  (@vars $file)
+  (store (0xb600) (0x20206463)) ;; cd spaces
+  (store (0xb604) (0x20202020)) ;; spaces
+  (@return (@call access ($file) (0xb700)))
 )
 
 (memstart: ;; must be the last function
