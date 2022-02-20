@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISA skeleton builder</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      html {
+        background-color: #111;
+        color: #eee;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <pre>
+    <script>
+      function opcodeBranch(bits = "", ind = "    ") {
+        if (bits.length < 8) {
+          document.writeln(` ;; $${pad(bits2byte(bits, "0").toString(16))} - $${pad(bits2byte(bits, "1").toString(16))}`)
+          if (anything(opcodes, bits2byte(bits, "0"), bits2byte(bits, "1"))) {
+            document.write(`${ind}(if (i32.and (local.get $opcode) (i32.const 0x${pad(mask4bitlen(bits).toString(16))}) ) (then`)
+            opcodeBranch(bits + "1", ind + "  ")
+            document.write(`${ind})(else`)
+            opcodeBranch(bits + "0", ind + "  ")
+            document.writeln(`${ind}))`)
+          } else {
+            document.writeln(`${ind}(call $illegal (local.get $opcode))`)
+          }
+        } else {
+          document.writeln(` ;; $${pad(bits2byte(bits).toString(16))}`)
+          console.log(` ;; $${pad(bits2byte(bits).toString(16))}`, opcodes[bits2byte(bits)])
+          if (opcodes[bits2byte(bits)]) {
+            document.writeln()
+            // document.writeln(`${ind};; ${opcodes[bits2byte(bits)]}`)
+            document.writeln(`${ind}(local.set $instruction (i32.const 0x${pad((instructions.indexOf(opcodes[bits2byte(bits)][0])).toString(16))})) ;; ${opcodes[bits2byte(bits)][0]}`)
+            document.writeln(`${ind}(local.set $addressmode (i32.const 0x${((addressModes.indexOf(opcodes[bits2byte(bits)][1])).toString(16))})) ;; ${opcodes[bits2byte(bits)][1]}`)
+            document.writeln(`${ind}(global.set $cycles (i32.sub (global.get $cycles) (i32.const ${opcodes[bits2byte(bits)][2]})))`)
+            document.writeln(`${ind}(br 7)`)
+            document.writeln()
+          } else {
+            document.writeln(`${ind}(call $illegal (local.get $opcode))`)
+          }
+        }
+      }
+      function addressModeBranch(bits = "0000", ind = "    ") {
+        if (bits.length < 8) {
+          document.writeln(` ;; $${(bits2byte(bits, "0").toString(16))} - $${(bits2byte(bits, "1").toString(16))}`)
+          if (anything(addressModes, bits2byte(bits, "0"), bits2byte(bits, "1"))) {
+            document.write(`${ind}(if (i32.and (local.get $addressmode) (i32.const 0x${pad(mask4bitlen(bits).toString(16))}) ) (then`)
+            addressModeBranch(bits + "1", ind + "  ")
+            document.write(`${ind})(else`)
+            addressModeBranch(bits + "0", ind + "  ")
+            document.writeln(`${ind}))`)
+          } else {
+            document.writeln(`${ind}(nop)`)
+          }
+        } else {
+          document.writeln(` ;; $${(bits2byte(bits).toString(16))}`)
+          console.log(` ;; $${(bits2byte(bits).toString(16))}`, addressModes[bits2byte(bits)])
+          if (addressModes[bits2byte(bits)]) {
+            document.writeln()
+            document.writeln(`${ind};; ${addressModes[bits2byte(bits)]}`)
+            document.writeln(`${ind};;                             NOT YET IMPLEMENTED`)
+            document.writeln(`${ind}(br 3)`)
+            document.writeln()
+          } else {
+            document.writeln(`${ind}(nop)`)
+          }
+        }
+      }
+      function instructionBranch(bits = "", ind = "    ") {
+        if (bits.length < 8) {
+          document.writeln(` ;; $${pad(bits2byte(bits, "0").toString(16))} - $${pad(bits2byte(bits, "1").toString(16))}`)
+          if (anything(instructions, bits2byte(bits, "0"), bits2byte(bits, "1"))) {
+            document.write(`${ind}(if (i32.and (local.get $instruction) (i32.const 0x${pad(mask4bitlen(bits).toString(16))}) ) (then`)
+            instructionBranch(bits + "1", ind + "  ")
+            document.write(`${ind})(else`)
+            instructionBranch(bits + "0", ind + "  ")
+            document.writeln(`${ind}))`)
+          } else {
+            document.writeln(`${ind}(nop)`)
+          }
+        } else {
+          document.writeln(` ;; $${pad(bits2byte(bits).toString(16))}`)
+          console.log(` ;; $${pad(bits2byte(bits).toString(16))}`, instructions[bits2byte(bits)])
+          if (instructions[bits2byte(bits)]) {
+            document.writeln()
+            document.writeln(`${ind};; ${instructions[bits2byte(bits)]}`)
+            document.writeln(`${ind};;                             NOT YET IMPLEMENTED`)
+            document.writeln(`${ind}(br 7)`)
+            document.writeln()
+          } else {
+            document.writeln(`${ind}(nop)`)
+          }
+        }
+      }
+      function mask4bitlen(bits = "") {
+        bits = bits.replaceAll("1", "0")
+        return bits2byte(bits + "1", "0")
+      }
+      function bits2byte(bits = "", fill = "0") {
+        while (bits.length < 8) bits += fill
+        return parseInt(bits, 2)
+      }
+      function pad(num = "", len = 2) {
+        while (num.length < len) num = "0" + num
+        return num.toUpperCase()
+      }
+      function anything(arr, min, max) {
+        for (let i = min; i <= max; i++) {
+          if (arr[i]) return arr[i]
+        }
+        return null
+      }
+
+      let instructions = [
+        'ADC', 'AND', 'ASL', 'BCC', 'BCS', 'BEQ', 'BIT', 'BMI', 'BNE', 'BPL', 'BRK', 'BVC', 'BVS', 'CLC',
+        'CLD', 'CLI', 'CLV', 'CMP', 'CPX', 'CPY', 'DEC', 'DEX', 'DEY', 'EOR', 'INC', 'INX', 'INY', 'JMP',
+        'JSR', 'LDA', 'LDX', 'LDY', 'LSR', 'NOP', 'ORA', 'PHA', 'PHP', 'PLA', 'PLP', 'ROL', 'ROR', 'RTI',
+        'RTS', 'SBC', 'SEC', 'SED', 'SEI', 'STA', 'STX', 'STY', 'TAX', 'TAY', 'TSX', 'TXA', 'TXS', 'TYA',
+        'XXX'
+      ].reverse()
+      let addressModes = [
+        'IMP', 'IMM', 'ZP0',
+        'ZPX', 'ZPY', 'REL',
+        'ABS', 'ABX', 'ABY',
+        'IND', 'IZX', 'IZY',
+      ].reverse()
+      const opcodes = [
+        ["BRK", "IMM", 7], ["ORA", "IZX", 6], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 3], ["ORA", "ZP0", 3], ["ASL", "ZP0", 5], ["XXX", "IMP", 5], ["PHP", "IMP", 3], ["ORA", "IMM", 2], ["ASL", "IMP", 2], ["XXX", "IMP", 2], ["NOP", "IMP", 4], ["ORA", "ABS", 4], ["ASL", "ABS", 6], ["XXX", "IMP", 6],
+        ["BPL", "REL", 2], ["ORA", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["ORA", "ZPX", 4], ["ASL", "ZPX", 6], ["XXX", "IMP", 6], ["CLC", "IMP", 2], ["ORA", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["ORA", "ABX", 4], ["ASL", "ABX", 7], ["XXX", "IMP", 7],
+        ["JSR", "ABS", 6], ["AND", "IZX", 6], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["BIT", "ZP0", 3], ["AND", "ZP0", 3], ["ROL", "ZP0", 5], ["XXX", "IMP", 5], ["PLP", "IMP", 4], ["AND", "IMM", 2], ["ROL", "IMP", 2], ["XXX", "IMP", 2], ["BIT", "ABS", 4], ["AND", "ABS", 4], ["ROL", "ABS", 6], ["XXX", "IMP", 6],
+        ["BMI", "REL", 2], ["AND", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["AND", "ZPX", 4], ["ROL", "ZPX", 6], ["XXX", "IMP", 6], ["SEC", "IMP", 2], ["AND", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["AND", "ABX", 4], ["ROL", "ABX", 7], ["XXX", "IMP", 7],
+        ["RTI", "IMP", 6], ["EOR", "IZX", 6], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 3], ["EOR", "ZP0", 3], ["LSR", "ZP0", 5], ["XXX", "IMP", 5], ["PHA", "IMP", 3], ["EOR", "IMM", 2], ["LSR", "IMP", 2], ["XXX", "IMP", 2], ["JMP", "ABS", 3], ["EOR", "ABS", 4], ["LSR", "ABS", 6], ["XXX", "IMP", 6],
+        ["BVC", "REL", 2], ["EOR", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["EOR", "ZPX", 4], ["LSR", "ZPX", 6], ["XXX", "IMP", 6], ["CLI", "IMP", 2], ["EOR", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["EOR", "ABX", 4], ["LSR", "ABX", 7], ["XXX", "IMP", 7],
+        ["RTS", "IMP", 6], ["ADC", "IZX", 6], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 3], ["ADC", "ZP0", 3], ["ROR", "ZP0", 5], ["XXX", "IMP", 5], ["PLA", "IMP", 4], ["ADC", "IMM", 2], ["ROR", "IMP", 2], ["XXX", "IMP", 2], ["JMP", "IND", 5], ["ADC", "ABS", 4], ["ROR", "ABS", 6], ["XXX", "IMP", 6],
+        ["BVS", "REL", 2], ["ADC", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["ADC", "ZPX", 4], ["ROR", "ZPX", 6], ["XXX", "IMP", 6], ["SEI", "IMP", 2], ["ADC", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["ADC", "ABX", 4], ["ROR", "ABX", 7], ["XXX", "IMP", 7],
+        ["NOP", "IMP", 2], ["STA", "IZX", 6], ["NOP", "IMP", 2], ["XXX", "IMP", 6], ["STY", "ZP0", 3], ["STA", "ZP0", 3], ["STX", "ZP0", 3], ["XXX", "IMP", 3], ["DEY", "IMP", 2], ["NOP", "IMP", 2], ["TXA", "IMP", 2], ["XXX", "IMP", 2], ["STY", "ABS", 4], ["STA", "ABS", 4], ["STX", "ABS", 4], ["XXX", "IMP", 4],
+        ["BCC", "REL", 2], ["STA", "IZY", 6], ["XXX", "IMP", 2], ["XXX", "IMP", 6], ["STY", "ZPX", 4], ["STA", "ZPX", 4], ["STX", "ZPY", 4], ["XXX", "IMP", 4], ["TYA", "IMP", 2], ["STA", "ABY", 5], ["TXS", "IMP", 2], ["XXX", "IMP", 5], ["NOP", "IMP", 5], ["STA", "ABX", 5], ["XXX", "IMP", 5], ["XXX", "IMP", 5],
+        ["LDY", "IMM", 2], ["LDA", "IZX", 6], ["LDX", "IMM", 2], ["XXX", "IMP", 6], ["LDY", "ZP0", 3], ["LDA", "ZP0", 3], ["LDX", "ZP0", 3], ["XXX", "IMP", 3], ["TAY", "IMP", 2], ["LDA", "IMM", 2], ["TAX", "IMP", 2], ["XXX", "IMP", 2], ["LDY", "ABS", 4], ["LDA", "ABS", 4], ["LDX", "ABS", 4], ["XXX", "IMP", 4],
+        ["BCS", "REL", 2], ["LDA", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 5], ["LDY", "ZPX", 4], ["LDA", "ZPX", 4], ["LDX", "ZPY", 4], ["XXX", "IMP", 4], ["CLV", "IMP", 2], ["LDA", "ABY", 4], ["TSX", "IMP", 2], ["XXX", "IMP", 4], ["LDY", "ABX", 4], ["LDA", "ABX", 4], ["LDX", "ABY", 4], ["XXX", "IMP", 4],
+        ["CPY", "IMM", 2], ["CMP", "IZX", 6], ["NOP", "IMP", 2], ["XXX", "IMP", 8], ["CPY", "ZP0", 3], ["CMP", "ZP0", 3], ["DEC", "ZP0", 5], ["XXX", "IMP", 5], ["INY", "IMP", 2], ["CMP", "IMM", 2], ["DEX", "IMP", 2], ["XXX", "IMP", 2], ["CPY", "ABS", 4], ["CMP", "ABS", 4], ["DEC", "ABS", 6], ["XXX", "IMP", 6],
+        ["BNE", "REL", 2], ["CMP", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["CMP", "ZPX", 4], ["DEC", "ZPX", 6], ["XXX", "IMP", 6], ["CLD", "IMP", 2], ["CMP", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["CMP", "ABX", 4], ["DEC", "ABX", 7], ["XXX", "IMP", 7],
+        ["CPX", "IMM", 2], ["SBC", "IZX", 6], ["NOP", "IMP", 2], ["XXX", "IMP", 8], ["CPX", "ZP0", 3], ["SBC", "ZP0", 3], ["INC", "ZP0", 5], ["XXX", "IMP", 5], ["INX", "IMP", 2], ["SBC", "IMM", 2], ["NOP", "IMP", 2], ["SBC", "IMP", 2], ["CPX", "ABS", 4], ["SBC", "ABS", 4], ["INC", "ABS", 6], ["XXX", "IMP", 6],
+        ["BEQ", "REL", 2], ["SBC", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["SBC", "ZPX", 4], ["INC", "ZPX", 6], ["XXX", "IMP", 6], ["SED", "IMP", 2], ["SBC", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["SBC", "ABX", 4], ["INC", "ABX", 7], ["XXX", "IMP", 7],
+      ]
+
+      opcodeBranch()
+      document.writeln()
+      addressModeBranch()
+      document.writeln()
+      instructionBranch()
+      document.writeln()
+    </script>
+  </pre>
+  <script src="/live.js"></script>
+</body>
+
+</html>
