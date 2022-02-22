@@ -48,10 +48,7 @@
   (@call fill (0) (0xb400) (0x10000-0xb400))
 
   (@call intro)
-  (@if (eq (load8u (0x10000)) (0x10) ) (
-    (sys (0) (0x10000) (1))
-  ))
-  (@call typist)
+  (@call launcher)
   (@jump reboot)
 )
 
@@ -80,18 +77,26 @@
   (@return)
 )
 
-(typist:
+(launcher:
   (@while (load (0xb4f4)) (
     (store (0xb4f4) (0))
     (vsync)
   ))
   (@call printstr (add (@call memstart) (0x40) ) (-1))
-  (sys (0x02) (0x81) (0x400) (2))
-  (sys (0x02) (0x08) (0x400) (2))
+  (@call memcopy (add (@call memstart) (0x1d0) ) (add (@call memstart) (0x90) ) (0x20))
   (@while (true) (
+    (@if (@call load (add (@call memstart) (0x90) ) (0x10000)) (
+      (sys (0) (0x10000) (1))
+    )(
+      (@call printstr (add (@call memstart) (0x90) ) (-1))
+      (@call printchar (0x3a))
+      (@call printchar (0x20))
+      (@call printstr (add (@call memstart) (0x1b0) ) (-1))
+    ))
     (@call printchar (0x3e))
     (@call printchar (0x20))
-    (@call readln (0x100) (add (@call memstart) (0x90) ))
+    (@call memcopy (add (@call memstart) (0x1d0) ) (add (@call memstart) (0x90) ) (0x20))
+    (@call readln (0x10) (add (@call memstart) (0x98) ))
   ))
   (@return)
 )
@@ -595,7 +600,10 @@
   (@vars $file $dest
     $drive $len)
   (store (0xb4f0) (0))
-  (@while (and (eqz (eq (load8u ($file)) (0))) (eqz (eq (load8u ($file)) (0x3a)))) (
+  (@while (and 
+      (eqz (eq (load8u ($file)) (0x0)))
+      (eqz (eq (load8u ($file)) (0x3a)))
+    ) (
     (set $file (add ($file) (1)) )
   ))
   (set $file (sub ($file) (1)) )
@@ -746,3 +754,7 @@
 ;; 0x190
 (@string 0x20 " ips.\n")
 ;; 0x1b0
+(@string 0x20 "file not found!\n")
+;; 0x1d0
+(@string 0x20 "drive0:/main.prg\0")
+;; 0x1f0
