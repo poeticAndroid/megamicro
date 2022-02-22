@@ -35,16 +35,41 @@
           document.writeln(` ;; $${pad(bits2byte(bits).toString(16))}`)
           console.log(` ;; $${pad(bits2byte(bits).toString(16))}`, opcodes[bits2byte(bits)])
           if (opcodes[bits2byte(bits)]) {
+            let instruction = opcodes[bits2byte(bits)][0]
+            let addressmode = opcodes[bits2byte(bits)][1]
             document.writeln()
             // document.writeln(`${ind};; ${opcodes[bits2byte(bits)]}`)
-            document.writeln(`${ind}(local.set $instruction (i32.const 0x${pad((instructions.indexOf(opcodes[bits2byte(bits)][0])).toString(16))})) ;; ${opcodes[bits2byte(bits)][0]}`)
-            document.writeln(`${ind}(local.set $addressmode (i32.const 0x${((addressModes.indexOf(opcodes[bits2byte(bits)][1])).toString(16))})) ;; ${opcodes[bits2byte(bits)][1]}`)
-            document.writeln(`${ind}(global.set $cycles (i32.sub (global.get $cycles) (i32.const ${opcodes[bits2byte(bits)][2]})))`)
+            document.writeln(`${ind}(global.set $cycles (i32.add (global.get $cycles) (i32.add (i32.const ${opcodes[bits2byte(bits)][2]}) (i32.and`)
+            document.writeln(`${ind}  (call $${addressmode}_adrmode)`)
+            document.writeln(`${ind}  (call $${instruction}_instr)`)
+            document.writeln(`${ind}))))`)
             document.writeln(`${ind}(br 7)`)
             document.writeln()
           } else {
             document.writeln(`${ind}(call $illegal (local.get $opcode))`)
           }
+        }
+      }
+      function addressModeFuncs(ind = "  ") {
+        let i = 0
+        for (const sym of addressModes) {
+          document.writeln(``)
+          document.writeln(`${ind}(func $${sym}_adrmode (result i32)`)
+          document.writeln(`${ind}  ;;                             NOT YET IMPLEMENTED`)
+          document.writeln(`${ind}  (call $illegal (i32.const ${i++}))`)
+          document.writeln(`${ind}  (i32.const 0)`)
+          document.writeln(`${ind})`)
+        }
+      }
+      function instructionFuncs(ind = "  ") {
+        let i = 0
+        for (const sym of instructions) {
+          document.writeln(``)
+          document.writeln(`${ind}(func $${sym}_instr (result i32)`)
+          document.writeln(`${ind}  ;;                             NOT YET IMPLEMENTED`)
+          document.writeln(`${ind}  (call $illegal (i32.const ${i++}))`)
+          document.writeln(`${ind}  (i32.const 0)`)
+          document.writeln(`${ind})`)
         }
       }
       function addressModeBranch(bits = "0000", ind = "    ") {
@@ -124,13 +149,13 @@
         'JSR', 'LDA', 'LDX', 'LDY', 'LSR', 'NOP', 'ORA', 'PHA', 'PHP', 'PLA', 'PLP', 'ROL', 'ROR', 'RTI',
         'RTS', 'SBC', 'SEC', 'SED', 'SEI', 'STA', 'STX', 'STY', 'TAX', 'TAY', 'TSX', 'TXA', 'TXS', 'TYA',
         'XXX'
-      ].reverse()
+      ]//.reverse()
       let addressModes = [
         'IMP', 'IMM', 'ZP0',
         'ZPX', 'ZPY', 'REL',
         'ABS', 'ABX', 'ABY',
         'IND', 'IZX', 'IZY',
-      ].reverse()
+      ]//.reverse()
       const opcodes = [
         ["BRK", "IMM", 7], ["ORA", "IZX", 6], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 3], ["ORA", "ZP0", 3], ["ASL", "ZP0", 5], ["XXX", "IMP", 5], ["PHP", "IMP", 3], ["ORA", "IMM", 2], ["ASL", "IMP", 2], ["XXX", "IMP", 2], ["NOP", "IMP", 4], ["ORA", "ABS", 4], ["ASL", "ABS", 6], ["XXX", "IMP", 6],
         ["BPL", "REL", 2], ["ORA", "IZY", 5], ["XXX", "IMP", 2], ["XXX", "IMP", 8], ["NOP", "IMP", 4], ["ORA", "ZPX", 4], ["ASL", "ZPX", 6], ["XXX", "IMP", 6], ["CLC", "IMP", 2], ["ORA", "ABY", 4], ["NOP", "IMP", 2], ["XXX", "IMP", 7], ["NOP", "IMP", 4], ["ORA", "ABX", 4], ["ASL", "ABX", 7], ["XXX", "IMP", 7],
@@ -152,9 +177,11 @@
 
       opcodeBranch()
       document.writeln()
-      addressModeBranch()
+      // addressModeBranch()
+      addressModeFuncs()
       document.writeln()
-      instructionBranch()
+      // instructionBranch()
+      instructionFuncs()
       document.writeln()
     </script>
   </pre>

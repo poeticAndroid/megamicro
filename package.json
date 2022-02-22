@@ -4,8 +4,8 @@
   "description": "An attempt to create my own fantasy cpu",
   "main": "script.js",
   "scripts": {
-    "build": "wat2wasm cpu.wat",
-    "watch": "sane \"npm run build\" . --glob=cpu.wat"
+    "build": "foreach -g ./*.wat -x \"wat2wasm #{path}\"",
+    "watch": "sane \"npm run build\" . --glob=*.wat"
   },
   "keywords": [
     "fantasy-console",
@@ -15,6 +15,7 @@
   "author": "poeticAndroid",
   "license": "MIT",
   "dependencies": {
+    "foreach-cli": "^1.8.1",
     "sane": "^5.0.1",
     "wabt": "^1.0.25"
   }
