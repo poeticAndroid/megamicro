@@ -121,17 +121,83 @@
   (export "setSR" (func $setSR))
 
   (func $reset
-    ;; not yet implemented!
+    (global.set $adr (i32.const 0xfffc))
+    (global.set $pc (i32.or
+      (call $read (global.get $adr) )
+      (i32.shl (call $read (i32.add (global.get $adr) (i32.const 1) ) ) (i32.const 8))
+    ))
+
+    (global.set $a (i32.const 0))
+    (global.set $x (i32.const 0))
+    (global.set $y (i32.const 0))
+    (global.set $sp (i32.const 0xfd))
+    (call $setSR (i32.const 0))
+    (global.set $u (i32.const 1))
+
+    (global.set $adr (i32.const 0))
+    (global.set $cycles (i32.add (global.get $cycles) (i32.const 8)))
   )
   (export "reset" (func $reset))
 
   (func $irq
-    ;; not yet implemented!
+    (if (i32.eqz (global.get $i)) (then
+      (call $write 
+        (i32.add (i32.const 0x100) (global.get $sp)) 
+        (i32.and (i32.const 0xff) (i32.shr_u (global.get $pc) (i32.const 8)))
+      )
+      (global.set $sp (i32.sub (global.get $sp) (i32.const 1) ))
+      (call $write 
+        (i32.add (i32.const 0x100) (global.get $sp) ) 
+        (i32.and (i32.const 0xff) (global.get $pc) )
+      )
+      (global.set $sp (i32.sub (global.get $sp) (i32.const 1) ))
+
+      (global.set $b (i32.const 0))
+      (global.set $u (i32.const 1))
+      (global.set $i (i32.const 1))
+      (call $write 
+        (i32.add (i32.const 0x100) (global.get $sp) ) 
+        (call $getSR)
+      )
+      (global.set $sp (i32.sub (global.get $sp) (i32.const 1) ))
+
+      (global.set $adr (i32.const 0xfffe))
+      (global.set $pc (i32.or
+        (call $read (global.get $adr) )
+        (i32.shl (call $read (i32.add (global.get $adr) (i32.const 1) ) ) (i32.const 8))
+      ))
+      (global.set $cycles (i32.add (global.get $cycles) (i32.const 7)))
+    ))
   )
   (export "irq" (func $irq))
 
   (func $nmi
-    ;; not yet implemented!
+    (call $write 
+      (i32.add (i32.const 0x100) (global.get $sp)) 
+      (i32.and (i32.const 0xff) (i32.shr_u (global.get $pc) (i32.const 8)))
+    )
+    (global.set $sp (i32.sub (global.get $sp) (i32.const 1) ))
+    (call $write 
+      (i32.add (i32.const 0x100) (global.get $sp) ) 
+      (i32.and (i32.const 0xff) (global.get $pc) )
+    )
+    (global.set $sp (i32.sub (global.get $sp) (i32.const 1) ))
+
+    (global.set $b (i32.const 0))
+    (global.set $u (i32.const 1))
+    (global.set $i (i32.const 1))
+    (call $write 
+      (i32.add (i32.const 0x100) (global.get $sp) ) 
+      (call $getSR)
+    )
+    (global.set $sp (i32.sub (global.get $sp) (i32.const 1) ))
+
+    (global.set $adr (i32.const 0xfffa))
+    (global.set $pc (i32.or
+      (call $read (global.get $adr) )
+      (i32.shl (call $read (i32.add (global.get $adr) (i32.const 1) ) ) (i32.const 8))
+    ))
+    (global.set $cycles (i32.add (global.get $cycles) (i32.const 8)))
   )
   (export "nmi" (func $nmi))
 
@@ -2719,6 +2785,7 @@
         ))
       ))
     ))
+    (global.set $u (i32.const 1))
   
     (i32.const 1)
   )
@@ -2726,74 +2793,135 @@
 
 
   (func $IMP_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 0))
     (i32.const 0)
   )
 
   (func $IMM_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 1))
+    (global.set $adr (global.get $pc))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
     (i32.const 0)
   )
 
   (func $ZP0_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 2))
+    (global.set $adr (call $read (global.get $pc)))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
+    (global.set $adr (i32.and (global.get $adr) (i32.const 0xff)))
     (i32.const 0)
   )
 
   (func $ZPX_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 3))
+    (global.set $adr (i32.add (call $read (global.get $pc)) (global.get $x) ))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
+    (global.set $adr (i32.and (global.get $adr) (i32.const 0xff)))
     (i32.const 0)
   )
 
   (func $ZPY_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 4))
+    (global.set $adr (i32.add (call $read (global.get $pc)) (global.get $y) ))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
+    (global.set $adr (i32.and (global.get $adr) (i32.const 0xff)))
     (i32.const 0)
   )
 
   (func $REL_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 5))
+    (local $rel i32)
+    (local.set $rel (call $read (global.get $pc)))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
+    (if (i32.and (local.get $rel) (i32.const 0x80)) (then
+      (local.set $rel (i32.sub (local.get $rel) (i32.const -256) ))
+    ))
+    (global.set $adr (i32.add (global.get $pc) (local.get $rel)))
     (i32.const 0)
   )
 
   (func $ABS_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 6))
+    (global.set $adr (i32.or
+      (call $read (global.get $pc) )
+      (i32.shl (call $read (i32.add (global.get $pc) (i32.const 1) ) ) (i32.const 8))
+    ))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 2)))
     (i32.const 0)
   )
 
   (func $ABX_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 7))
+    (global.set $adr (i32.or
+      (call $read (global.get $pc) )
+      (i32.shl (call $read (i32.add (global.get $pc) (i32.const 1) ) ) (i32.const 8))
+    ))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 2)))
+    (global.set $adr (i32.add (global.get $adr) (global.get $x)))
+
+    (if (i32.ne
+      (i32.and (global.get $adr) (i32.const 0xff00) )
+      (i32.and (i32.sub (global.get $adr) (global.get $x)) (i32.const 0xff00) )
+    )(then
+      (return (i32.const 1))
+    ))
     (i32.const 0)
   )
 
   (func $ABY_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 8))
+    (global.set $adr (i32.or
+      (call $read (global.get $pc) )
+      (i32.shl (call $read (i32.add (global.get $pc) (i32.const 1) ) ) (i32.const 8))
+    ))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 2)))
+    (global.set $adr (i32.add (global.get $adr) (global.get $y)))
+
+    (if (i32.ne
+      (i32.and (global.get $adr) (i32.const 0xff00) )
+      (i32.and (i32.sub (global.get $adr) (global.get $y)) (i32.const 0xff00) )
+    )(then
+      (return (i32.const 1))
+    ))
     (i32.const 0)
   )
 
   (func $IND_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 9))
+    (global.set $adr (i32.or
+      (call $read (global.get $pc) )
+      (i32.shl (call $read (i32.add (global.get $pc) (i32.const 1) ) ) (i32.const 8))
+    ))
+    (global.set $pc (i32.add (global.get $pc) (i32.const 2)))
+
+    (if (i32.eq (i32.and (global.get $adr) (i32.const 0xff) ) (i32.const 0xff) ) (then
+      (global.set $adr (i32.or
+        (call $read (global.get $adr) )
+        (i32.shl (call $read (i32.and (global.get $adr) (i32.const 0xff00) ) ) (i32.const 8))
+      ))
+    )(else
+      (global.set $adr (i32.or
+        (call $read (global.get $adr) )
+        (i32.shl (call $read (i32.add (global.get $adr) (i32.const 1) ) ) (i32.const 8))
+      ))
+    ))
     (i32.const 0)
   )
 
   (func $IZX_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 10))
+    (global.set $adr (call $read (global.get $pc)) )
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
+    (global.set $adr (i32.or
+      (call $read (i32.and (i32.add (global.get $adr) (global.get $x)) (i32.const 0xff) ) )
+      (i32.shl (call $read (i32.and (i32.add (i32.add (global.get $adr) (global.get $x)) (i32.const 1) ) (i32.const 0xff) ) ) (i32.const 8))
+    ))
     (i32.const 0)
   )
 
   (func $IZY_adrmode (result i32)
-    ;;                             NOT YET IMPLEMENTED
-    (call $illegal (i32.const 11))
+    (global.set $adr (call $read (global.get $pc)) )
+    (global.set $pc (i32.add (global.get $pc) (i32.const 1)))
+    (global.set $adr (i32.or
+      (call $read (i32.and (global.get $adr) (i32.const 0xff) ) )
+      (i32.shl (call $read (i32.and (i32.add (global.get $adr) (i32.const 1) ) (i32.const 0xff) ) ) (i32.const 8))
+    ))
+    (global.set $adr (i32.add (global.get $adr) (global.get $y)))
+    (if (i32.ne
+      (i32.and (global.get $adr) (i32.const 0xff00) )
+      (i32.and (i32.sub (global.get $adr) (global.get $y)) (i32.const 0xff00) )
+    )(then
+      (return (i32.const 1))
+    ))
     (i32.const 0)
   )
 
