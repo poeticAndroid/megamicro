@@ -4,6 +4,7 @@
   (global $pc (mut i32) (i32.const 0x0) ) ;; program counter
   (global $cs (mut i32) (i32.const 0x0) ) ;; call stack counter
   (global $vs (mut i32) (i32.const 0x0) ) ;; value stack counter
+  (global $safecs (mut i32) (i32.const 0x0) ) ;; safe call stack pointer
   (global $sleep (mut i32) (i32.const 0x0) ) ;; sleep duration
 
   (func $getPC (result i32) (global.get $pc) )
@@ -25,25 +26,29 @@
   (export "getSleep" (func $getSleep) )
 
   (func $push (param $val i32)
+    (if (i32.ge_u (global.get $vs) (global.get $cs) ) (then
+      (global.set $vs (global.get $cs) )
+    ) )
     (global.set $vs (i32.sub (global.get $vs) (i32.const 4) ) )
     (i32.store (global.get $vs) (local.get $val) )
   )
   (func $pop (result i32)
-    (if (i32.ge_s (global.get $vs) (global.get $cs) ) (then
-      (global.set $vs (global.get $cs) )
+    (if (i32.ge_u (global.get $vs) (global.get $cs) ) (then
       (call $push (i32.const 0) )
     ) )
     (i32.load (global.get $vs) )
     (global.set $vs (i32.add (global.get $vs) (i32.const 4) ) )
   )
   (func $fpush (param $val f32)
+    (if (i32.ge_s (global.get $vs) (global.get $cs) ) (then
+      (global.set $vs (global.get $cs) )
+    ) )
     (global.set $vs (i32.sub (global.get $vs) (i32.const 4) ) )
     (f32.store (global.get $vs) (local.get $val) )
   )
   (func $fpop (result f32)
     (if (i32.ge_s (global.get $vs) (global.get $cs) ) (then
-      (global.set $vs (global.get $cs) )
-      (call $fpush (f32.const 0) )
+      (call $push (i32.const 0) )
     ) )
     (f32.load (global.get $vs) )
     (global.set $vs (i32.add (global.get $vs) (i32.const 4) ) )
@@ -440,10 +445,17 @@
                 ) )
               ) (else ;; $08 - $0B
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $0A - $0B
+                  (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $0B
 
-                  (call $noop_instr)
-                  (br 6)
+                    (call $break_instr)
+                    (br 7)
 
+                  ) (else ;; $0A
+
+                    (call $exec_instr)
+                    (br 7)
+
+                  ) )
                 ) (else ;; $08 - $09
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $09
 
@@ -563,8 +575,8 @@
       (br 0)
     ) )
 
-    (call $push (global.get $pc) )
     (call $push (global.get $cs) )
+    (call $push (global.get $pc) )
     (global.set $cs (global.get $vs) )
 
     (local.set $count (local.get $params) )
@@ -584,14 +596,36 @@
     (local.set $result (call $pop) )
     (global.set $vs (global.get $cs) )
     (global.set $cs (i32.mul (i32.const 0x10000) (memory.size) ) )
-    (global.set $cs (call $pop) )
     (global.set $pc (call $pop) )
+    (global.set $cs (call $pop) )
     (call $push (local.get $result) )
   )
+
+  (func $exec_instr
+    (call $call_instr)
+    (if (i32.eqz (global.get $safecs) ) (then
+      (global.set $safecs (global.get $cs) )
+    ) )
+  )
+
+  (func $break_instr
+    (call $push (i32.const -1) )
+    (if (global.get $safecs) (then
+      (global.set $cs (global.get $safecs) )
+      (global.set $safecs (i32.const 0) )
+      (call $return_instr )
+    ) (else
+      (call $reset_instr)
+    ) )
+  ) (export "break" (func $break_instr) )
 
   (func $reset_instr
     (global.set $cs (i32.mul (i32.const 0x10000) (memory.size) ) )
     (global.set $vs (i32.mul (i32.const 0x10000) (memory.size) ) )
+    (global.set $safecs (i32.const 0) )
+    (call $push (i32.sub (global.get $cs) (i32.const 8) ) )
+    (global.set $cs (call $pop) )
+    (call $return_instr)
   ) (export "reset" (func $reset_instr) )
 
   (func $absadr_instr

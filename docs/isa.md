@@ -13,8 +13,8 @@ CPU instructions
 **x7** |                        | stackptr:negadr             | uitof:float int | rot:n a b
 **x8** | call:result adr params | drop val                    | fadd:n a b      | feq:bool a b
 **x9** | return result          | set index val               | fsub:n a b      | flt:bool a b
-**xA** |                        |                             | fmult:n a b     | fgt:bool a b
-**xB** |                        | store adr len val           | fdiv:n a b      |
+**xA** | exec:err adr params    |                             | fmult:n a b     | fgt:bool a b
+**xB** | break                  | store adr len val           | fdiv:n a b      |
 **xC** | reset                  | storebit adr bit bitlen val | ffloor:n a      |
 **xD** | absadr:absadr adr      |                             |                 |
 **xE** | cpuver:ver             |                             |                 |
