@@ -30,7 +30,7 @@
             document.writeln(`${ind}) )`)
           } else {
             document.writeln()
-            document.writeln(`${ind}(call $${bits.slice(0, 2) === "00" ? "noop" : "const"}_instr)`)
+            document.writeln(`${ind}(call $${bits.slice(0, 2) === "00" ? "noop" : "lit"}_instr)`)
             document.writeln(`${ind}(br ${bits.length - 1})`)
             document.writeln()
           }
@@ -38,7 +38,7 @@
           document.writeln(` ;; $${pad(bits2byte(bits).toString(16))}`)
           console.log(` ;; $${pad(bits2byte(bits).toString(16))}`, opcodes[bits2byte(bits)])
           // if (opcodes[bits2byte(bits)]) {
-          let instruction = opcodes[bits2byte(bits)] || (bits2byte(bits) >= opcodes.length ? "const" : "noop")
+          let instruction = opcodes[bits2byte(bits)] || (bits2byte(bits) >= opcodes.length ? "lit" : "noop")
           document.writeln()
           document.writeln(`${ind}(call $${instruction}_instr)`)
           document.writeln(`${ind}(br ${bits.length - 1})`)
@@ -83,7 +83,7 @@
 
       const opcodes = [
         "halt", "sleep", "vsync", null, "jump", "jumpifz", null, null, "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
-        "const", "get", null, "load", "loadbit", "loadu", null, "stackptr", "drop", "set", null, "store", "storebit", null, null, "memsize",
+        "lit", "get", null, "load", "loadbit", "loadu", null, "stackptr", "drop", "set", null, "store", "storebit", null, null, "memsize",
         "add", "sub", "mult", "div", "rem", null, "itof", "uitof", "fadd", "fsub", "fmult", "fdiv", "ffloor", null, null, "ftoi",
         "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", null, null, null, null, null
       ]

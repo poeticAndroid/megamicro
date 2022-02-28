@@ -73,7 +73,7 @@
         mem[i] = mem[i] ^ mem[2]
       }
     }
-    await loadCPU("cpu.wasm", { pcb: { ram: ram } })
+    await loadCPU("z28r_cpu.wasm", { env: { ram: ram } })
     hwClock()
     render()
     window.mem = mem
@@ -138,7 +138,7 @@
         running = false
         return setTimeout(() => {
           delete cpu
-          loadCPU("cypu.wasm", { pcb: { ram: ram } }).then(
+          loadCPU("z28r_cpu.wasm", { env: { ram: ram } }).then(
             render()
           )
         }, 16384)
@@ -150,11 +150,9 @@
           break
         case 0x01: // sleep
           running = false
-          let adr = cpu.getVS()
-          uint8.set(mem.slice(adr, adr + 4))
           sleep = setTimeout(() => {
             running = true
-          }, int32[0])
+          }, cpu.getSleep())
           break
         case 0x02:
           vsyncfps++
@@ -479,7 +477,7 @@
       txt += ("000000" + adr.toString(16)).slice(-5) + " "
       txt += ("00" + mem[adr].toString(16)).slice(-2) + " "
       txt += (opcodes[mem[adr]] || "") + " "
-      if (opcodes[mem[adr]] === "const") {
+      if (opcodes[mem[adr]] === "lit") {
         uint8.set(mem.slice(adr + 1, adr + 5))
         txt += "0x" + int32[0].toString(16) + " " + int32[0]
         adr += 4

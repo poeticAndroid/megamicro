@@ -93,13 +93,13 @@
     ;; Execute!
     (if (i32.and (local.get $opcode) (i32.const 0xC0) ) (then ;; $40 - $FF
 
-      (call $const_instr)
+      (call $lit_instr)
       (br 0)
 
     ) (else ;; $00 - $7F
       (if (i32.and (local.get $opcode) (i32.const 0x40) ) (then ;; $40 - $7F
 
-        (call $const_instr)
+        (call $lit_instr)
         (br 1)
 
       ) (else ;; $00 - $3F
@@ -408,7 +408,7 @@
 
                   ) (else ;; $10
 
-                    (call $const_instr)
+                    (call $lit_instr)
                     (br 7)
 
                   ) )
@@ -639,7 +639,7 @@
   (func $noop_instr
   )
 
-  (func $const_instr
+  (func $lit_instr
     (local $opcode i32)
     (local $val i32)
     (local $rot i32)

@@ -3,7 +3,7 @@ CPU instructions
 
 \      | 0x Flow                | 1x Memory                   | 2x Math         | 3x Logic
 -------|------------------------|-----------------------------|-----------------|-------------
-**x0** | halt                   | const:val                   | add:n a b       | eq:bool a b
+**x0** | halt                   | lit:val                     | add:n a b       | eq:bool a b
 **x1** | sleep ms               | get:val index               | sub:n a b       | lt:bool a b
 **x2** | vsync                  |                             | mult:n a b      | gt:bool a b
 **x3** |                        | load:val adr len            | div:n a b       | eqz:bool a
@@ -20,13 +20,13 @@ CPU instructions
 **xE** | cpuver:ver             |                             |                 |
 **xF** | noop                   | memsize:bytes               | ftoi:int float  |
 
- - All instructions are 1 byte, except for constants (read below)
+ - All instructions are 1 byte, except for literals (read below)
  - Instruction parameters are popped in specified order and thus must be pushed in reverse order
  - All values are stored as little endian
 
 
-Constants
----------
+Literals
+--------
 
 Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4
 ------------------------|-----------|-----------|-----------|-----------|----------
