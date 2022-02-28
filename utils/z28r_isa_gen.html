@@ -19,19 +19,19 @@
 <body>
   <pre>
     <script>
-      function opcodeBranch(bits = "0", ind = "    ") {
+      function opcodeBranch(bits = "", ind = "    ") {
         if (bits.length < 8) {
           document.writeln(` ;; $${pad(bits2byte(bits, "0").toString(16))} - $${pad(bits2byte(bits, "1").toString(16))}`)
           if (anything(opcodes, bits2byte(bits, "0"), bits2byte(bits, "1"))) {
             document.write(`${ind}(if (i32.and (local.get $opcode) (i32.const 0x${pad(mask4bitlen(bits).toString(16))}) ) (then`)
             opcodeBranch(bits + "1", ind + "  ")
-            document.write(`${ind})(else`)
+            document.write(`${ind}) (else`)
             opcodeBranch(bits + "0", ind + "  ")
-            document.writeln(`${ind}))`)
+            document.writeln(`${ind}) )`)
           } else {
             document.writeln()
             document.writeln(`${ind}(call $${bits.slice(0, 2) === "00" ? "noop" : "const"}_instr)`)
-            document.writeln(`${ind}(br ${bits.length - 2})`)
+            document.writeln(`${ind}(br ${bits.length - 1})`)
             document.writeln()
           }
         } else {
@@ -41,10 +41,10 @@
           let instruction = opcodes[bits2byte(bits)] || (bits2byte(bits) >= opcodes.length ? "const" : "noop")
           document.writeln()
           document.writeln(`${ind}(call $${instruction}_instr)`)
-          document.writeln(`${ind}(br ${bits.length - 2})`)
+          document.writeln(`${ind}(br ${bits.length - 1})`)
           document.writeln()
           // } else {
-          //   document.writeln(`${ind}(call $illegal (local.get $opcode))`)
+          //   document.writeln(`${ind}(call $illegal (local.get $opcode) )`)
           // }
         }
       }
@@ -56,7 +56,7 @@
           document.writeln(``)
           document.writeln(`${ind}(func $${sym}_instr`)
           document.writeln(`${ind}  ;;                             NOT YET IMPLEMENTED`)
-          // document.writeln(`${ind}  (call $illegal (i32.const ${i++}))`)
+          // document.writeln(`${ind}  (call $illegal (i32.const ${i++}) )`)
           // document.writeln(`${ind}  (i32.const 0)`)
           document.writeln(`${ind})`)
           done.push(sym)
@@ -82,9 +82,9 @@
       }
 
       const opcodes = [
-        "halt", "sleep", "vsync", null, "jump", "jumpifz", null, null, "call", "return", null, null, "reset", "here", "cpuver", "noop",
+        "halt", "sleep", "vsync", null, "jump", "jumpifz", null, null, "call", "return", null, null, "reset", "absadr", "cpuver", "noop",
         "const", "get", null, "load", "loadbit", "loadu", null, "stackptr", "drop", "set", null, "store", "storebit", null, null, "memsize",
-        "add", "sub", "mult", "div", "rem", null, null, "ftoi", "fadd", "fsub", "fmult", "fdiv", null, null, "uitof", "sitof",
+        "add", "sub", "mult", "div", "rem", null, "itof", "uitof", "fadd", "fsub", "fmult", "fdiv", "ffloor", null, null, "ftoi",
         "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", null, null, null, null, null
       ]
 
