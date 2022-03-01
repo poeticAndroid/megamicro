@@ -316,14 +316,14 @@
 
                   ) (else ;; $1E
 
-                    (call $noop_instr)
+                    (call $dec_instr)
                     (br 7)
 
                   ) )
                 ) (else ;; $1C - $1D
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $1D
 
-                    (call $noop_instr)
+                    (call $inc_instr)
                     (br 7)
 
                   ) (else ;; $1C
@@ -796,6 +796,28 @@
 
     (local.set $val (i32.and (i32.xor (local.get $val) (i32.load8_u (local.get $adr) ) ) (local.get $mask) ) )
     (i32.store8 (local.get $adr) (i32.xor (i32.load8_u (local.get $adr) ) (local.get $val) ) )
+  )
+
+  (func $inc_instr
+    (local $index i32)
+    (local.set $index (call $pop) )
+    (call $push (i32.const 1) )
+    (call $push (local.get $index) )
+    (call $get_instr)
+    (call $add_instr)
+    (call $push (local.get $index) )
+    (call $set_instr)
+  )
+
+  (func $dec_instr
+    (local $index i32)
+    (local.set $index (call $pop) )
+    (call $push (i32.const 1) )
+    (call $push (local.get $index) )
+    (call $get_instr)
+    (call $sub_instr)
+    (call $push (local.get $index) )
+    (call $set_instr)
   )
 
   (func $memsize_instr

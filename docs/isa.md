@@ -16,8 +16,8 @@ CPU instructions
 **xA** | exec:err adr params    |                             | fmult:n a b     | fgt:bool a b
 **xB** | break                  | store adr len val           | fdiv:n a b      |
 **xC** | reset                  | storebit adr bit bitlen val | ffloor:n a      |
-**xD** | absadr:absadr adr      |                             |                 |
-**xE** | cpuver:ver             |                             |                 |
+**xD** | absadr:absadr adr      | inc index                   |                 |
+**xE** | cpuver:ver             | dec index                   |                 |
 **xF** | noop                   | memsize:bytes               | ftoi:int float  |
 
  - All instructions are 1 byte, except for literals (read below)
