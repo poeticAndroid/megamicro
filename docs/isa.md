@@ -10,7 +10,7 @@ CPU instructions
 **x4** | jump adr               | loadbit:val adr bit bitlen  | rem:n a b       | and:n a b
 **x5** | jumpifz adr val        | loadu:val adr len           |                 | or:n a b
 **x6** |                        |                             | itof:float int  | xor:n a b
-**x7** |                        | stackptr:negadr             | uitof:float int | rot:n a b
+**x7** | endcall                | stackptr:negadr             | uitof:float int | rot:n a b
 **x8** | call:result adr params | drop val                    | fadd:n a b      | feq:bool a b
 **x9** | return result          | set index val               | fsub:n a b      | flt:bool a b
 **xA** | exec:err adr params    |                             | fmult:n a b     | fgt:bool a b

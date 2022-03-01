@@ -473,10 +473,17 @@
             ) (else ;; $00 - $07
               (if (i32.and (local.get $opcode) (i32.const 0x04) ) (then ;; $04 - $07
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $06 - $07
+                  (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $07
 
-                  (call $noop_instr)
-                  (br 6)
+                    (call $endcall_instr)
+                    (br 7)
 
+                  ) (else ;; $06
+
+                    (call $noop_instr)
+                    (br 7)
+
+                  ) )
                 ) (else ;; $04 - $05
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $05
 
@@ -550,6 +557,13 @@
     ) )
   )
 
+  (func $endcall_instr
+    (global.set $vs (global.get $cs) )
+    (global.set $cs (i32.mul (i32.const 0x10000) (memory.size) ) )
+    (global.set $pc (call $pop) )
+    (global.set $cs (call $pop) )
+  )
+
   (func $call_instr
     (local $adr i32)
     (local $params i32)
@@ -592,13 +606,9 @@
   )
 
   (func $return_instr
-    (local $result i32)
-    (local.set $result (call $pop) )
-    (global.set $vs (global.get $cs) )
-    (global.set $cs (i32.mul (i32.const 0x10000) (memory.size) ) )
-    (global.set $pc (call $pop) )
-    (global.set $cs (call $pop) )
-    (call $push (local.get $result) )
+    (call $pop)
+    (call $endcall_instr)
+    (call $push)
   )
 
   (func $exec_instr
