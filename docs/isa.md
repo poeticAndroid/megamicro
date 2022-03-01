@@ -5,20 +5,20 @@ CPU instructions
 -------|------------------------|-----------------------------|-----------------|-------------
 **x0** | halt                   | lit:val                     | add:n a b       | eq:bool a b
 **x1** | sleep ms               | get:val index               | sub:n a b       | lt:bool a b
-**x2** | vsync                  |                             | mult:n a b      | gt:bool a b
-**x3** |                        | load:val adr len            | div:n a b       | eqz:bool a
-**x4** | jump adr               | loadbit:val adr bit bitlen  | rem:n a b       | and:n a b
-**x5** | jumpifz adr val        | loadu:val adr len           |                 | or:n a b
-**x6** |                        |                             | itof:float int  | xor:n a b
-**x7** | endcall                | stackptr:negadr             | uitof:float int | rot:n a b
+**x2** | vsync                  | stackptr:negadr             | mult:n a b      | gt:bool a b
+**x3** |                        | memsize:bytes               | div:n a b       | eqz:bool a
+**x4** | jump adr               |                             | rem:n a b       | and:n a b
+**x5** | jumpifz adr val        | loadbit:val adr bit bitlen  |                 | or:n a b
+**x6** |                        | load:val adr len            | itof:float int  | xor:n a b
+**x7** | endcall                | loadu:val adr len           | uitof:float int | rot:n a b
 **x8** | call:result adr params | drop val                    | fadd:n a b      | feq:bool a b
 **x9** | return result          | set index val               | fsub:n a b      | flt:bool a b
-**xA** | exec:err adr params    |                             | fmult:n a b     | fgt:bool a b
-**xB** | break                  | store adr len val           | fdiv:n a b      |
-**xC** | reset                  | storebit adr bit bitlen val | ffloor:n a      |
-**xD** | absadr:absadr adr      | inc index                   |                 |
-**xE** | cpuver:ver             | dec index                   |                 |
-**xF** | noop                   | memsize:bytes               | ftoi:int float  |
+**xA** | exec:err adr params    | inc index                   | fmult:n a b     | fgt:bool a b
+**xB** | break                  | dec index                   | fdiv:n a b      |
+**xC** | reset                  |                             | ffloor:n a      |
+**xD** | absadr:absadr adr      | storebit adr bit bitlen val |                 |
+**xE** | cpuver:ver             | store adr len val           |                 |
+**xF** | noop                   |                             | ftoi:int float  |
 
  - All instructions are 1 byte, except for literals (read below)
  - Instruction parameters are popped in specified order and thus must be pushed in reverse order
