@@ -209,12 +209,11 @@
     return oldArr.slice(0, size)
   }
 
-  const _ = null
   const opcodes = [
-    "halt", "sleep", "vsync", _, "jump", "jumpifz", _, "cpuver", "call", "sys", _, "return", "reset", "here", "goto", "noop",
-    "const", "get", _, "load", "load16u", "load8u", "load16s", "load8s", "drop", "set", _, "store", "store16", "store8", "stacksize", "memsize",
-    "add", "sub", "mult", "div", "rem", _, _, "ftoi", "fadd", "fsub", "fmult", "fdiv", _, _, "uitof", "sitof",
-    "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", _, _, _, _, _
+    "halt", "sleep", "vsync", null, "jump", "jumpifz", null, "endcall", "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
+    "lit", "get", "stackptr", "memsize", null, "loadbit", "load", "loadu", "drop", "set", "inc", "dec", null, "storebit", "store", null,
+    "add", "sub", "mult", "div", "rem", null, "itof", "uitof", "fadd", "fsub", "fmult", "fdiv", "ffloor", null, null, "ftoi",
+    "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", null, null, null, null, null
   ]
 
   window.assemble = assemble

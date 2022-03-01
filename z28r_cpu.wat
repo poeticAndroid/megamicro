@@ -905,7 +905,7 @@
   )
 
   (func $rot_instr
-    (call $push (i32.rotr (call $pop) (call $pop) ) )
+    (call $push (i32.rotl (call $pop) (call $pop) ) )
   )
 
   (func $feq_instr
