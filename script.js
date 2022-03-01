@@ -107,22 +107,22 @@
   function render(t = 0) {
     let opcode
     if (running) {
-      if (kbBuffer.length && mem[0xb4f4] === 0) {
-        mem[0xb4f5] = kbBuffer.shift()
-        mem[0xb4f4] = Math.min(255, 1 + kbBuffer.length)
+      if (kbBuffer.length && mem[0x4b04] === 0) {
+        mem[0x4b05] = kbBuffer.shift()
+        mem[0x4b04] = Math.min(255, 1 + kbBuffer.length)
       }
-      if (mem[0xb4f0]) {
-        if (mem[0xb4f1]) {
-          diskReq.push(mem.slice(0xb600, 0xb600 + mem[0xb4f1]))
-          mem[0xb4f1] = 0
+      if (mem[0x4b00]) {
+        if (mem[0x4b01]) {
+          diskReq.push(mem.slice(0x4900, 0x4900 + mem[0x4b01]))
+          mem[0x4b01] = 0
         }
-        handleDrive(mem[0xb4f0] - 1)
-        if (!mem[0xb4f2]) {
+        handleDrive(mem[0x4b00] - 1)
+        if (!mem[0x4b02]) {
           if (diskResp.length) {
-            mem[0xb4f2] = diskResp[0].length
-            mem.set(diskResp.shift(), 0xb700)
+            mem[0x4b02] = diskResp[0].length
+            mem.set(diskResp.shift(), 0x4a00)
           } else if (!diskBusy && !diskWrite) {
-            mem[0xb4f0] = 0
+            mem[0x4b00] = 0
           }
         }
       } else {
@@ -161,7 +161,7 @@
     }
 
     // rendering
-    let mode = mem[0xb4f8],
+    let mode = mem[0x4b08],
       bpp = Math.pow(2, mode & 0x3)
     if (gmode !== mode) {
       let pw = 1, ph = 1
@@ -188,8 +188,8 @@
       img = g.getImageData(0, 0, canvas.width, canvas.height)
       gmode = mode
     }
-    let start = 0xb800
-    let end = 0x10000
+    let start = 0x0000
+    let end = 0x4800
     let i = 0
     for (let m = start; m < end; m++) {
       i += renderbyte(m, i, bpp, mode & 4)
@@ -270,21 +270,21 @@
 
   function onUser(e) {
     if (e.type.slice(0, 5) === "mouse") {
-      mem[0xb4f9] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
-      mem[0xb4fa] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
-      if (mem[0xb4fb] = e.buttons) {
+      mem[0x4b09] = Math.max(0, (e.offsetX / e.target.clientWidth) * 255)
+      mem[0x4b0a] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
+      if (mem[0x4b0b] = e.buttons) {
         kbEnabled = true
         canvas.style.cursor = "none"
       }
     }
 
     if (e.type === "keyup") {
-      mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
+      mem[0x4b07] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
     }
     if (e.type === "keydown") {
       if (kbEnabled) {
-        mem[0xb4f6] = e.keyCode
-        mem[0xb4f7] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
+        mem[0x4b06] = e.keyCode
+        mem[0x4b07] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
         if (!e.ctrlKey && !e.metaKey) {
           if (e.key === "Backspace") {
             kbBuffer.push(0x08)
@@ -389,8 +389,8 @@
 
 
     if (!diskInitialized) {
-      mem.fill(0, 0xb4f0, 0xb4f4)
-      mem.fill(0, 0xb600, 0xb800)
+      mem.fill(0, 0x4b00, 0x4b04)
+      mem.fill(0, 0x4900, 0xb800)
       diskBusy = false
       diskCwd[driveNum] = "/"
       diskInitialized = true
@@ -430,14 +430,14 @@
 
   function hwClock() {
     let now = new Date()
-    mem[0xb4e8] = now.getYear()
-    mem[0xb4e9] = now.getMonth()
-    mem[0xb4ea] = now.getDate()
-    mem[0xb4eb] = now.getDay()
-    mem[0xb4ec] = now.getHours()
-    mem[0xb4ed] = now.getMinutes()
-    mem[0xb4ee] = now.getSeconds()
-    mem[0xb4ef] = 0
+    mem[0x4b10] = now.getYear()
+    mem[0x4b11] = now.getMonth()
+    mem[0x4b12] = now.getDate()
+    mem[0x4b13] = now.getDay()
+    mem[0x4b14] = now.getHours()
+    mem[0x4b15] = now.getMinutes()
+    mem[0x4b16] = now.getSeconds()
+    mem[0x4b17] = 0
     setTimeout(hwClock, 1000 - now.getMilliseconds())
   }
 
