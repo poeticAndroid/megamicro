@@ -37,33 +37,12 @@
     canvas.addEventListener("mousemove", onUser)
     canvas.addEventListener("mouseout", e => canvas.style.cursor = "crosshair")
 
-    document.querySelector("#asmTxt").value = localStorage.getItem("program.asm") || `;;Peti asm
-    ;; docs at https://github.com/poeticAndroid/peti
-
-    (main: ;; must be the first function
-      (@vars $argv
-        )
-      (sys (0x03) (@call memstart) (-1) (0x400) (3)) ;; printstr syscall
-    
-      (@return (0)) ;; return to dos with no error
-    )
-    
-    (memstart: ;; must be the last function
-      (@return (add (8) (here)))
-    )
-
-    (@string 0x10 "Hello world!\\x9b\\n\\n")
-    `.replaceAll("\n    ", "\n")
-    document.querySelector("#fileTxt").value = localStorage.getItem("?file") || "drive0:/main.prg"
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "16"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()
-    document.querySelector("#compileBtn").addEventListener("click", compileAsm)
     document.querySelector("#stopBtn").addEventListener("click", e => { running = false; clearTimeout(sleep) })
     document.querySelector("#stepBtn").addEventListener("click", e => cpu.run(1))
     document.querySelector("#runBtn").addEventListener("click", e => running = true)
 
-    document.querySelector("#asmTxt").addEventListener("focus", e => kbEnabled = false)
-    document.querySelector("#fileTxt").addEventListener("focus", e => kbEnabled = false)
     document.querySelector("#speedTxt").addEventListener("focus", e => kbEnabled = false)
 
     for (let i = 0; i < mem.length; i++) {

@@ -29,9 +29,16 @@ pre {
   width: 20em;
 }
 
+.newfile {
+  font-style: italic;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     background-color: #111;
     color: #eee;
+  }
+  a,a:link,a:visited{
+    color: #9cf;
   }
 }

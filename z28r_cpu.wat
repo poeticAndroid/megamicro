@@ -9,18 +9,12 @@
 
   (func $getPC (result i32) (global.get $pc) )
   (export "getPC" (func $getPC) )
-  (func $setPC (param $val i32) (global.set $pc (local.get $val) ) )
-  (export "setPC" (func $setPC) )
 
   (func $getCS (result i32) (global.get $cs) )
   (export "getCS" (func $getCS) )
-  (func $setCS (param $val i32) (global.set $cs (local.get $val) ) )
-  (export "setCS" (func $setCS) )
 
   (func $getVS (result i32) (global.get $vs) )
   (export "getVS" (func $getVS) )
-  (func $setVS (param $val i32) (global.set $vs (local.get $val) ) )
-  (export "setVS" (func $setVS) )
 
   (func $getSleep (result i32) (global.get $sleep) )
   (export "getSleep" (func $getSleep) )

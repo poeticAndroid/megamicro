@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>z28r asm</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="assembler.js"></script>
+</head>
+
+<body>
+  <p>
+    <select id="fileSel">
+      <option class="sep"> --- </option>
+      <option value="%new" class="newfile"><em>New file..</em></option>
+    </select>
+  </p>
+  <p>
+    <textarea name="source" id="sourceTxt" cols="80" rows="24"></textarea>
+  </p>
+  <article>
+    <pre id="binDump"> ¯\_(ツ)_/¯ </pre>
+  </article>
+  <a href="javascript:history.back()">computer</a>
+  <script>
+    let files = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const file = localStorage.key(i)
+      if (file.slice(0, 8) === "drive0:/" && file.slice(-4) === ".asm") {
+        files.push(file)
+      }
+    }
+    files.sort()
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      let opt = document.createElement("option")
+      opt.setAttribute("value", file)
+      opt.textContent = file
+      document.querySelector("#fileSel").insertBefore(opt, document.querySelector(".sep"))
+    }
+    document.querySelector("#fileSel").addEventListener("change", e => {
+      if (e.target.value === "%new") {
+        let file = prompt("Filename:", "drive0:/")
+        if (!file) location.reload()
+        if (file.slice(-4) !== ".asm") file += ".asm"
+        localStorage.setItem(file, "3b3b207a3238722061736d0a")
+        location.replace("#" + file)
+        location.reload()
+      } else {
+        location.replace("#" + e.target.value)
+        document.querySelector("#sourceTxt").value = load(e.target.value)
+        document.querySelector("#binDump").textContent = "program dump here"
+      }
+    })
+    document.querySelector("#sourceTxt").addEventListener("keydown", e => {
+      setTimeout(() => {
+        e.target.focus()
+      })
+    })
+    document.querySelector("#sourceTxt").addEventListener("keyup", e => {
+      if (e.key === "Tab") {
+        console.log(e.key)
+        let pos = e.target.selectionStart
+        let val = e.target.value
+        let indent = "  "
+        e.target.value = val.slice(0, pos) + indent + val.slice(pos)
+        e.target.selectionStart = e.target.selectionEnd = pos + indent.length
+      }
+      if (e.key === "Enter") {
+        let pos = e.target.selectionStart
+        let val = e.target.value
+        let lastLine = val.slice(0, pos).trim().split("\n").pop()
+        let indent = lastLine.slice(0, lastLine.indexOf(lastLine.trim()))
+        e.target.value = val.slice(0, pos) + indent + val.slice(pos)
+        e.target.selectionStart = e.target.selectionEnd = pos + indent.length
+      }
+    })
+    document.querySelector("#sourceTxt").addEventListener("change", e => {
+      save(document.querySelector("#fileSel").value, document.querySelector("#sourceTxt").value)
+      let bin = assemble(document.querySelector("#sourceTxt").value)
+      document.querySelector("#binDump").textContent = dumpBin(bin)
+      save(document.querySelector("#fileSel").value.replace(".asm", ".prg"), bin)
+    })
+    document.querySelector("#fileSel").value = location.hash.replace("#", "")
+    document.querySelector("#sourceTxt").value = load(location.hash.replace("#", ""))
+
+    function load(file) {
+      let src = localStorage.getItem(file)
+      console.log("load", file, src)
+      let out = ""
+      for (let i = 0; i < src.length; i += 2) {
+        out += String.fromCharCode(parseInt(src.slice(i, i + 2), 16))
+      }
+      return out
+    }
+    function save(file, data) {
+      let src = ""
+      for (let i = 0; i < data.length; i++) {
+        if (typeof data === "string") src += ("00" + data.charCodeAt(i).toString(16)).slice(-2)
+        else src += ("00" + data[i].toString(16)).slice(-2)
+      }
+      console.log("save", file, src)
+      localStorage.setItem(file, src)
+    }
+  </script>
+  <script src="/live.js"></script>
+</body>
+
+</html>

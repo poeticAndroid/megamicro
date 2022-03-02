@@ -39,11 +39,11 @@
         if (params >= 0 || results >= 0) {
           if (params >= 0) {
             int32[0] = labels[label] - (outpos + 11)
-            writeBytes([opcodes.indexOf("const")])
+            writeBytes([opcodes.indexOf("lit")])
             writeBytes(uint8)
           }
           int32[0] = Math.max(params, results)
-          writeBytes([opcodes.indexOf("const")])
+          writeBytes([opcodes.indexOf("lit")])
           writeBytes(uint8)
           writeBytes([opcodes.indexOf(params >= 0 ? "call" : "return")])
           if (params >= 0) {
@@ -62,7 +62,7 @@
         encode()
         if (iff === 1 || whil === 1) {
           int32[0] = 0
-          writeBytes([opcodes.indexOf("const")])
+          writeBytes([opcodes.indexOf("lit")])
           writeBytes(uint8)
           writeBytes([opcodes.indexOf("jumpifz")])
           then = outpos
@@ -70,12 +70,12 @@
         if (iff === 2 || whil === 2) {
           if (whil > 0) {
             int32[0] = cond - (outpos + 6)
-            writeBytes([opcodes.indexOf("const")])
+            writeBytes([opcodes.indexOf("lit")])
             writeBytes(uint8)
             writeBytes([opcodes.indexOf("jump")])
           }
           int32[0] = 0
-          writeBytes([opcodes.indexOf("const")])
+          writeBytes([opcodes.indexOf("lit")])
           writeBytes(uint8)
           writeBytes([opcodes.indexOf("jump")])
           int32[0] = outpos - then
@@ -109,7 +109,7 @@
       } else if (token === "@jump") {
         let label = readToken()
         int32[0] = labels[label] - (outpos + 6)
-        writeBytes([opcodes.indexOf("const")])
+        writeBytes([opcodes.indexOf("lit")])
         writeBytes(uint8)
         writeBytes([opcodes.indexOf("jump")])
         if (!labels[label]) {
@@ -135,17 +135,17 @@
           case 1: // declaration
             locals.push(token)
             int32[0] = 0
-            writeBytes([opcodes.indexOf("const")])
+            writeBytes([opcodes.indexOf("lit")])
             writeBytes(uint8)
             break
           case 2: // assignment
             int32[0] = locals.indexOf(token)
-            writeBytes([opcodes.indexOf("const")])
+            writeBytes([opcodes.indexOf("lit")])
             writeBytes(uint8)
             break
           default: // reference
             int32[0] = locals.indexOf(token)
-            writeBytes([opcodes.indexOf("const")])
+            writeBytes([opcodes.indexOf("lit")])
             writeBytes(uint8)
             writeBytes([opcodes.indexOf("get")])
             break
@@ -180,8 +180,8 @@
         let val = eval(token)
         if (token.includes(".")) float32[0] = val
         else int32[0] = val
-        if (bytes[bytes.length - 1] !== opcodes.indexOf("const"))
-          bytes.push(opcodes.indexOf("const"))
+        if (bytes[bytes.length - 1] !== opcodes.indexOf("lit"))
+          bytes.push(opcodes.indexOf("lit"))
         for (let i = 0; i < uint8.length; i++) {
           bytes.push(uint8[i])
         }
@@ -209,6 +209,38 @@
     return oldArr.slice(0, size)
   }
 
+  function dumpBin(bin, pc = -1) {
+    let adr = 0
+    let txt = ""
+    let end = bin.length
+    while (adr < end) {
+      txt += (adr == pc ? "> " : "  ")
+      txt += ("000000" + adr.toString(16)).slice(-5) + " "
+      txt += ("00" + bin[adr].toString(16)).slice(-2) + " "
+      txt += (opcodes[bin[adr]] || "") + " "
+      if (opcodes[bin[adr]] === "lit") {
+        uint8.set(bin.slice(adr + 1, adr + 5))
+        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        adr += 4
+      }
+      if (bin[adr] >= 0x40) {
+        let op = bin[adr] >> 4
+        let len = bin[adr] >> 6
+        if (op & 2) uint8.fill(255)
+        else uint8.fill(0)
+        uint8.set(bin.slice(adr + 1, adr + len), 1)
+        uint8[0] = bin[adr] << 4
+        int32[0] = int32[0] >> 4
+        if (op & 1) int32[0] = int32[0] ^ 0x40000000
+        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        adr += len - 1
+      }
+      txt += "\n"
+      adr++
+    }
+    return txt
+  }
+
   const opcodes = [
     "halt", "sleep", "vsync", null, "jump", "jumpifz", null, "endcall", "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
     "lit", "get", "stackptr", "memsize", null, "loadbit", "load", "loadu", "drop", "set", "inc", "dec", null, "storebit", "store", null,
@@ -218,4 +250,5 @@
 
   window.assemble = assemble
   window.opcodes = opcodes
+  window.dumpBin = dumpBin
 })()
