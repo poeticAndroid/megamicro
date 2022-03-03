@@ -17,13 +17,15 @@
       <option value="%new" class="newfile"><em>New file..</em></option>
     </select>
   </p>
-  <p>
-    <textarea name="source" id="sourceTxt" cols="80" rows="24"></textarea>
-  </p>
   <article>
-    <pre id="binDump"> ¯\_(ツ)_/¯ </pre>
+    <p>
+      <textarea name="source" id="sourceTxt" cols="80" rows="24"></textarea>
+    </p>
+    <a href="javascript:history.back()">///</a>
   </article>
-  <a href="javascript:history.back()">computer</a>
+  <article>
+    <pre id="binDump"> (Select a file!) </pre>
+  </article>
   <script>
     let files = []
     for (let i = 0; i < localStorage.length; i++) {
@@ -44,14 +46,16 @@
       if (e.target.value === "%new") {
         let file = prompt("Filename:", "drive0:/")
         if (!file) location.reload()
+        if (file.slice(0, 8) !== "drive0:/") file = "drive0:/" + file
         if (file.slice(-4) !== ".asm") file += ".asm"
         localStorage.setItem(file, "3b3b207a3238722061736d0a")
         location.replace("#" + file)
         location.reload()
       } else {
         location.replace("#" + e.target.value)
+        document.querySelector("#binDump").textContent = " ¯\_(ツ)_/¯ "
         document.querySelector("#sourceTxt").value = load(e.target.value)
-        document.querySelector("#binDump").textContent = "program dump here"
+        document.querySelector("#binDump").textContent = dumpBin(load(e.target.value.replace(".asm", ".prg"), true))
       }
     })
     document.querySelector("#sourceTxt").addEventListener("keydown", e => {
@@ -61,7 +65,6 @@
     })
     document.querySelector("#sourceTxt").addEventListener("keyup", e => {
       if (e.key === "Tab") {
-        console.log(e.key)
         let pos = e.target.selectionStart
         let val = e.target.value
         let indent = "  "
@@ -71,7 +74,7 @@
       if (e.key === "Enter") {
         let pos = e.target.selectionStart
         let val = e.target.value
-        let lastLine = val.slice(0, pos).trim().split("\n").pop()
+        let lastLine = val.slice(0, pos - 1).split("\n").pop()
         let indent = lastLine.slice(0, lastLine.indexOf(lastLine.trim()))
         e.target.value = val.slice(0, pos) + indent + val.slice(pos)
         e.target.selectionStart = e.target.selectionEnd = pos + indent.length
@@ -83,15 +86,20 @@
       document.querySelector("#binDump").textContent = dumpBin(bin)
       save(document.querySelector("#fileSel").value.replace(".asm", ".prg"), bin)
     })
-    document.querySelector("#fileSel").value = location.hash.replace("#", "")
-    document.querySelector("#sourceTxt").value = load(location.hash.replace("#", ""))
+    if (location.hash.replace("#", "")) {
+      document.querySelector("#fileSel").value = location.hash.replace("#", "")
+      document.querySelector("#sourceTxt").value = load(location.hash.replace("#", ""))
+      document.querySelector("#binDump").textContent = dumpBin(load(location.hash.replace("#", "").replace(".asm", ".prg"), true))
+    }
 
-    function load(file) {
+    function load(file, bin = false) {
       let src = localStorage.getItem(file)
       console.log("load", file, src)
       let out = ""
+      if (bin) out = new Uint8Array(src.length / 2)
       for (let i = 0; i < src.length; i += 2) {
-        out += String.fromCharCode(parseInt(src.slice(i, i + 2), 16))
+        if (bin) out[i / 2] = parseInt(src.slice(i, i + 2), 16)
+        else out += String.fromCharCode(parseInt(src.slice(i, i + 2), 16))
       }
       return out
     }

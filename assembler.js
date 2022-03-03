@@ -1,212 +1,190 @@
 (() => {
-  let inpos = 0
-  let outpos = 0
-  let tokens = []
-  let bin = new Uint8Array(1024)
+  let mem = new Uint8Array(1024 * 64)
 
   let uint8 = new Uint8Array(4),
     int32 = new Int32Array(uint8.buffer),
     float32 = new Float32Array(uint8.buffer)
 
-  let labels = {},
-    unrefs = {},
-    locals = []
-
   function assemble(asm) {
-    inpos = 0
-    outpos = 0
-    labels = {}
-    unrefs = {}
-    locals = []
+    let state, adr
+    state = 0x42
 
-    asm = asm.replaceAll(/;;.*\n/g, "\n").replaceAll("(", " ( ").replaceAll(")", " ) ").trim()
-    tokens = asm.split(/\s+/)
-    tokens.push(")")
-    encode()
+    adr = item(state, 0)//keywords
+    store(adr - 4, 4, loadWordList(keywords, adr))
+    adr = item(state, 1)//opcodes
+    store(adr - 4, 4, loadWordList(opcodes, adr))
+    adr = item(state, 2)//source
+    store(adr - 4, 4, loadFile(asm + "\n", adr))
+    toLowerCase(adr)
+    removeComments(adr)
+    removeOptionals(adr)
 
-    return window.bin = trimSize(bin)
+    adr = item(state, 3)//functions
+    store(adr - 4, 4, listFn(item(state, 2), adr))
+
+    return mem.slice(bin, bin + binLen)
   }
 
-  function encode() {
-    let token
-    let bytes = []
-    let iff = -1, whil = -1, cond, then, end
-    let label, params = -1, results = -1
-    let varstate = 0 // 0=reference, 1=declaration, 2=assignment
-    while (token = readToken()) {
-      let opcode = opcodes.indexOf(token)
-      if (token === ")") {
-        if (params >= 0 || results >= 0) {
-          if (params >= 0) {
-            int32[0] = labels[label] - (outpos + 11)
-            writeBytes([opcodes.indexOf("lit")])
-            writeBytes(uint8)
-          }
-          int32[0] = Math.max(params, results)
-          writeBytes([opcodes.indexOf("lit")])
-          writeBytes(uint8)
-          writeBytes([opcodes.indexOf(params >= 0 ? "call" : "return")])
-          if (params >= 0) {
-            if (!labels[label]) {
-              unrefs[label] = unrefs[label] || []
-              unrefs[label].push({ pos: outpos - 10, add: -10 })
-            }
-          }
+  function listFn(src, list) {
+    let len
+    while (load(src, 1)) {
+      src++
+    }
+
+    return len
+  }
+
+  function skipChar(adr, char, dir) {
+    while (load(adr, 1) === char) {
+      adr += dir
+    }
+    return adr
+  }
+  function skipToChar(adr, char, dir) {
+    while (load(adr, 1) !== char) {
+      adr += dir
+    }
+    return adr
+  }
+  function skipWS(adr, dir) {
+    while (load(adr, 1) < 0x21) {
+      adr += dir
+    }
+    return adr
+  }
+  function skipToWS(adr, dir) {
+    while (load(adr, 1) > 0x20) {
+      adr += dir
+    }
+    return adr
+  }
+
+  function sameWord(a, b) {
+    while (load(a, 1) === load(b, 1)) {
+      a++
+      b++
+    }
+    if (load(a, 1) < 0x60 && load(b, 1) < 0x60) {
+      return true
+    }
+    return false
+  }
+
+  function toLowerCase(adr) {
+    let inString
+    while (load(adr, 1)) {
+      while (inString && load(adr, 1) === 0x5c) adr += 2
+      if (load(adr, 1) === 0x22) inString = !inString
+      if (load(adr, 1) === 0x0a) inString = false
+      if (!inString) {
+        if (load(adr, 1) > 0x40 && load(adr, 1) < 0x5b) {
+          store(adr, 1, load(adr, 1) + 0x20)
         }
-        return writeBytes(bytes)
-      } else if (token === "(") {
-        if (params >= 0) params++
-        if (results >= 0) results++
-        if (whil >= 0) whil++
-        if (iff >= 0) iff++
-        encode()
-        if (iff === 1 || whil === 1) {
-          int32[0] = 0
-          writeBytes([opcodes.indexOf("lit")])
-          writeBytes(uint8)
-          writeBytes([opcodes.indexOf("jumpifz")])
-          then = outpos
-        }
-        if (iff === 2 || whil === 2) {
-          if (whil > 0) {
-            int32[0] = cond - (outpos + 6)
-            writeBytes([opcodes.indexOf("lit")])
-            writeBytes(uint8)
-            writeBytes([opcodes.indexOf("jump")])
-          }
-          int32[0] = 0
-          writeBytes([opcodes.indexOf("lit")])
-          writeBytes(uint8)
-          writeBytes([opcodes.indexOf("jump")])
-          int32[0] = outpos - then
-          for (let i = 0; i < uint8.length; i++) {
-            bin[then - 5 + i] = uint8[i]
-          }
-          then = outpos
-        }
-        if (iff === 3) {
-          int32[0] = outpos - then
-          for (let i = 0; i < uint8.length; i++) {
-            bin[then - 5 + i] = uint8[i]
-          }
-          end = outpos
-        }
-      } else if (opcode >= 0) {
-        bytes.push(opcode)
-        varstate = 2
-      } else if (token.slice(-1) === ":") {
-        let label = token.replace(":", "")
-        labels[label] = outpos
-        if (unrefs[label]) {
-          let o
-          while (o = unrefs[label].pop()) {
-            int32[0] = outpos - o.pos + o.add
-            for (let i = 0; i < uint8.length; i++) {
-              bin[o.pos + i] = uint8[i]
-            }
-          }
-        }
-      } else if (token === "@jump") {
-        let label = readToken()
-        int32[0] = labels[label] - (outpos + 6)
-        writeBytes([opcodes.indexOf("lit")])
-        writeBytes(uint8)
-        writeBytes([opcodes.indexOf("jump")])
-        if (!labels[label]) {
-          unrefs[label] = unrefs[label] || []
-          unrefs[label].push({ pos: outpos - 5, add: -5 })
-        }
-      } else if (token === "@call") {
-        label = readToken()
-        params = 0
-      } else if (token === "@return") {
-        results = 0
-      } else if (token === "@while") {
-        whil = 0
-        cond = outpos
-      } else if (token === "@if") {
-        iff = 0
-        cond = outpos
-      } else if (token === "@vars") {
-        locals = []
-        varstate = 1
-      } else if (token.slice(0, 1) === "$") {
-        switch (varstate) {
-          case 1: // declaration
-            locals.push(token)
-            int32[0] = 0
-            writeBytes([opcodes.indexOf("lit")])
-            writeBytes(uint8)
-            break
-          case 2: // assignment
-            int32[0] = locals.indexOf(token)
-            writeBytes([opcodes.indexOf("lit")])
-            writeBytes(uint8)
-            break
-          default: // reference
-            int32[0] = locals.indexOf(token)
-            writeBytes([opcodes.indexOf("lit")])
-            writeBytes(uint8)
-            writeBytes([opcodes.indexOf("get")])
-            break
-        }
-      } else if (token === "@skipto") {
-        let min = eval(readToken())
-        let len = min - outpos
-        if (len >= 0) {
-          let a = []
-          a.length = len
-          writeBytes(a)
-        } else {
-          console.error("@skipto: already past", min)
-        }
-      } else if (token === "@bytes") {
-        while ((token = readToken()) && token !== ")") {
-          bytes.push(eval(token))
-        }
-        return writeBytes(bytes)
-      } else if (token === "@string") {
-        let str = ""
-        let len = eval(readToken())
-        while ((token = readToken()) && token !== ")") {
-          str += token + " "
-        }
-        str = eval(str)
-        for (let i = 0; i < len; i++) {
-          bytes.push(str.charCodeAt(i))
-        }
-        return writeBytes(bytes, len)
-      } else {
-        let val = eval(token)
-        if (token.includes(".")) float32[0] = val
-        else int32[0] = val
-        if (bytes[bytes.length - 1] !== opcodes.indexOf("lit"))
-          bytes.push(opcodes.indexOf("lit"))
-        for (let i = 0; i < uint8.length; i++) {
-          bytes.push(uint8[i])
-        }
+      }
+      adr++
+    }
+  }
+  function removeComments(adr) {
+    let inString, erase
+    while (load(adr, 1)) {
+      while (inString && load(adr, 1) === 0x5c) adr += 2
+      if (load(adr, 1) === 0x22) inString = !inString
+      if (load(adr, 1) === 0x0a) inString = false
+      if (load(adr, 1) === 0x0a) erase = false
+      if (load(adr, 1) === 0x3b && !inString) erase = true
+      if (erase) store(adr, 1, 0x20)
+      adr++
+    }
+  }
+  function removeOptionals(adr) {
+    let inString
+    while (load(adr, 1)) {
+      while (inString && load(adr, 1) === 0x5c) adr += 2
+      if (load(adr, 1) === 0x22) inString = !inString
+      if (load(adr, 1) === 0x0a) inString = false
+      if (!inString) {
+        if (load(adr, 1) === 0x21) store(adr, 1, 0x20)
+        if (load(adr, 1) > 0x22 && load(adr, 1) < 0x2d) store(adr, 1, 0x20)
+        if (load(adr, 1) === 0x2d && load(adr + 1, 1) < 0x21) store(adr, 1, 0x20)
+        if (load(adr, 1) === 0x2f) store(adr, 1, 0x20)
+        if (load(adr, 1) > 0x39 && load(adr, 1) < 0x61) store(adr, 1, 0x20)
+      }
+      adr++
+    }
+  }
+
+  function item(list, index) {
+    while (index && load(list, 4)) {
+      list += 4 + load(list, 4)
+      index--
+    }
+    return list + 4
+  }
+  function indexOf(list, word) {
+    let index = 0
+    while (load(list, 4)) {
+      list += 4
+      if (sameWord(list, word))
+        return index
+      list += load(list - 4, 4)
+      index++
+    }
+    return -1
+  }
+  function has(list, word) {
+    if (indexOf(list, word) < 0) return false
+    else return true
+  }
+
+  function mcopy(src, dest, len) {
+    if (src > dest) {
+      while (len) {
+        store(dest, 4, load(src, 4))
+        dest++
+        src++
+        len--
+      }
+    } else {
+      src += len
+      dest += len
+      while (len) {
+        dest--
+        src--
+        store(dest, 4, load(src, 4))
+        len--
       }
     }
   }
-
-  function readToken() {
-    return tokens[inpos++]
+  function load(adr, len) {
+    len = 8 * (4 - len)
+    uint8.set(mem.slice(adr, adr + 4))
+    int32[0] = int32[0] << len
+    int32[0] = int32[0] >> len
+    return int32[0]
+  }
+  function store(adr, len, val) {
+    int32[0] = val
+    mem.set(uint8.slice(0, len), adr)
   }
 
-  function writeBytes(data, len = data.length) {
-    while (outpos + len >= bin.length) bin = doubleSize(bin)
-    let i = 0
-    while (i < len) {
-      bin[outpos++] = data[i++] || 0
+  function loadFile(data, adr) {
+    for (let i = 0; i < data.length; i++) {
+      if (typeof data === "string") mem[adr + i] = data.charCodeAt(i)
+      else mem[adr + i] = data[i]
     }
+    mem[adr + data.length] = 0
+    return data.length + 1
   }
-  function doubleSize(oldArr) {
-    let newArr = new Uint8Array(oldArr.length * 2)
-    newArr.set(oldArr)
-    return newArr
-  }
-  function trimSize(oldArr, size = outpos) {
-    return oldArr.slice(0, size)
+  function loadWordList(words, adr) {
+    let start = adr
+    for (let word of words) {
+      store(adr, 4, word.length)
+      adr += 4
+      adr += loadFile(word, adr)
+    }
+    store(adr, 4, 0)
+    adr += 4
+    return adr - start
   }
 
   function dumpBin(bin, pc = -1) {
@@ -241,12 +219,21 @@
     return txt
   }
 
-  const opcodes = [
-    "halt", "sleep", "vsync", null, "jump", "jumpifz", null, "endcall", "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
-    "lit", "get", "stackptr", "memsize", null, "loadbit", "load", "loadu", "drop", "set", "inc", "dec", null, "storebit", "store", null,
-    "add", "sub", "mult", "div", "rem", null, "itof", "uitof", "fadd", "fsub", "fmult", "fdiv", "ffloor", null, null, "ftoi",
-    "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", null, null, null, null, null
+  const keywords = [
+    "fn", "vars", "global", "data", "import", "if", "else", "while", "end"
   ]
+
+  const opcodes = [
+    "halt", "sleep", "vsync", "-", "jump", "jumpifz", "-", "endcall", "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
+    "lit", "get", "stackptr", "memsize", "-", "loadbit", "load", "loadu", "drop", "set", "inc", "dec", "-", "storebit", "store", "-",
+    "add", "sub", "mult", "div", "rem", "-", "itof", "uitof", "fadd", "fsub", "fmult", "fdiv", "ffloor", "-", "-", "ftoi",
+    "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", "-", "-", "-", "-", "-",
+    "false", "true"
+  ]
+
+  for (let i = 0; i < mem.length; i++) {
+    mem[i] = Math.random() * 255
+  }
 
   window.assemble = assemble
   window.opcodes = opcodes
