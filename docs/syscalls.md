@@ -1,6 +1,8 @@
 System calls
 ============
 
+**This is depricated as I'm currently working on a new kernal..**
+
 ```wat
 (sys ({call code}) ({arg 1}) ({arg 2})...({arg n}) (0x400) ({number of args + 1}))
 ```
