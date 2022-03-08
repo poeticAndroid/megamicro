@@ -5,60 +5,236 @@
     int32 = new Int32Array(uint8.buffer),
     float32 = new Float32Array(uint8.buffer)
 
+  let state = 0x42
+  // 0:keywords
+  // 1:opcodes
+  // 2:source
+  // 3:global list
+  // 4:external list
+  // 5:function list
+  // 6:data list
+  // 7:local list
+  // 8:lit lengths
+  // 9:executable
+
   function assemble(asm) {
-    let state, adr
-    state = 0x42
+    let adr
 
     adr = item(state, 0)//keywords
     store(adr - 4, 4, loadWordList(keywords, adr))
     adr = item(state, 1)//opcodes
     store(adr - 4, 4, loadWordList(opcodes, adr))
     adr = item(state, 2)//source
-    store(adr - 4, 4, loadFile(asm + "\n", adr))
+    store(adr - 4, 4, loadFile(asm, adr))
     toLowerCase(adr)
     removeComments(adr)
     removeOptionals(adr)
 
-    adr = item(state, 3)//functions
-    store(adr - 4, 4, listFn(item(state, 2), adr))
+    adr = item(state, 3)//globals
+    store(adr - 4, 4, listGlobals())
+    adr = item(state, 4)//externals
+    store(adr - 4, 4, listExt())
+    adr = item(state, 5)//functions
+    store(adr - 4, 4, listFn())
+    adr = item(state, 6)//data list
+    store(adr - 4, 4, listData())
+    adr = item(state, 7)//local list
+    store(adr - 4, 4, listLocals())
+    adr = item(state, 8)//lit lengths
+    store(adr - 4, 4, listLits())
+    adr = item(state, 9)//executable
+    store(adr - 4, 4, 0)
 
-    return mem.slice(bin, bin + binLen)
+    return mem.slice(item(state, 9))
   }
 
-  function listFn(src, list) {
-    let len
-    while (load(src, 1)) {
-      src++
+  function listGlobals() {
+    let kw, src, globlist, globlistPos, pos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    globlist = item(state, 3) // global list
+    globlistPos = globlist
+    while (load(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) === 1) { //fn
+        store(globlistPos, 4, 0)
+        globlistPos += 4
+        return globlistPos - globlist
+      }
+      if (indexOf(kw, pos) === 2) { //vars
+        pos = nextWord(pos)
+        while (load(pos, 1) > 0x20) {
+          store(globlistPos, 4, wordLen(pos) + 5)
+          globlistPos += 4
+          mcopy(pos, globlistPos, wordLen(pos))
+          globlistPos += wordLen(pos)
+          store(globlistPos, 1, 0)
+          globlistPos += 1
+          store(globlistPos, 4, 0)
+          globlistPos += 4
+          pos = nextWord(pos)
+        }
+      }
+      pos = nextLine(pos)
     }
+    store(globlistPos, 4, 0)
+    globlistPos += 4
 
+    return globlistPos - globlist
+  }
+  function listExt() {
+    let kw, src, extlist, extlistPos, pos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    extlist = item(state, 4) // external list
+    extlistPos = extlist
+    while (load(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) === 0) { //ext
+        pos = nextWord(pos)
+        store(extlistPos, 4, wordLen(pos) + 9)
+        extlistPos += 4
+        mcopy(pos, extlistPos, wordLen(pos))
+        extlistPos += wordLen(pos)
+        store(extlistPos, 1, 0)
+        extlistPos += 1
+        store(extlistPos, 4, 0)
+        extlistPos += 4
+        store(extlistPos, 4, 0)
+        extlistPos += 4
+      }
+      pos = nextLine(pos)
+    }
+    store(extlistPos, 4, 0)
+    extlistPos += 4
+
+    return extlistPos - extlist
+  }
+  function listFn() {
+    let kw, src, fnlist, fnlistPos, pos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    fnlist = item(state, 5) // function list
+    fnlistPos = fnlist
+    while (load(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) === 1) { //fn
+        pos = nextWord(pos)
+        store(fnlistPos, 4, wordLen(pos) + 9)
+        fnlistPos += 4
+        mcopy(pos, fnlistPos, wordLen(pos))
+        fnlistPos += wordLen(pos)
+        store(fnlistPos, 1, 0)
+        fnlistPos += 1
+        store(fnlistPos, 4, 0)
+        fnlistPos += 4
+        store(fnlistPos, 4, 0)
+        fnlistPos += 4
+      }
+      pos = nextLine(pos)
+    }
+    store(fnlistPos, 4, 0)
+    fnlistPos += 4
+
+    return fnlistPos - fnlist
+  }
+  function listData() {
+    let kw, src, datalist, datalistPos, pos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    datalist = item(state, 6) // data list
+    datalistPos = datalist
+    while (load(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) === 3) { //data
+        pos = nextWord(pos)
+        store(datalistPos, 4, wordLen(pos) + 9)
+        datalistPos += 4
+        mcopy(pos, datalistPos, wordLen(pos))
+        datalistPos += wordLen(pos)
+        store(datalistPos, 1, 0)
+        datalistPos += 1
+        store(datalistPos, 4, 0)
+        datalistPos += 4
+      }
+      pos = nextLine(pos)
+    }
+    store(datalistPos, 4, 0)
+    datalistPos += 4
+
+    return datalistPos - datalist
+  }
+  function listLocals() {
+    let kw, src, varlist, varlistPos, pos, maxpos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    varlist = item(state, 7) // local list
+    varlistPos = varlist
+    maxpos = 0
+    while (load(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) < 3) { //ext fn vars
+        if (indexOf(kw, pos) === 1) { //fn
+          if (varlistPos > maxpos)
+            maxpos = varlistPos
+          varlistPos = varlist
+        }
+        pos = nextWord(pos)
+        while (load(pos, 1) > 0x20) {
+          store(varlistPos, 4, wordLen(pos) + 5)
+          varlistPos += 4
+          mcopy(pos, varlistPos, wordLen(pos))
+          varlistPos += wordLen(pos)
+          store(varlistPos, 1, 0)
+          varlistPos += 1
+          store(varlistPos, 4, 0)
+          varlistPos += 4
+          pos = nextWord(pos)
+        }
+      }
+      pos = nextLine(pos)
+    }
+    if (varlistPos > maxpos)
+      maxpos = varlistPos
+    store(maxpos, 4, 0)
+    maxpos += 4
+
+    return maxpos - varlist
+  }
+
+  function skipWS(pos) {
+    while (load(pos, 1) !== 0 && load(pos, 1) < 0x21) pos++
+    return pos
+  }
+  function nextLine(pos) {
+    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a) pos++
+    return pos + 1
+  }
+  function nextWord(pos) {
+    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) > 0x20) pos++
+    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) < 0x21) pos++
+    return pos
+  }
+  function prevWord(pos) {
+    if (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a) pos--
+    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) < 0x21) pos--
+    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) > 0x20) pos--
+    return pos + 1
+  }
+
+  function wordLen(word) {
+    let len = 0
+    while (load(word, 1) > 0x60) {
+      word++
+      len++
+    }
     return len
   }
-
-  function skipChar(adr, char, dir) {
-    while (load(adr, 1) === char) {
-      adr += dir
-    }
-    return adr
-  }
-  function skipToChar(adr, char, dir) {
-    while (load(adr, 1) !== char) {
-      adr += dir
-    }
-    return adr
-  }
-  function skipWS(adr, dir) {
-    while (load(adr, 1) < 0x21) {
-      adr += dir
-    }
-    return adr
-  }
-  function skipToWS(adr, dir) {
-    while (load(adr, 1) > 0x20) {
-      adr += dir
-    }
-    return adr
-  }
-
   function sameWord(a, b) {
     while (load(a, 1) === load(b, 1)) {
       a++
@@ -156,6 +332,7 @@
     }
   }
   function load(adr, len) {
+    if (adr < 0) throw console.error("attempting to load adr", adr)
     len = 8 * (4 - len)
     uint8.set(mem.slice(adr, adr + 4))
     int32[0] = int32[0] << len
@@ -163,6 +340,7 @@
     return int32[0]
   }
   function store(adr, len, val) {
+    if (adr < 0) throw console.error("attempting to load adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
   }
@@ -178,7 +356,7 @@
   function loadWordList(words, adr) {
     let start = adr
     for (let word of words) {
-      store(adr, 4, word.length)
+      store(adr, 4, word.length + 1)
       adr += 4
       adr += loadFile(word, adr)
     }
@@ -220,7 +398,8 @@
   }
 
   const keywords = [
-    "fn", "vars", "global", "data", "import", "if", "else", "while", "end"
+    "ext", "fn", "vars", "data", "-", "-", "-", "-",
+    "while", "if", "else", "end", "skipto"
   ]
 
   const opcodes = [

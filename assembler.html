@@ -81,7 +81,7 @@
       }
     })
     document.querySelector("#sourceTxt").addEventListener("change", e => {
-      save(document.querySelector("#fileSel").value, document.querySelector("#sourceTxt").value)
+      save(document.querySelector("#fileSel").value, document.querySelector("#sourceTxt").value.trim() + "\n")
       let bin = assemble(document.querySelector("#sourceTxt").value)
       document.querySelector("#binDump").textContent = dumpBin(bin)
       save(document.querySelector("#fileSel").value.replace(".asm", ".prg"), bin)
