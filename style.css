@@ -33,6 +33,10 @@ pre {
   font-style: italic;
 }
 
+.hidden {
+  display: none;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     background-color: #111;

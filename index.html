@@ -16,22 +16,27 @@
     <span style="color:#0f0">/</span><span style="color:#f00">/</span><span style="color:#00f">/</span>
   </h1>
   <canvas width="1024" height="576"></canvas>
-  <article>
-    <p>
-      <button id="stopBtn">Stop</button>
-      <button id="stepBtn">Step</button>
-      <button id="runBtn">Run</button>
-      <input type="number" id="speedTxt" min="0" max=31 value="0">
-      <code id="fps">9000 FPS!</code>
-    </p>
-    <p><a href="assembler.html">assembler</a></p>
-  </article>
-  <article>
-    <pre id="monitorPre">monitor</pre>
-  </article>
-  <article>
-    <pre id="stackPre">stack</pre>
-  </article>
+  <section id="debugSec">
+    <article>
+      <p>
+        <button id="stopBtn">Stop</button>
+        <button id="stepBtn">Step</button>
+        <button id="runBtn">Run</button>
+        <input type="number" id="speedTxt" min="0" max=31 value="0" />
+        <code id="fps">9000 FPS!</code>
+      </p>
+      <p><a href="assembler.html">assembler</a></p>
+    </article>
+    <article>
+      <pre id="monitorPre">monitor</pre>
+    </article>
+    <article>
+      <pre id="stackPre">stack</pre>
+    </article>
+  </section>
+  <p>
+    <input type="checkbox" name="debug" id="debugChk" /><label for="debugChk">Debug</label>
+  </p>
   <script src="script.js"></script>
   <script src="assembler.js"></script>
   <script src="/live.js"></script>

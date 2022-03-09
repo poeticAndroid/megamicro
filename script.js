@@ -10,7 +10,8 @@
     waitingforuser = false,
     sleep = false,
     kbEnabled = true,
-    kbBuffer = []
+    kbBuffer = [],
+    debugMode
 
   let diskInitialized = false,
     diskReq = [],
@@ -42,8 +43,8 @@
     document.querySelector("#stopBtn").addEventListener("click", e => { running = false; clearTimeout(sleep) })
     document.querySelector("#stepBtn").addEventListener("click", e => cpu.run(1))
     document.querySelector("#runBtn").addEventListener("click", e => running = true)
-
     document.querySelector("#speedTxt").addEventListener("focus", e => kbEnabled = false)
+    document.querySelector("#debugChk").addEventListener("change", toggleDebug); toggleDebug()
 
     for (let i = 0; i < mem.length; i++) {
       mem[i] = 255 * Math.random()
@@ -175,15 +176,18 @@
     }
 
     g.putImageData(img, 0, 0)
-    updateMonitor(cpu.getPC())
-    updateStack()
 
-    fps++
-    if (fpssec !== Math.floor(t / 1000)) {
-      document.querySelector("#fps").textContent = vsyncfps + "/" + fps + " fps"
-      fps = 0
-      vsyncfps = 0
-      fpssec = Math.floor(t / 1000)
+    if (debugMode) {
+      updateMonitor(cpu.getPC())
+      updateStack()
+
+      fps++
+      if (fpssec !== Math.floor(t / 1000)) {
+        document.querySelector("#fps").textContent = vsyncfps + "/" + fps + " fps"
+        fps = 0
+        vsyncfps = 0
+        fpssec = Math.floor(t / 1000)
+      }
     }
 
     requestAnimationFrame(render)
@@ -524,6 +528,13 @@
       maxwidth = 1024
     }
     gmode = -1
+  }
+
+  function toggleDebug(e) {
+    debugMode = document.querySelector("#debugChk").checked
+    if (debugMode) document.querySelector("#debugSec").classList.remove("hidden")
+    else document.querySelector("#debugSec").classList.add("hidden")
+    window.scrollBy(0, 320)
   }
 
   const font = 'MCwwLDAsMjQsMjQsMCwwLDAsMCwwLDAsMCwxNSwxNSwxNSwxNSwwLDAsMCwwLDI0MCwyNDAsMjQwLDI0MCwwLDAsMCwwLDI1NSwyNTUsMjU1LDI1NSwxNSwxNSwxNSwxNSwwLDAsMCwwLDE1LDE1LDE1LDE1LDE1LDE1LDE1LDE1LDE1LDE1LDE1LDE1LDI0MCwyNDAsMjQwLDI0MCwyNDAsMjQwLDI0MCwyNDAsMCwwLDAsMCwwLDAsMCwxNSwxNSwyNCwyNCwyNCwwLDAsMCwyNDAsMjQwLDI0LDI0LDI0LDI0LDI0LDI0LDMxLDE1LDAsMCwwLDI0LDI0LDI0LDI0OCwyNDAsMCwwLDAsMjQsMjQsMjQsMjU1LDIzMSwwLDAsMCwyNCwyNCwyNCwxNSwxNSwyNCwyNCwyNCwwLDAsMCwyMzEsMjU1LDI0LDI0LDI0LDI0LDI0LDI0LDI0MCwyNDAsMjQsMjQsMjQsMjQsMjQsMjQsMjQsMjQsMjQsMjQsMjQsMCwwLDAsMjU1LDI1NSwwLDAsMCwyNCwyNCw2MCwyNTUsMjU1LDYwLDI0LDI0LDE5NSwyMzEsMTI2LDYwLDYwLDEyNiwyMzEsMTk1LDMsNywxNCwyOCw1NiwxMTIsMjI0LDE5MiwxOTIsMjI0LDExMiw1NiwyOCwxNCw3LDMsMSwzLDcsMTUsMTUsMzEsNjMsMTI3LDEyOCwxOTIsMjI0LDI0MCwyNDAsMjQ4LDI1MiwyNTQsMTI0LDEzMCwxMzAsMTMwLDEzMCwxMzAsMTI0LDAsMCw2LDEyLDEyLDIxNiwxMjAsNDgsMCwxMjQsMjE0LDIxNCwyNTQsMjM4LDIxNCwxMjQsMCwxMjQsMjE0LDIxNCwyNTQsMTg2LDE5OCwxMjQsMCwwLDEwOCwyNTQsMjU0LDEyNCw1NiwxNiwwLDE2LDU2LDEyNCwyNTQsODQsMTYsNTYsMCwxNiw1NiwxMjQsMjU0LDEyNCw1NiwxNiwwLDU2LDU2LDU2LDI1NCwyNTQsMTYsNTYsMCwwLDAsMCwwLDAsMCwwLDAsMTYsMTYsMTYsMTYsMTYsMCwxNiwwLDY4LDY4LDAsMCwwLDAsMCwwLDM2LDEyNiwzNiwzNiwzNiwxMjYsMzYsMCwxNiw2MCw2NCw1Niw0LDEyMCwxNiwwLDY2LDE2NCw3MiwxNiwzNiw3NCwxMzIsMCwyOCwzNCwzNiwyNCwzNyw2Niw2MSwwLDgsOCwwLDAsMCwwLDAsMCw4LDE2LDMyLDMyLDMyLDE2LDgsMCwxNiw4LDQsNCw0LDgsMTYsMCwxNiw4NCw1Niw4NCwxNiwwLDAsMCwwLDE2LDE2LDEyNCwxNiwxNiwwLDAsMCwwLDAsMCw4LDgsMTYsMCwwLDAsMCwxMjYsMCwwLDAsMCwwLDAsMCwwLDAsMCwxNiwwLDIsNCw4LDE2LDMyLDY0LDEyOCwwLDU2LDY4LDY4LDY4LDY4LDY4LDU2LDAsMTYsNDgsMTYsMTYsMTYsMTYsMTI0LDAsNTYsNjgsNCwyNCwzMiw2NCwxMjQsMCw1Niw2OCw0LDI0LDQsNjgsNTYsMCwyNCw0MCw3Miw3MiwxMjQsOCw4LDAsMTI0LDY0LDEyMCw0LDQsNjgsNTYsMCw1Niw2OCw2NCwxMjAsNjgsNjgsNTYsMCwxMjQsNCw4LDE2LDE2LDE2LDE2LDAsNTYsNjgsNjgsNTYsNjgsNjgsNTYsMCw1Niw2OCw2OCw2MCw0LDY4LDU2LDAsMCwxNiwwLDAsMTYsMCwwLDAsMCw4LDAsMCw4LDE2LDAsMCw0LDgsMTYsMzIsMTYsOCw0LDAsMCwwLDEyNiwwLDEyNiwwLDAsMCwxNiw4LDQsMiw0LDgsMTYsMCw1Niw2OCw0LDI0LDE2LDAsMTYsMCw2MCw2NiwxNTMsMTY1LDE2NSwxNTgsNjQsNjAsMTYsNDAsNDAsNjgsMTI0LDEzMCwxMzAsMCwyNTIsMTMwLDEzMCwyNTIsMTMwLDEzMCwyNTIsMCwxMjQsMTMwLDEyOCwxMjgsMTI4LDEzMCwxMjQsMCwyNTIsMTMwLDEzMCwxMzAsMTMwLDEzMCwyNTIsMCwyNTQsMTI4LDEyOCwyNDgsMTI4LDEyOCwyNTQsMCwyNTQsMTI4LDEyOCwyNDgsMTI4LDEyOCwxMjgsMCwxMjQsMTMwLDEyOCwxNDIsMTMwLDEzMCwxMjQsMCwxMzAsMTMwLDEzMCwyNTQsMTMwLDEzMCwxMzAsMCwxMjQsMTYsMTYsMTYsMTYsMTYsMTI0LDAsMiwyLDIsMiwyLDEzMCwxMjQsMCwxMzAsMTMyLDEzNiwyNDAsMTM2LDEzMiwxMzAsMCwxMjgsMTI4LDEyOCwxMjgsMTI4LDEyOCwyNTQsMCwxMzAsMTk4LDE3MCwxNDYsMTMwLDEzMCwxMzAsMCwxMzAsMTk0LDE2MiwxNDYsMTM4LDEzNCwxMzAsMCwxMjQsMTMwLDEzMCwxMzAsMTMwLDEzMCwxMjQsMCwyNTIsMTMwLDEzMCwxMzAsMjUyLDEyOCwxMjgsMCwxMjQsMTMwLDEzMCwxMzAsMTMwLDEzOCwxMjQsMiwyNTIsMTMwLDEzMCwyNTIsMTMyLDEzMCwxMzAsMCwxMjQsMTMwLDEyOCwxMjQsMiwxMzAsMTI0LDAsMjU0LDE2LDE2LDE2LDE2LDE2LDE2LDAsMTMwLDEzMCwxMzAsMTMwLDEzMCwxMzAsMTI0LDAsMTMwLDEzMCwxMzAsMTMwLDY4LDQwLDE2LDAsMTMwLDEzMCwxNDYsMTQ2LDE0NiwxMDgsNjgsMCwxMzAsNjgsNDAsMTYsNDAsNjgsMTMwLDAsMTMwLDEzMCw2OCw0MCwxNiwxNiwxNiwwLDI1NCw0LDgsMTYsMzIsNjQsMjU0LDAsNTYsMzIsMzIsMzIsMzIsMzIsNTYsMCwxMjgsNjQsMzIsMTYsOCw0LDIsMCwyOCw0LDQsNCw0LDQsMjgsMCwxNiw0MCw2OCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwyNTUsMTYsOCwwLDAsMCwwLDAsMCwwLDAsNjAsMiw2Miw2Niw2MiwwLDY0LDY0LDEyNCw2Niw2Niw2NiwxMjQsMCwwLDAsNjAsNjYsNjQsNjYsNjAsMCwyLDIsNjIsNjYsNjYsNjYsNjIsMCwwLDAsNjAsNjYsMTI0LDY0LDYyLDAsMTIsMTYsNTYsMTYsMTYsMTYsMTYsMCwwLDAsNjIsNjYsNjYsNjIsMiw2MCw2NCw2NCwxMjQsNjYsNjYsNjYsNjYsMCwxNiwwLDQ4LDE2LDE2LDE2LDU2LDAsNCwwLDEyLDQsNCw0LDY4LDU2LDY0LDY0LDY2LDY4LDEyMCw2OCw2NiwwLDQ4LDE2LDE2LDE2LDE2LDE2LDE2LDAsMCwwLDI1MiwxNDYsMTQ2LDE0NiwxNDYsMCwwLDAsMTI0LDY2LDY2LDY2LDY2LDAsMCwwLDYwLDY2LDY2LDY2LDYwLDAsMCwwLDEyNCw2Niw2Niw2NiwxMjQsNjQsMCwwLDYyLDY2LDY2LDY2LDYyLDIsMCwwLDk0LDk2LDY0LDY0LDY0LDAsMCwwLDYyLDY0LDYwLDIsMTI0LDAsMTYsMTYsNTYsMTYsMTYsMTYsMTIsMCwwLDAsNjYsNjYsNjYsNjYsNjIsMCwwLDAsNjYsNjYsNjYsMzYsMjQsMCwwLDAsNjUsNzMsNzMsNzMsNTQsMCwwLDAsNjgsNDAsMTYsNDAsNjgsMCwwLDAsNjYsNjYsNjYsNjIsMiw2MCwwLDAsMTI0LDgsMTYsMzIsMTI0LDAsOCwxNiwxNiwzMiwxNiwxNiw4LDAsMTYsMTYsMTYsMTYsMTYsMTYsMTYsMTYsMTYsOCw4LDQsOCw4LDE2LDAsMCwwLDk2LDE0NiwxMiwwLDAsMCwxNiw0MCw2OCwxOTgsNjgsNjgsMTI0LDA='
