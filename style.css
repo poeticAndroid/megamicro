@@ -20,6 +20,11 @@ textarea {
 input {
   max-width: 8em;
 }
+section {
+  overflow: hidden;
+  transition-duration: 1s;
+  max-height: 300px;
+}
 article {
   display: inline-block;
   text-align: left;
@@ -34,7 +39,7 @@ pre {
 }
 
 .hidden {
-  display: none;
+  max-height: 0;
 }
 
 @media (prefers-color-scheme: dark) {
