@@ -43,9 +43,9 @@
     adr = item(state, 8)//lit lengths
     store(adr - 4, 4, listLits())
     adr = item(state, 9)//executable
-    store(adr - 4, 4, 0)
+    store(adr - 4, 4, 42)
 
-    return mem.slice(item(state, 9))
+    return mem.slice(item(state, 9), item(state, 9) + load(item(state, 9) - 4, 4))
   }
 
   function listGlobals() {
@@ -152,7 +152,7 @@
       pos = skipWS(pos)
       if (indexOf(kw, pos) === 3) { //data
         pos = nextWord(pos)
-        store(datalistPos, 4, wordLen(pos) + 9)
+        store(datalistPos, 4, wordLen(pos) + 5)
         datalistPos += 4
         mcopy(pos, datalistPos, wordLen(pos))
         datalistPos += wordLen(pos)
@@ -199,12 +199,52 @@
       }
       pos = nextLine(pos)
     }
+    store(varlistPos, 4, 0)
     if (varlistPos > maxpos)
       maxpos = varlistPos
-    store(maxpos, 4, 0)
     maxpos += 4
 
     return maxpos - varlist
+  }
+  function listLits() {
+    let kw, src, litlist, litlistPos, pos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    litlist = item(state, 8) // lit list
+    litlistPos = litlist
+    while (load(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) === 2) { //vars
+        while (load(pos, 1) > 0x20) {
+          store(litlistPos, 1, 1)
+          litlistPos += 1
+          pos = nextWord(pos)
+        }
+      }
+      if (indexOf(kw, pos) === 8) { //while
+        store(litlistPos, 1, 1)
+        litlistPos += 1
+        store(litlistPos, 1, 1)
+        litlistPos += 1
+      }
+      if (indexOf(kw, pos) === 9) { //if
+        store(litlistPos, 1, 1)
+        litlistPos += 1
+        store(litlistPos, 1, 1)
+        litlistPos += 1
+      }
+      while (load(pos, 1) > 0x20) {
+        if (isNumber(pos)) {
+          store(litlistPos, 1, 1)
+          litlistPos += 1
+        }
+        pos = nextWord(pos)
+      }
+      pos = nextLine(pos)
+    }
+
+    return litlistPos - litlist
   }
 
   function skipWS(pos) {
@@ -243,6 +283,11 @@
     if (load(a, 1) < 0x60 && load(b, 1) < 0x60) {
       return true
     }
+    return false
+  }
+  function isNumber(pos) {
+    if (load(pos, 1) === 0x2d && isNumber(pos + 1)) return true
+    if (load(pos, 1) > 0x2f && load(pos, 1) < 0x3a) return true
     return false
   }
 
