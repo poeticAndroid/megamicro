@@ -30,7 +30,7 @@ Literals
 
 Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4
 ------------------------|-----------|-----------|-----------|-----------|----------
-32bit literal           | 0001 0000 | bbbb aaaa | dddd cccc | ffff eeee | hhhh gggg
+32bit `lit`eral         | 0001 0000 | bbbb aaaa | dddd cccc | ffff eeee | hhhh gggg
 4bit  positive relative | 0100 aaaa |           |           |           |
 4bit  positive absolute | 0101 aaaa |           |           |           |
 4bit  negative relative | 0110 aaaa |           |           |           |
