@@ -233,21 +233,21 @@
     if (alt && bpp === 1) {
       for (let i = 0; i < ppb; i++) {
         iadr -= 4
-        img.data[iadr + 2] = (byte & bm) ? 3 : 15
+        img.data[iadr + 2] = (img.data[iadr + 2] + ((byte & bm) ? 3 : 15)) / 2
         byte = byte >> bs
-        img.data[iadr + 0] = (byte & rm) ? 7 : 31
+        img.data[iadr + 0] = (img.data[iadr + 0] + ((byte & rm) ? 7 : 31)) / 2
         byte = byte >> rs
-        img.data[iadr + 1] = (byte & gm) ? 15 : 63
+        img.data[iadr + 1] = (img.data[iadr + 1] + ((byte & gm) ? 15 : 63)) / 2
         byte = byte >> gs
       }
     } else {
       for (let i = 0; i < ppb; i++) {
         iadr -= 4
-        img.data[iadr + 2] = 255 * ((byte & bm) / bm)
+        img.data[iadr + 2] = (img.data[iadr + 2] + 255 * ((byte & bm) / bm)) / 2
         byte = byte >> bs
-        img.data[iadr + 0] = 255 * ((byte & rm) / rm)
+        img.data[iadr + 0] = (img.data[iadr + 0] + 255 * ((byte & rm) / rm)) / 2
         byte = byte >> rs
-        img.data[iadr + 1] = 255 * ((byte & gm) / gm)
+        img.data[iadr + 1] = (img.data[iadr + 1] + 255 * ((byte & gm) / gm)) / 2
         byte = byte >> gs
       }
     }
