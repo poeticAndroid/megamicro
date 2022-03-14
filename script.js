@@ -23,7 +23,8 @@
     canvas = document.querySelector("canvas"),
     g = canvas.getContext("2d"),
     maxwidth = 1024,
-    gmode = -1
+    gmode = -1,
+    nextFrame = 0
 
   let uint8 = new Uint8Array(4),
     int32 = new Int32Array(uint8.buffer),
@@ -73,7 +74,7 @@
 
   function loadROM() {
     let bin
-    mem.set([0, 0x50, 0x04], 0x0)
+    mem.set([0x41, 0x10, 0x08, 0x4b, 0x00, 0x40, 0x17, 0x41, 0x20, 0x41, 0x10, 0x08, 0x4b, 0x00, 0x40, 0x1e, 0x80, 0x40, 0x01, 0x0c], 0x0)
     mem.set([0x50, 0x04], 0x5000)
     bin = JSON.parse("[" +
       atob(font)
@@ -85,6 +86,8 @@
   }
 
   function render(t = 0) {
+    if (t < nextFrame) return requestAnimationFrame(render)
+    nextFrame = Math.ceil(t / 20) * 20
     let opcode
     if (running) {
       if (kbBuffer.length && mem[0x4b04] === 0) {
@@ -535,7 +538,7 @@
     if (debugMode) document.querySelector("#debugSec").classList.remove("hidden")
     else document.querySelector("#debugSec").classList.add("hidden")
     let scr = setInterval(() => {
-      window.scrollBy(0, 4)
+      document.querySelector("#debugSec").scrollIntoView(false)
     }, 16)
     setTimeout(() => {
       clearTimeout(scr)

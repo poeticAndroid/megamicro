@@ -23,10 +23,11 @@ input {
 section {
   overflow: hidden;
   transition-duration: 1s;
-  max-height: 300px;
+  max-height: 768px;
 }
 article {
   display: inline-block;
+  overflow: hidden;
   text-align: left;
   vertical-align: top;
 }
