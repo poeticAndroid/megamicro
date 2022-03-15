@@ -5,7 +5,11 @@
     int32 = new Int32Array(uint8.buffer),
     float32 = new Float32Array(uint8.buffer)
 
-  let state = 0x42
+  let
+    srcpos = 0,
+    litpos = 0,
+    exepos = 0,
+    state = 0x42
   // 0:keywords
   // 1:opcodes
   // 2:source
@@ -18,7 +22,7 @@
   // 9:executable
 
   function assemble(asm) {
-    let adr
+    let adr, tries
 
     adr = item(state, 0)//keywords
     store(adr - 4, 4, loadWordList(keywords, adr))
@@ -43,9 +47,74 @@
     adr = item(state, 8)//lit lengths
     store(adr - 4, 4, listLits())
     adr = item(state, 9)//executable
-    store(adr - 4, 4, 42)
+    store(adr - 4, 4, 0)
 
-    return mem.slice(item(state, 9), item(state, 9) + load(item(state, 9) - 4, 4))
+    srcpos = item(state, 2)//source
+    litpos = item(state, 8)//lits
+    exepos = item(state, 9)//exe
+    tries = 8
+    while (tries && compile()) {
+      srcpos = item(state, 2)//source
+      litpos = item(state, 8)//lits
+      exepos = item(state, 9)//exe
+      tries--
+    }
+
+    return mem.slice(item(state, 9), exepos)
+  }
+
+  function compile() {
+    let kw, name, i, gspace
+    let changes = 0
+    gspace = true
+    kw = item(state, 0)
+    while (load(srcpos, 1)) {
+      srcpos = skipWS(srcpos)
+
+      if (indexOf(kw, srcpos) === 0) {//ext
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        srcpos = nextWord(srcpos)
+        setValueOf(item(state, 4), name, 0, strToInt(srcpos))
+        srcpos = nextWord(srcpos)
+        setValueOf(item(state, 4), name, 1, strToInt(srcpos))
+      }
+      if (indexOf(kw, srcpos) === 1) {//fn
+        gspace = false
+        store(item(state, 7), 4, 0)
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        setValueOf(item(state, 5), name, 0, exepos)
+        i = 0
+        srcpos = nextWord(srcpos)
+        while (load(srcpos, 1) > 0x20) {
+          i++
+          addTo(item(state, 7), srcpos, 0)
+          srcpos = nextWord(srcpos)
+        }
+        setValueOf(item(state, 5), name, 1, i)
+      }
+      if (indexOf(kw, srcpos) === 2) {//vars
+        if (gspace) {
+          srcpos = nextWord(srcpos)
+          while (load(srcpos, 1) > 0x20) {
+            setValueOf(item(state, 3), srcpos, 0, exepos)
+            changes += vstore(exepos, 4, 0)
+            exepos += 4
+            srcpos = nextWord(srcpos)
+          }
+        } else {
+          srcpos = nextWord(srcpos)
+          while (load(srcpos, 1) > 0x20) {
+            addTo(item(state, 7), srcpos, 0)
+            srcpos = nextWord(srcpos)
+          }
+        }
+      }
+
+      srcpos = nextLine(srcpos)
+    }
+    return changes
   }
 
   function listGlobals() {
@@ -186,14 +255,12 @@
         }
         pos = nextWord(pos)
         while (load(pos, 1) > 0x20) {
-          store(varlistPos, 4, wordLen(pos) + 5)
+          store(varlistPos, 4, wordLen(pos) + 1)
           varlistPos += 4
           mcopy(pos, varlistPos, wordLen(pos))
           varlistPos += wordLen(pos)
           store(varlistPos, 1, 0)
           varlistPos += 1
-          store(varlistPos, 4, 0)
-          varlistPos += 4
           pos = nextWord(pos)
         }
       }
@@ -352,9 +419,53 @@
     }
     return -1
   }
+  function addTo(list, word, valcount) {
+    while (load(list, 4)) {
+      list += 4
+      if (sameWord(list, word))
+        return
+      list += load(list - 4, 4)
+    }
+    store(list, 4, wordLen(word) + 1 + (4 * valcount))
+    list += 4
+    mcopy(word, list, wordLen(word))
+    list += wordLen(word)
+    store(list, 1, 0)
+    list++
+    while (valcount) {
+      store(list, 4, 0)
+      list += 4
+      valcount--
+    }
+    store(list, 4, 0)
+  }
   function has(list, word) {
     if (indexOf(list, word) < 0) return false
     else return true
+  }
+  function valueOf(list, word, index) {
+    while (load(list, 4)) {
+      list += 4
+      if (sameWord(list, word)) {
+        list += wordLen(word) + 1
+        list += index * 4
+        return load(list, 4)
+      }
+      list += load(list - 4, 4)
+    }
+    return -1
+  }
+  function setValueOf(list, word, index, val) {
+    while (load(list, 4)) {
+      list += 4
+      if (sameWord(list, word)) {
+        list += wordLen(word) + 1
+        list += index * 4
+        store(list, 4, val)
+        return
+      }
+      list += load(list - 4, 4)
+    }
   }
 
   function mcopy(src, dest, len) {
@@ -388,6 +499,53 @@
     if (adr < 0) throw console.error("attempting to load adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
+  }
+  function vstore(adr, len, val) {
+    let delta = load(adr, len)
+    if (adr < 0) throw console.error("attempting to load adr", adr)
+    int32[0] = val
+    mem.set(uint8.slice(0, len), adr)
+    return !!(delta - load(adr, len))
+  }
+  function strToInt(str, base) {
+    let int = 0, fact = 0, i = 0, digs = 0
+    digs = 0x0004
+    fact = 1
+    if (load(str, 1) === 0x2d) {//minus
+      fact = -1
+      str++
+    }
+    while (load(str, 1)) {
+      if (base === 10) {
+        if (load(str, 1) === 0x62) { // b
+          base = 2
+          str++
+        }
+        if (load(str, 1) === 0x6f) { // o
+          base = 8
+          str++
+        }
+        if (load(str, 1) === 0x78) { // x
+          base = 16
+          str++
+        }
+      }
+      i = 0
+      while (i < base) {
+        if ((load(str, 1) === load(digs + i, 1)) |
+          (load(str, 1) + 0x20 === load(digs + i, 1))) {
+          int = int * base
+          int += i
+          i = base
+        }
+        i++
+      }
+      if (i === base) {
+        return int * fact
+      }
+      str++
+    }
+    return int * fact
   }
 
   function loadFile(data, adr) {
@@ -458,6 +616,9 @@
   for (let i = 0; i < mem.length; i++) {
     mem[i] = Math.random() * 255
   }
+  loadWordList(["0123456789abcdefghijklmnopqrstuvwxyz"], 0)
+  console.log(mem)
+
 
   window.assemble = assemble
   window.opcodes = opcodes
