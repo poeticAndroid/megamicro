@@ -86,7 +86,7 @@
   }
 
   function render(t = 0) {
-    if (t < nextFrame) return requestAnimationFrame(render)
+    if (t <= nextFrame) return requestAnimationFrame(render)
     nextFrame = Math.ceil(t / 20) * 20
     let opcode
     if (running) {

@@ -64,11 +64,10 @@
   }
 
   function compile() {
-    let kw, name, i, gspace
+    let kw, name, i
     let changes = 0
-    gspace = true
     kw = item(state, 0)
-    while (load(srcpos, 1)) {
+    while (loadu(srcpos, 1)) {
       srcpos = skipWS(srcpos)
 
       if (indexOf(kw, srcpos) === 0) {//ext
@@ -80,38 +79,82 @@
         setValueOf(item(state, 4), name, 1, strToInt(srcpos))
       }
       if (indexOf(kw, srcpos) === 1) {//fn
-        gspace = false
         store(item(state, 7), 4, 0)
         srcpos = nextWord(srcpos)
         name = srcpos
         setValueOf(item(state, 5), name, 0, exepos)
         i = 0
         srcpos = nextWord(srcpos)
-        while (load(srcpos, 1) > 0x20) {
+        while (loadu(srcpos, 1) > 0x20) {
           i++
           addTo(item(state, 7), srcpos, 0)
           srcpos = nextWord(srcpos)
         }
         setValueOf(item(state, 5), name, 1, i)
+        changes += compile()
       }
       if (indexOf(kw, srcpos) === 2) {//vars
-        if (gspace) {
+        srcpos = nextWord(srcpos)
+        while (loadu(srcpos, 1) > 0x20) {
+          addTo(item(state, 7), srcpos, 0)
           srcpos = nextWord(srcpos)
-          while (load(srcpos, 1) > 0x20) {
-            setValueOf(item(state, 3), srcpos, 0, exepos)
-            changes += vstore(exepos, 4, 0)
-            exepos += 4
-            srcpos = nextWord(srcpos)
-          }
-        } else {
-          srcpos = nextWord(srcpos)
-          while (load(srcpos, 1) > 0x20) {
-            addTo(item(state, 7), srcpos, 0)
-            srcpos = nextWord(srcpos)
-          }
         }
       }
+      if (indexOf(kw, srcpos) === 3) {//data
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        srcpos = nextWord(srcpos)
+        setValueOf(item(state, 6), name, 0, exepos)
+        srcpos = nextWord(srcpos)
+        changes += compileData()
+      }
+      if (indexOf(kw, srcpos) === 4) {//globals
+        srcpos = nextWord(srcpos)
+        while (loadu(srcpos, 1) > 0x20) {
+          setValueOf(item(state, 3), srcpos, 0, exepos)
+          changes += vstore(exepos, 4, 0)
+          exepos += 4
+          srcpos = nextWord(srcpos)
+        }
+      }
+      if (indexOf(kw, srcpos) === 11) {//end
+        srcpos = nextWord(srcpos)
+        return changes
+      }
 
+      srcpos = nextLine(srcpos)
+    }
+    return changes
+  }
+  function compileData() {
+    let kw
+    let changes = 0
+    kw = item(state, 0)
+    while (loadu(srcpos, 1)) {
+      srcpos = skipWS(srcpos)
+
+      if (indexOf(kw, srcpos) === 11) {//end
+        srcpos = nextWord(srcpos)
+        return changes
+      }
+      while (loadu(srcpos, 1) > 0x20) {
+        if (isNumber(srcpos)) {
+          changes += vstore(exepos, 1, strToInt(srcpos))
+          exepos++
+        }
+        if (loadu(srcpos, 1) === 0x22) {
+          srcpos++
+          while (loadu(srcpos, 1) !== 0x22) {
+            if (loadu(srcpos, 1) !== 0x5c) {
+              srcpos++
+            }
+            changes += vstore(exepos, 1, loadu(srcpos, 1))
+            exepos++
+            srcpos++
+          }
+        }
+        srcpos = nextWord(srcpos)
+      }
       srcpos = nextLine(srcpos)
     }
     return changes
@@ -124,16 +167,11 @@
     pos = src
     globlist = item(state, 3) // global list
     globlistPos = globlist
-    while (load(pos, 1)) {
+    while (loadu(pos, 1)) {
       pos = skipWS(pos)
-      if (indexOf(kw, pos) === 1) { //fn
-        store(globlistPos, 4, 0)
-        globlistPos += 4
-        return globlistPos - globlist
-      }
-      if (indexOf(kw, pos) === 2) { //vars
+      if (indexOf(kw, pos) === 4) { //globals
         pos = nextWord(pos)
-        while (load(pos, 1) > 0x20) {
+        while (loadu(pos, 1) > 0x20) {
           store(globlistPos, 4, wordLen(pos) + 5)
           globlistPos += 4
           mcopy(pos, globlistPos, wordLen(pos))
@@ -159,7 +197,7 @@
     pos = src
     extlist = item(state, 4) // external list
     extlistPos = extlist
-    while (load(pos, 1)) {
+    while (loadu(pos, 1)) {
       pos = skipWS(pos)
       if (indexOf(kw, pos) === 0) { //ext
         pos = nextWord(pos)
@@ -188,7 +226,7 @@
     pos = src
     fnlist = item(state, 5) // function list
     fnlistPos = fnlist
-    while (load(pos, 1)) {
+    while (loadu(pos, 1)) {
       pos = skipWS(pos)
       if (indexOf(kw, pos) === 1) { //fn
         pos = nextWord(pos)
@@ -217,7 +255,7 @@
     pos = src
     datalist = item(state, 6) // data list
     datalistPos = datalist
-    while (load(pos, 1)) {
+    while (loadu(pos, 1)) {
       pos = skipWS(pos)
       if (indexOf(kw, pos) === 3) { //data
         pos = nextWord(pos)
@@ -245,7 +283,7 @@
     varlist = item(state, 7) // local list
     varlistPos = varlist
     maxpos = 0
-    while (load(pos, 1)) {
+    while (loadu(pos, 1)) {
       pos = skipWS(pos)
       if (indexOf(kw, pos) < 3) { //ext fn vars
         if (indexOf(kw, pos) === 1) { //fn
@@ -254,7 +292,7 @@
           varlistPos = varlist
         }
         pos = nextWord(pos)
-        while (load(pos, 1) > 0x20) {
+        while (loadu(pos, 1) > 0x20) {
           store(varlistPos, 4, wordLen(pos) + 1)
           varlistPos += 4
           mcopy(pos, varlistPos, wordLen(pos))
@@ -280,10 +318,10 @@
     pos = src
     litlist = item(state, 8) // lit list
     litlistPos = litlist
-    while (load(pos, 1)) {
+    while (loadu(pos, 1)) {
       pos = skipWS(pos)
       if (indexOf(kw, pos) === 2) { //vars
-        while (load(pos, 1) > 0x20) {
+        while (loadu(pos, 1) > 0x20) {
           store(litlistPos, 1, 1)
           litlistPos += 1
           pos = nextWord(pos)
@@ -301,7 +339,7 @@
         store(litlistPos, 1, 1)
         litlistPos += 1
       }
-      while (load(pos, 1) > 0x20) {
+      while (loadu(pos, 1) > 0x20) {
         if (isNumber(pos)) {
           store(litlistPos, 1, 1)
           litlistPos += 1
@@ -315,58 +353,58 @@
   }
 
   function skipWS(pos) {
-    while (load(pos, 1) !== 0 && load(pos, 1) < 0x21) pos++
+    while (loadu(pos, 1) !== 0 && loadu(pos, 1) < 0x21) pos++
     return pos
   }
   function nextLine(pos) {
-    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a) pos++
+    while (loadu(pos, 1) !== 0 && loadu(pos, 1) !== 0x0a) pos++
     return pos + 1
   }
   function nextWord(pos) {
-    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) > 0x20) pos++
-    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) < 0x21) pos++
+    while (loadu(pos, 1) !== 0 && loadu(pos, 1) !== 0x0a && loadu(pos, 1) > 0x20) pos++
+    while (loadu(pos, 1) !== 0 && loadu(pos, 1) !== 0x0a && loadu(pos, 1) < 0x21) pos++
     return pos
   }
   function prevWord(pos) {
-    if (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a) pos--
-    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) < 0x21) pos--
-    while (load(pos, 1) !== 0 && load(pos, 1) !== 0x0a && load(pos, 1) > 0x20) pos--
+    if (loadu(pos, 1) !== 0 && loadu(pos, 1) !== 0x0a) pos--
+    while (loadu(pos, 1) !== 0 && loadu(pos, 1) !== 0x0a && loadu(pos, 1) < 0x21) pos--
+    while (loadu(pos, 1) !== 0 && loadu(pos, 1) !== 0x0a && loadu(pos, 1) > 0x20) pos--
     return pos + 1
   }
 
   function wordLen(word) {
     let len = 0
-    while (load(word, 1) > 0x60) {
+    while (loadu(word, 1) > 0x60) {
       word++
       len++
     }
     return len
   }
   function sameWord(a, b) {
-    while (load(a, 1) === load(b, 1)) {
+    while (loadu(a, 1) === loadu(b, 1)) {
       a++
       b++
     }
-    if (load(a, 1) < 0x60 && load(b, 1) < 0x60) {
+    if (loadu(a, 1) < 0x60 && loadu(b, 1) < 0x60) {
       return true
     }
     return false
   }
   function isNumber(pos) {
-    if (load(pos, 1) === 0x2d && isNumber(pos + 1)) return true
-    if (load(pos, 1) > 0x2f && load(pos, 1) < 0x3a) return true
+    if (loadu(pos, 1) === 0x2d && isNumber(pos + 1)) return true
+    if (loadu(pos, 1) > 0x2f && loadu(pos, 1) < 0x3a) return true
     return false
   }
 
   function toLowerCase(adr) {
     let inString
-    while (load(adr, 1)) {
-      while (inString && load(adr, 1) === 0x5c) adr += 2
-      if (load(adr, 1) === 0x22) inString = !inString
-      if (load(adr, 1) === 0x0a) inString = false
+    while (loadu(adr, 1)) {
+      while (inString && loadu(adr, 1) === 0x5c) adr += 2
+      if (loadu(adr, 1) === 0x22) inString = !inString
+      if (loadu(adr, 1) === 0x0a) inString = false
       if (!inString) {
-        if (load(adr, 1) > 0x40 && load(adr, 1) < 0x5b) {
-          store(adr, 1, load(adr, 1) + 0x20)
+        if (loadu(adr, 1) > 0x40 && loadu(adr, 1) < 0x5b) {
+          store(adr, 1, loadu(adr, 1) + 0x20)
         }
       }
       adr++
@@ -374,57 +412,57 @@
   }
   function removeComments(adr) {
     let inString, erase
-    while (load(adr, 1)) {
-      while (inString && load(adr, 1) === 0x5c) adr += 2
-      if (load(adr, 1) === 0x22) inString = !inString
-      if (load(adr, 1) === 0x0a) inString = false
-      if (load(adr, 1) === 0x0a) erase = false
-      if (load(adr, 1) === 0x3b && !inString) erase = true
+    while (loadu(adr, 1)) {
+      while (inString && loadu(adr, 1) === 0x5c) adr += 2
+      if (loadu(adr, 1) === 0x22) inString = !inString
+      if (loadu(adr, 1) === 0x0a) inString = false
+      if (loadu(adr, 1) === 0x0a) erase = false
+      if (loadu(adr, 1) === 0x3b && !inString) erase = true
       if (erase) store(adr, 1, 0x20)
       adr++
     }
   }
   function removeOptionals(adr) {
     let inString
-    while (load(adr, 1)) {
-      while (inString && load(adr, 1) === 0x5c) adr += 2
-      if (load(adr, 1) === 0x22) inString = !inString
-      if (load(adr, 1) === 0x0a) inString = false
+    while (loadu(adr, 1)) {
+      while (inString && loadu(adr, 1) === 0x5c) adr += 2
+      if (loadu(adr, 1) === 0x22) inString = !inString
+      if (loadu(adr, 1) === 0x0a) inString = false
       if (!inString) {
-        if (load(adr, 1) === 0x21) store(adr, 1, 0x20)
-        if (load(adr, 1) > 0x22 && load(adr, 1) < 0x2d) store(adr, 1, 0x20)
-        if (load(adr, 1) === 0x2d && load(adr + 1, 1) < 0x21) store(adr, 1, 0x20)
-        if (load(adr, 1) === 0x2f) store(adr, 1, 0x20)
-        if (load(adr, 1) > 0x39 && load(adr, 1) < 0x61) store(adr, 1, 0x20)
+        if (loadu(adr, 1) === 0x21) store(adr, 1, 0x20)
+        if (loadu(adr, 1) > 0x22 && loadu(adr, 1) < 0x2d) store(adr, 1, 0x20)
+        if (loadu(adr, 1) === 0x2d && loadu(adr + 1, 1) < 0x21) store(adr, 1, 0x20)
+        if (loadu(adr, 1) === 0x2f) store(adr, 1, 0x20)
+        if (loadu(adr, 1) > 0x39 && loadu(adr, 1) < 0x61) store(adr, 1, 0x20)
       }
       adr++
     }
   }
 
   function item(list, index) {
-    while (index && load(list, 4)) {
-      list += 4 + load(list, 4)
+    while (index && loadu(list, 4)) {
+      list += 4 + loadu(list, 4)
       index--
     }
     return list + 4
   }
   function indexOf(list, word) {
     let index = 0
-    while (load(list, 4)) {
+    while (loadu(list, 4)) {
       list += 4
       if (sameWord(list, word))
         return index
-      list += load(list - 4, 4)
+      list += loadu(list - 4, 4)
       index++
     }
     return -1
   }
   function addTo(list, word, valcount) {
-    while (load(list, 4)) {
+    while (loadu(list, 4)) {
       list += 4
       if (sameWord(list, word))
         return
-      list += load(list - 4, 4)
+      list += loadu(list - 4, 4)
     }
     store(list, 4, wordLen(word) + 1 + (4 * valcount))
     list += 4
@@ -444,19 +482,19 @@
     else return true
   }
   function valueOf(list, word, index) {
-    while (load(list, 4)) {
+    while (loadu(list, 4)) {
       list += 4
       if (sameWord(list, word)) {
         list += wordLen(word) + 1
         list += index * 4
-        return load(list, 4)
+        return loadu(list, 4)
       }
-      list += load(list - 4, 4)
+      list += loadu(list - 4, 4)
     }
     return -1
   }
   function setValueOf(list, word, index, val) {
-    while (load(list, 4)) {
+    while (loadu(list, 4)) {
       list += 4
       if (sameWord(list, word)) {
         list += wordLen(word) + 1
@@ -464,14 +502,14 @@
         store(list, 4, val)
         return
       }
-      list += load(list - 4, 4)
+      list += loadu(list - 4, 4)
     }
   }
 
   function mcopy(src, dest, len) {
     if (src > dest) {
       while (len) {
-        store(dest, 4, load(src, 4))
+        store(dest, 4, loadu(src, 4))
         dest++
         src++
         len--
@@ -482,7 +520,7 @@
       while (len) {
         dest--
         src--
-        store(dest, 4, load(src, 4))
+        store(dest, 4, loadu(src, 4))
         len--
       }
     }
@@ -495,45 +533,51 @@
     int32[0] = int32[0] >> len
     return int32[0]
   }
+  function loadu(adr, len) {
+    if (adr < 0) throw console.error("attempting to load adr", adr)
+    int32[0] = 0
+    uint8.set(mem.slice(adr, adr + len))
+    return int32[0]
+  }
   function store(adr, len, val) {
     if (adr < 0) throw console.error("attempting to load adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
   }
   function vstore(adr, len, val) {
-    let delta = load(adr, len)
+    let delta = loadu(adr, len)
     if (adr < 0) throw console.error("attempting to load adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
-    return !!(delta - load(adr, len))
+    return !!(delta - loadu(adr, len))
   }
   function strToInt(str, base) {
     let int = 0, fact = 0, i = 0, digs = 0
     digs = 0x0004
     fact = 1
-    if (load(str, 1) === 0x2d) {//minus
+    if (loadu(str, 1) === 0x2d) {//minus
       fact = -1
       str++
     }
-    while (load(str, 1)) {
+    while (loadu(str, 1)) {
       if (base === 10) {
-        if (load(str, 1) === 0x62) { // b
+        if (loadu(str, 1) === 0x62) { // b
           base = 2
           str++
         }
-        if (load(str, 1) === 0x6f) { // o
+        if (loadu(str, 1) === 0x6f) { // o
           base = 8
           str++
         }
-        if (load(str, 1) === 0x78) { // x
+        if (loadu(str, 1) === 0x78) { // x
           base = 16
           str++
         }
       }
       i = 0
       while (i < base) {
-        if ((load(str, 1) === load(digs + i, 1)) |
-          (load(str, 1) + 0x20 === load(digs + i, 1))) {
+        if ((loadu(str, 1) === loadu(digs + i, 1)) |
+          (loadu(str, 1) + 0x20 === loadu(digs + i, 1))) {
           int = int * base
           int += i
           i = base
@@ -601,8 +645,8 @@
   }
 
   const keywords = [
-    "ext", "fn", "vars", "data", "-", "-", "-", "-",
-    "while", "if", "else", "end", "skipto"
+    "ext", "fn", "vars", "data", "globals", "-", "-", "skipto",
+    "while", "if", "else", "end", "-"
   ]
 
   const opcodes = [
