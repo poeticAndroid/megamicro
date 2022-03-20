@@ -74,9 +74,9 @@
         srcpos = nextWord(srcpos)
         name = srcpos
         srcpos = nextWord(srcpos)
-        setValueOf(item(state, 4), name, 0, strToInt(srcpos))
+        setValueOf(item(state, 4), name, 0, strToInt(srcpos, 10, -1))
         srcpos = nextWord(srcpos)
-        setValueOf(item(state, 4), name, 1, strToInt(srcpos))
+        setValueOf(item(state, 4), name, 1, strToInt(srcpos, 10, -1))
       }
       if (indexOf(kw, srcpos) === 1) {//fn
         store(item(state, 7), 4, 0)
@@ -127,7 +127,7 @@
     return changes
   }
   function compileData() {
-    let kw
+    let kw, char
     let changes = 0
     kw = item(state, 0)
     while (loadu(srcpos, 1)) {
@@ -139,16 +139,33 @@
       }
       while (loadu(srcpos, 1) > 0x20) {
         if (isNumber(srcpos)) {
-          changes += vstore(exepos, 1, strToInt(srcpos))
+          changes += vstore(exepos, 1, strToInt(srcpos, 10, -1))
           exepos++
         }
-        if (loadu(srcpos, 1) === 0x22) {
+        if (loadu(srcpos, 1) === 0x22) { // "
           srcpos++
-          while (loadu(srcpos, 1) !== 0x22) {
-            if (loadu(srcpos, 1) !== 0x5c) {
+          while (loadu(srcpos, 1) !== 0x22) { // "
+            char = loadu(srcpos, 1)
+            if (char === 0x5c) { // \
               srcpos++
+              char = loadu(srcpos, 1)
+              if (char > 0x2f && char < 0x38) { // octal code
+                char = strToInt(srcpos, 8, 3)
+                if (char > 0o7) srcpos++
+                if (char > 0o77) srcpos++
+              }
+              if (char === 0x62) char = 0x08 // b -> backspace
+              if (char === 0x66) char = 0x0c // f -> formfeed
+              if (char === 0x6e) char = 0x0a // n -> linefeed
+              if (char === 0x72) char = 0x0d // r -> carriage return
+              if (char === 0x74) char = 0x09 // t -> tab
+              if (char === 0x78) { // x -> hex code
+                srcpos++
+                char = strToInt(srcpos, 16, 2)
+                srcpos++
+              }
             }
-            changes += vstore(exepos, 1, loadu(srcpos, 1))
+            changes += vstore(exepos, 1, char)
             exepos++
             srcpos++
           }
@@ -551,27 +568,31 @@
     mem.set(uint8.slice(0, len), adr)
     return !!(delta - loadu(adr, len))
   }
-  function strToInt(str, base) {
+  function strToInt(str, base, maxlen) {
     let int = 0, fact = 0, i = 0, digs = 0
     digs = 0x0004
     fact = 1
     if (loadu(str, 1) === 0x2d) {//minus
       fact = -1
       str++
+      if (maxlen) maxlen--
     }
-    while (loadu(str, 1)) {
+    while (maxlen && loadu(str, 1)) {
       if (base === 10) {
         if (loadu(str, 1) === 0x62) { // b
           base = 2
           str++
+          if (maxlen) maxlen--
         }
         if (loadu(str, 1) === 0x6f) { // o
           base = 8
           str++
+          if (maxlen) maxlen--
         }
         if (loadu(str, 1) === 0x78) { // x
           base = 16
           str++
+          if (maxlen) maxlen--
         }
       }
       i = 0
@@ -588,6 +609,7 @@
         return int * fact
       }
       str++
+      if (maxlen) maxlen--
     }
     return int * fact
   }
@@ -646,7 +668,7 @@
 
   const keywords = [
     "ext", "fn", "vars", "data", "globals", "-", "-", "skipto",
-    "while", "if", "else", "end", "-"
+    "while", "if", "else", "end", "let"
   ]
 
   const opcodes = [
@@ -660,7 +682,7 @@
   for (let i = 0; i < mem.length; i++) {
     mem[i] = Math.random() * 255
   }
-  loadWordList(["0123456789abcdefghijklmnopqrstuvwxyz"], 0)
+  loadWordList(["0123456789abcdef"], 0)
   console.log(mem)
 
 
