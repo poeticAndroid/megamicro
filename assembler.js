@@ -74,7 +74,7 @@
         srcpos = nextWord(srcpos)
         name = srcpos
         srcpos = nextWord(srcpos)
-        setValueOf(item(state, 4), name, 0, strToInt(srcpos, 10, -1))
+        setValueOf(item(state, 4), name, 0, strToInt(srcpos, 10, -1) | 0x40000000)
         srcpos = nextWord(srcpos)
         setValueOf(item(state, 4), name, 1, strToInt(srcpos, 10, -1))
       }
@@ -98,6 +98,8 @@
         while (loadu(srcpos, 1) > 0x20) {
           addTo(item(state, 7), srcpos, 0)
           srcpos = nextWord(srcpos)
+          changes += vstore(exepos, 1, 0x40)
+          exepos++
         }
       }
       if (indexOf(kw, srcpos) === 3) {//data
@@ -116,6 +118,28 @@
           exepos += 4
           srcpos = nextWord(srcpos)
         }
+      }
+      if (indexOf(kw, srcpos) === 6) {//skipby
+        srcpos = nextWord(srcpos)
+        i = strToInt(srcpos, 10, -1)
+        while (i) {
+          changes += vstore(exepos, 1, 0)
+          exepos++
+          i--
+        }
+      }
+      if (indexOf(kw, srcpos) === 7) {//skipto
+        srcpos = nextWord(srcpos)
+        i = item(state, 9)
+        i += strToInt(srcpos, 10, -1)
+        while (exepos < i) {
+          changes += vstore(exepos, 1, 0)
+          exepos++
+        }
+      }
+      if (indexOf(kw, srcpos) === 8) {//while
+        srcpos = nextWord(srcpos)
+        changes += compileWhile()
       }
       if (indexOf(kw, srcpos) === 11) {//end
         srcpos = nextWord(srcpos)
@@ -174,6 +198,107 @@
       }
       srcpos = nextLine(srcpos)
     }
+    return changes
+  }
+  function compileWhile() {
+    let kw, cond, loopStart, loopEnd
+    let changes = 0
+    kw = item(state, 0)
+    cond = exepos
+    changes += compileLine()
+
+    // todo: jumpifz
+
+    loopStart = exepos
+    changes += compile()
+
+    // todo: jump to cond
+
+    return changes
+  }
+  function compileLine() {
+    let kw, ops, vars, datas, fns, exts, globals
+    let changes = 0, start, end, i
+    kw = item(state, 0)
+    ops = item(state, 1)
+    vars = item(state, 7)
+    datas = item(state, 6)
+    fns = item(state, 5)
+    exts = item(state, 4)
+    globals = item(state, 3)
+
+    end = srcpos - 1
+    while (load(srcpos, 1) > 0x20) {
+      start = srcpos
+      srcpos = nextWord(srcpos)
+    }
+    srcpos = start
+    while (srcpos > end) {
+      i = -1
+      if (isNumber(srcpos)) {
+        changes += compileLit(strToInt(srcpos, 10, -1))
+        i = -2
+      }
+      if (i === -1) i = indexOf(ops, srcpos)
+      if (i > -1) {
+        changes += vstore(exepos, 1, i)
+        exepos++
+        i = -2
+      }
+      if (i === -1) i = indexOf(vars, srcpos)
+      if (i > -1) {
+        changes += compileLit(i * -1 - 1)
+        changes += vstore(exepos, 1, 0x11) //get
+        exepos++
+        i = -2
+      }
+      if (i === -1) i = indexOf(datas, srcpos)
+      if (i > -1) {
+        changes += compileRef(valueOf(datas, srcpos, 0))
+        changes += vstore(exepos, 1, 0x0d) //absadr
+        exepos++
+        i = -2
+      }
+      if (i === -1) i = indexOf(fns, srcpos)
+      if (i > -1) {
+        changes += compileLit(valueOf(fns, srcpos, 1))
+        changes += compileRef(valueOf(fns, srcpos, 0))
+        changes += vstore(exepos, 1, 0x08) //call
+        exepos++
+        i = -2
+      }
+      if (i === -1) i = indexOf(exts, srcpos)
+      if (i > -1) {
+        changes += compileLit(valueOf(exts, srcpos, 1))
+        changes += compileLit(valueOf(exts, srcpos, 0))
+        changes += vstore(exepos, 1, 0x08) //call
+        exepos++
+        i = -2
+      }
+      if (i === -1) i = indexOf(globals, srcpos)
+      if (i > -1) {
+        changes += vstore(exepos, 1, 0x44) //lit 4
+        exepos++
+        changes += compileRef(valueOf(globals, srcpos, 0))
+        changes += vstore(exepos, 1, 0x16) //load
+        exepos++
+        i = -2
+      }
+      srcpos = prevWord(srcpos)
+    }
+
+    srcpos = nextWord(start)
+    return changes
+  }
+  function compileRef(adr) {
+    let i, changes = 0
+    i = exepos + load(litpos, 1) + 1
+    changes += compileLit(adr - i)
+    return changes
+  }
+  function compileLit(val) {
+    let changes = 0
+    // todo!
     return changes
   }
 
@@ -667,7 +792,7 @@
   }
 
   const keywords = [
-    "ext", "fn", "vars", "data", "globals", "-", "-", "skipto",
+    "ext", "fn", "vars", "data", "globals", "-", "skipby", "skipto",
     "while", "if", "else", "end", "let"
   ]
 
