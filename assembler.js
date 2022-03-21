@@ -22,7 +22,7 @@
   // 9:executable
 
   function assemble(asm) {
-    let adr, tries
+    let adr, tries, maxlit
 
     adr = item(state, 0)//keywords
     store(adr - 4, 4, loadWordList(keywords, adr))
@@ -45,15 +45,29 @@
     adr = item(state, 7)//local list
     store(adr - 4, 4, listLocals())
     adr = item(state, 8)//lit lengths
-    store(adr - 4, 4, listLits())
+    store(adr - 4, 4, 0)
     adr = item(state, 9)//executable
     store(adr - 4, 4, 0)
 
     srcpos = item(state, 2)//source
     litpos = item(state, 8)//lits
     exepos = item(state, 9)//exe
+    maxlit = 0
     tries = 8
     while (tries && compile()) {
+      console.log("tries", tries)
+      if (litpos > maxlit) {
+        console.log(litpos, ">", maxlit)
+        maxlit = litpos + 1
+        store(litpos, 4, 0)
+        litpos = item(state, 8)//lits
+        while (litpos < maxlit) {
+          store(litpos, 4, 0)
+          litpos += 4
+        }
+        litpos = item(state, 8)//lits
+        store(litpos - 4, 4, maxlit - litpos)
+      }
       srcpos = item(state, 2)//source
       litpos = item(state, 8)//lits
       exepos = item(state, 9)//exe
@@ -67,6 +81,7 @@
     let kw, name, i
     let changes = 0
     kw = item(state, 0)
+    console.log(srcpos, litpos, exepos)
     while (loadu(srcpos, 1)) {
       srcpos = skipWS(srcpos)
 
@@ -297,8 +312,41 @@
     return changes
   }
   function compileLit(val) {
+    let neg, abs, lownib, size
     let changes = 0
-    // todo!
+    neg = !!(val & 0x80000000)
+    abs = !!(val & 0x40000000)
+    if (neg) abs = !abs
+    lownib = val & 0xf
+
+    size = 1
+    if (abs) val = val ^ 0x40000000
+    if (neg) val = val ^ -1
+    if (val > 0xf) size = 2
+    if (val > 0xfff) size = 3
+    if (val > 0xfffff) size = 5
+    if (neg) val = val ^ -1
+    if (abs) val = val ^ 0x40000000
+    if (load(litpos, 1) > size) size = load(litpos, 1)
+    store(litpos, 1, size)
+    litpos++
+
+    if (size < 4) {
+      val = val << 4
+      val = val & 0xffffff00
+      val += size * 0x40
+      val += neg * 0x20
+      val += abs * 0x10
+      val += lownib
+      changes += vstore(exepos, size, val)
+      exepos += size
+    } else {
+      changes += vstore(exepos, 1, 0x10)
+      exepos++
+      changes += vstore(exepos, 4, val)
+      exepos += 4
+    }
+
     return changes
   }
 
