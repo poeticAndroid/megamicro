@@ -188,6 +188,62 @@
           exepos++
         }
       }
+      if (kwid === 13) {//inc
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        i = indexOf(item(state, 7), name)
+        if (i > -1) {
+          changes += compileLit(i * -1 - 1)
+          changes += vstore(exepos, 1, 0x1a) //inc
+          exepos++
+        } else {
+          changes += vstore(exepos, 1, 0x41) //lit 1
+          exepos++
+
+          changes += vstore(exepos, 1, 0x44) //lit 4
+          exepos++
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore(exepos, 1, 0x16) //load
+          exepos++
+
+          changes += vstore(exepos, 1, 0x20) //add
+          exepos++
+
+          changes += vstore(exepos, 1, 0x44) //lit 4
+          exepos++
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore(exepos, 1, 0x1e) //store
+          exepos++
+        }
+      }
+      if (kwid === 14) {//dec
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        i = indexOf(item(state, 7), name)
+        if (i > -1) {
+          changes += compileLit(i * -1 - 1)
+          changes += vstore(exepos, 1, 0x1b) //dec
+          exepos++
+        } else {
+          changes += vstore(exepos, 1, 0x41) //lit 1
+          exepos++
+
+          changes += vstore(exepos, 1, 0x44) //lit 4
+          exepos++
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore(exepos, 1, 0x16) //load
+          exepos++
+
+          changes += vstore(exepos, 1, 0x21) //sub
+          exepos++
+
+          changes += vstore(exepos, 1, 0x44) //lit 4
+          exepos++
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore(exepos, 1, 0x1e) //store
+          exepos++
+        }
+      }
 
       srcpos = nextLine(srcpos)
     }
@@ -320,9 +376,8 @@
     return changes
   }
   function compileLine() {
-    let kw, ops, vars, datas, fns, exts, globals
+    let ops, vars, datas, fns, exts, globals
     let changes = 0, start, end, i
-    kw = item(state, 0)
     ops = item(state, 1)
     vars = item(state, 7)
     datas = item(state, 6)
@@ -932,7 +987,7 @@
 
   const keywords = [
     "ext", "fn", "vars", "data", "globals", "-", "skipby", "skipto",
-    "while", "if", "else", "end", "let"
+    "while", "if", "else", "end", "let", "inc", "dec"
   ]
 
   const opcodes = [
