@@ -244,6 +244,14 @@
           exepos++
         }
       }
+      if (kwid === 15) {//jump
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        if (!valueOf(item(state, 5), name, 0)) setValueOf(item(state, 5), name, 0, exepos)
+        changes += compileRef(valueOf(item(state, 5), name, 0))
+        changes += vstore(exepos, 1, 0x04) //jump
+        exepos++
+      }
 
       srcpos = nextLine(srcpos)
     }
@@ -987,7 +995,7 @@
 
   const keywords = [
     "ext", "fn", "vars", "data", "globals", "-", "skipby", "skipto",
-    "while", "if", "else", "end", "let", "inc", "dec"
+    "while", "if", "else", "end", "let", "inc", "dec", "jump"
   ]
 
   const opcodes = [
