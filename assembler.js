@@ -55,10 +55,8 @@
     maxlit = 0
     tries = 8
     while (tries && compile()) {
-      console.log("tries", tries)
       if (litpos > maxlit) {
-        console.log(litpos, ">", maxlit)
-        maxlit = litpos + 1
+        maxlit = litpos + 4
         store(litpos, 4, 0)
         litpos = item(state, 8)//lits
         while (litpos < maxlit) {
@@ -78,14 +76,17 @@
   }
 
   function compile() {
-    let kw, name, i
+    let kw, kwid, name, i
     let changes = 0
     kw = item(state, 0)
-    console.log(srcpos, litpos, exepos)
     while (loadu(srcpos, 1)) {
       srcpos = skipWS(srcpos)
 
-      if (indexOf(kw, srcpos) === 0) {//ext
+      kwid = indexOf(kw, srcpos)
+      if (kwid < 0) {
+        changes += compileLine()
+      }
+      if (kwid === 0) {//ext
         srcpos = nextWord(srcpos)
         name = srcpos
         srcpos = nextWord(srcpos)
@@ -93,7 +94,7 @@
         srcpos = nextWord(srcpos)
         setValueOf(item(state, 4), name, 1, strToInt(srcpos, 10, -1))
       }
-      if (indexOf(kw, srcpos) === 1) {//fn
+      if (kwid === 1) {//fn
         store(item(state, 7), 4, 0)
         srcpos = nextWord(srcpos)
         name = srcpos
@@ -107,17 +108,19 @@
         }
         setValueOf(item(state, 5), name, 1, i)
         changes += compile()
+        changes += vstore(exepos, 1, 0x07)//endcall
+        exepos++
       }
-      if (indexOf(kw, srcpos) === 2) {//vars
+      if (kwid === 2) {//vars
         srcpos = nextWord(srcpos)
         while (loadu(srcpos, 1) > 0x20) {
           addTo(item(state, 7), srcpos, 0)
           srcpos = nextWord(srcpos)
-          changes += vstore(exepos, 1, 0x40)
+          changes += vstore(exepos, 1, 0x40)// false
           exepos++
         }
       }
-      if (indexOf(kw, srcpos) === 3) {//data
+      if (kwid === 3) {//data
         srcpos = nextWord(srcpos)
         name = srcpos
         srcpos = nextWord(srcpos)
@@ -125,7 +128,7 @@
         srcpos = nextWord(srcpos)
         changes += compileData()
       }
-      if (indexOf(kw, srcpos) === 4) {//globals
+      if (kwid === 4) {//globals
         srcpos = nextWord(srcpos)
         while (loadu(srcpos, 1) > 0x20) {
           setValueOf(item(state, 3), srcpos, 0, exepos)
@@ -134,7 +137,7 @@
           srcpos = nextWord(srcpos)
         }
       }
-      if (indexOf(kw, srcpos) === 6) {//skipby
+      if (kwid === 6) {//skipby
         srcpos = nextWord(srcpos)
         i = strToInt(srcpos, 10, -1)
         while (i) {
@@ -143,7 +146,7 @@
           i--
         }
       }
-      if (indexOf(kw, srcpos) === 7) {//skipto
+      if (kwid === 7) {//skipto
         srcpos = nextWord(srcpos)
         i = item(state, 9)
         i += strToInt(srcpos, 10, -1)
@@ -152,11 +155,11 @@
           exepos++
         }
       }
-      if (indexOf(kw, srcpos) === 8) {//while
+      if (kwid === 8) {//while
         srcpos = nextWord(srcpos)
         changes += compileWhile()
       }
-      if (indexOf(kw, srcpos) === 11) {//end
+      if (kwid === 11) {//end
         srcpos = nextWord(srcpos)
         return changes
       }
@@ -216,18 +219,33 @@
     return changes
   }
   function compileWhile() {
-    let kw, cond, loopStart, loopEnd
+    let kw, cond, jumplit, loopStart, loopEnd
+    let oldlit, newlit
     let changes = 0
     kw = item(state, 0)
     cond = exepos
     changes += compileLine()
 
-    // todo: jumpifz
+    jumplit = exepos
+    oldlit = litpos
+    exepos += load(litpos, 1)
+    litpos++
+    changes += vstore(exepos, 1, 0x05) //jumpifz
+    exepos++
 
     loopStart = exepos
     changes += compile()
+    changes += compileRef(cond)
+    changes += vstore(exepos, 1, 0x04) //jump
+    exepos++
+    loopEnd = exepos
 
-    // todo: jump to cond
+    newlit = litpos
+    litpos = oldlit
+    exepos = jumplit
+    changes += compileRef(loopEnd)
+    litpos = newlit
+    exepos = loopEnd
 
     return changes
   }
