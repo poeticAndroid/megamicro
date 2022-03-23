@@ -170,6 +170,24 @@
         srcpos = nextWord(srcpos)
         return changes
       }
+      if (kwid === 12) {//let
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        srcpos = nextWord(srcpos)
+        changes += compileLine()
+        i = indexOf(item(state, 7), name)
+        if (i > -1) {
+          changes += compileLit(i * -1 - 1)
+          changes += vstore(exepos, 1, 0x19) //set
+          exepos++
+        } else {
+          changes += vstore(exepos, 1, 0x44) //lit 4
+          exepos++
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore(exepos, 1, 0x1e) //store
+          exepos++
+        }
+      }
 
       srcpos = nextLine(srcpos)
     }
@@ -339,6 +357,7 @@
       }
       if (i === -1) i = indexOf(datas, srcpos)
       if (i > -1) {
+        if (!valueOf(datas, srcpos, 0)) setValueOf(datas, srcpos, 0, exepos)
         changes += compileRef(valueOf(datas, srcpos, 0))
         changes += vstore(exepos, 1, 0x0d) //absadr
         exepos++
@@ -346,6 +365,7 @@
       }
       if (i === -1) i = indexOf(fns, srcpos)
       if (i > -1) {
+        if (!valueOf(fns, srcpos, 0)) setValueOf(fns, srcpos, 0, exepos)
         changes += compileLit(valueOf(fns, srcpos, 1))
         changes += compileRef(valueOf(fns, srcpos, 0))
         changes += vstore(exepos, 1, 0x08) //call
@@ -362,6 +382,7 @@
       }
       if (i === -1) i = indexOf(globals, srcpos)
       if (i > -1) {
+        if (!valueOf(globals, srcpos, 0)) setValueOf(globals, srcpos, 0, exepos)
         changes += vstore(exepos, 1, 0x44) //lit 4
         exepos++
         changes += compileRef(valueOf(globals, srcpos, 0))
