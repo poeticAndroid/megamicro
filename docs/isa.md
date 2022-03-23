@@ -1,5 +1,5 @@
-CPU instructions
-================
+CPU instruction set
+===================
 
 \      | 0x Flow                | 1x Memory                   | 2x Math         | 3x Logic
 -------|------------------------|-----------------------------|-----------------|-------------
@@ -27,6 +27,8 @@ CPU instructions
 
 Literals
 --------
+Specific values can be pushed onto the stack using literals.
+Smaller numbers can be compressed into fewer bytes as described in the following table.
 
 Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4
 ------------------------|-----------|-----------|-----------|-----------|----------
@@ -52,55 +54,168 @@ Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4
 
 Instructions
 ------------
+Each instruction will pop the required number of parameters off of the stack.
+Some will push a result (prefixed in the documentation with a `:`.) back onto the stack.
+`adr` parameters can be given as either a relative or absolute address.
+Relative addresses are relative to the end of the instrction byte that operates on that address.
 
 ### `halt`
-### `sleep` `milliseconds`
+Pause the cpu indefinately (and open a debugger?).
+
+### `sleep` `ms`
+Pause the cpu for `ms` milliseconds.
+
 ### `vsync`
+Pause the cpu until next screen refresh.
+
 ### `jump` `adr`
+Jump to `adr`.
+
 ### `jumpifz` `adr` `val`
+Jump to `adr` if `val` is zero.
+
 ### `endcall`
-### `call``:result` `adr` `paramcount`
+Clear the current stack and jump back to where the current function was called from.
+If this brings us back to the safe state (if one is stored), the safe state will be cleared.
+
+### `call` `:result?` `adr` `paramcount`
+Start a new stack, move `paramcount` values over to the new stack in reverse order and jump to `adr`.
+(Note that a `result` might not be returned.)
+
 ### `return` `result`
-### `exec``:err` `adr` `paramcount`
+Like `endcall`, but push `result` onto the previous stack.
+
+### `exec` `:err` `adr` `paramcount`
+Like `call`, but store the current stack and program counter as a safe state to return to, if a `break` is invoked by a program or user interupt.
+If there was already a safe state saved, this will just behave like a `call`.
+
 ### `break`
+If a safe state is stored, this will `return` `-1` to the safe state and clear it.
+If no safe state is stored, this will act as a `reset`.
+
 ### `reset`
-### `absadr``:absadr` `adr`
-### `cpuver``:version`
+Clear all stacks and safe state and set the program counter to the 32bit address
+stored at 8 bytes before end of memory.
+
+### `absadr` `:absadr` `adr`
+Return `adr` as a positive absolute address.
+
+### `cpuver` `:version`
+Return the version number of the current cpu isa.
+
 ### `noop`
-### `lit``:val`
-### `get``:val` `index`
-### `stackptr``:negadr`
-### `memsize``:bytes`
-### `loadbit``:val` `adr` `bit` `bitlen`
-### `load``:val` `adr` `len`
-### `loadu``:val` `adr` `len`
+Waste one cpu cycle doing nothing.
+
+### `lit` `:val`
+Return and jump the next 4 bytes.
+
+### `get` `:val` `index`
+Return the value at the given `index` of the current stack.
+Positive `index` counts from the top of the stack.
+Negative `index` counts from the bottom of the stack, useful for local variables.
+
+### `stackptr` `:negadr`
+Return the negative absolute address of the stack pointer.
+
+### `memsize` `:bytes`
+Return the total amount of memory in bytes.
+
+### `loadbit` `:val` `adr` `bit` `bitlen`
+Read `bitlen` number of bits at `adr`, skipping `bit` bits, and return it as an unsigned integer.
+`bitlen` cannot go beyond the end of the byte.
+
+### `load` `:val` `adr` `len`
+Read `len` number of bytes at `adr` and return it as a signed integer.
+
+### `loadu` `:val` `adr` `len`
+Read `len` number of bytes at `adr` and return it as an unsigned integer.
+
 ### `drop` `val`
+Take a value from the stack and do nothing with it.
+
 ### `set` `index` `val`
+Like `get`, but overwrites the value in the stack with `val` without returning it.
+
 ### `inc` `index`
+Like `set`, but increments the integer in stack by 1.
+
 ### `dec` `index`
+Like `set`, but decrements the integer in stack by 1.
+
 ### `storebit` `adr` `bit` `bitlen` `val`
+Like `loadbit`, but stores `val` instead of reading and returning it.
+
 ### `store` `adr` `len` `val`
-### `add``:n` `a` `b`
-### `sub``:n` `a` `b`
-### `mult``:n` `a` `b`
-### `div``:n` `a` `b`
-### `rem``:n` `a` `b`
-### `itof``:float` `int`
-### `uitof``:float` `int`
-### `fadd``:n` `a` `b`
-### `fsub``:n` `a` `b`
-### `fmult``:n` `a` `b`
-### `fdiv``:n` `a` `b`
-### `ffloor``:n` `a`
-### `ftoi``:int` `float`
-### `eq``:bool` `a` `b`
-### `lt``:bool` `a` `b`
-### `gt``:bool` `a` `b`
-### `eqz``:bool` `a`
-### `and``:n` `a` `b`
-### `or``:n` `a` `b`
-### `xor``:n` `a` `b`
-### `rot``:n` `a` `b`
-### `feq``:bool` `a` `b`
-### `flt``:bool` `a` `b`
-### `fgt``:bool` `a` `b`
+Like `load`, but stores `val` instead of reading and returning it.
+
+### `add` `:n` `a` `b`
+Return the result of adding `a` and `b`.
+
+### `sub` `:n` `a` `b`
+Return the result of subtracting `b` from `a`.
+
+### `mult` `:n` `a` `b`
+Return the result of multiplying `a` and `b`.
+
+### `div` `:n` `a` `b`
+Return the result of integer dividing `a` by `b`.
+
+### `rem` `:n` `a` `b`
+Return the remainder of integer dividing `a` by `b`.
+
+### `itof` `:float` `int`
+Return `int` as a floating point number.
+
+### `uitof` `:float` `int`
+Return `int` as a positive floating point number.
+
+### `fadd` `:n` `a` `b`
+Like `add`, but for floating point numbers.
+
+### `fsub` `:n` `a` `b`
+Like `sub`, but for floating point numbers.
+
+### `fmult` `:n` `a` `b`
+Like `mult`, but for floating point numbers.
+
+### `fdiv` `:n` `a` `b`
+Like `div`, but for floating point numbers. (and doing actual division, not integer division.)
+
+### `ffloor` `:n` `a`
+Return the largest integer that is not larger than `a`.
+
+### `ftoi` `:int` `float`
+Return `float` as an integer.
+
+### `eq` `:bool` `a` `b`
+Return 1 if `a` is equal to `b`, else return 0.
+
+### `lt` `:bool` `a` `b`
+Return 1 if `a` is less than `b`, else return 0.
+
+### `gt` `:bool` `a` `b`
+Return 1 if `a` is greater than `b`, else return 0.
+
+### `eqz` `:bool` `a`
+Return 1 if `a` is zero, else return 0.
+
+### `and` `:n` `a` `b`
+Return the result of bitwise `and`ing `a` and `b`.
+
+### `or` `:n` `a` `b`
+Return the result of bitwise `or`ing `a` and `b`.
+
+### `xor` `:n` `a` `b`
+Return the result of bitwise `xor`ing `a` and `b`.
+
+### `rot` `:n` `a` `b`
+Return the result of rotating `a` `b` bits to the left.
+
+### `feq` `:bool` `a` `b`
+Like `eq`, but for floating point numbers.
+
+### `flt` `:bool` `a` `b`
+Like `lt`, but for floating point numbers.
+
+### `fgt` `:bool` `a` `b`
+Like `gt`, but for floating point numbers.
