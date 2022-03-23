@@ -49,3 +49,58 @@ Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4
  - `positive` = rest of nibbles are `0000`
  - `negative` = rest of nibbles are `1111`
  - `absolute` = second most significant bit (2^30) is flipped (for absolute addresses from either beginning(+) or end(-) of memory)
+
+Instructions
+------------
+
+### `halt`
+### `sleep` `milliseconds`
+### `vsync`
+### `jump` `adr`
+### `jumpifz` `adr` `val`
+### `endcall`
+### `call``:result` `adr` `paramcount`
+### `return` `result`
+### `exec``:err` `adr` `paramcount`
+### `break`
+### `reset`
+### `absadr``:absadr` `adr`
+### `cpuver``:version`
+### `noop`
+### `lit``:val`
+### `get``:val` `index`
+### `stackptr``:negadr`
+### `memsize``:bytes`
+### `loadbit``:val` `adr` `bit` `bitlen`
+### `load``:val` `adr` `len`
+### `loadu``:val` `adr` `len`
+### `drop` `val`
+### `set` `index` `val`
+### `inc` `index`
+### `dec` `index`
+### `storebit` `adr` `bit` `bitlen` `val`
+### `store` `adr` `len` `val`
+### `add``:n` `a` `b`
+### `sub``:n` `a` `b`
+### `mult``:n` `a` `b`
+### `div``:n` `a` `b`
+### `rem``:n` `a` `b`
+### `itof``:float` `int`
+### `uitof``:float` `int`
+### `fadd``:n` `a` `b`
+### `fsub``:n` `a` `b`
+### `fmult``:n` `a` `b`
+### `fdiv``:n` `a` `b`
+### `ffloor``:n` `a`
+### `ftoi``:int` `float`
+### `eq``:bool` `a` `b`
+### `lt``:bool` `a` `b`
+### `gt``:bool` `a` `b`
+### `eqz``:bool` `a`
+### `and``:n` `a` `b`
+### `or``:n` `a` `b`
+### `xor``:n` `a` `b`
+### `rot``:n` `a` `b`
+### `feq``:bool` `a` `b`
+### `flt``:bool` `a` `b`
+### `fgt``:bool` `a` `b`
