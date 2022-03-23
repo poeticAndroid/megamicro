@@ -552,6 +552,9 @@
   )
 
   (func $endcall_instr
+    (if (i32.eq (global.get $safecs) (global.get $cs) ) (then
+      (global.set $safecs (i32.const 0) )
+    ) )
     (global.set $vs (global.get $cs) )
     (global.set $cs (i32.mul (i32.const 0x10000) (memory.size) ) )
     (global.set $pc (call $pop) )
