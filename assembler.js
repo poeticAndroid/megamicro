@@ -159,6 +159,13 @@
         srcpos = nextWord(srcpos)
         changes += compileWhile()
       }
+      if (kwid === 9) {//if
+        srcpos = nextWord(srcpos)
+        changes += compileIf()
+      }
+      if (kwid === 10) {//else
+        return changes
+      }
       if (kwid === 11) {//end
         srcpos = nextWord(srcpos)
         return changes
@@ -219,10 +226,9 @@
     return changes
   }
   function compileWhile() {
-    let kw, cond, jumplit, loopStart, loopEnd
+    let cond, jumplit, loopEnd
     let oldlit, newlit
     let changes = 0
-    kw = item(state, 0)
     cond = exepos
     changes += compileLine()
 
@@ -233,7 +239,6 @@
     changes += vstore(exepos, 1, 0x05) //jumpifz
     exepos++
 
-    loopStart = exepos
     changes += compile()
     changes += compileRef(cond)
     changes += vstore(exepos, 1, 0x04) //jump
@@ -246,6 +251,53 @@
     changes += compileRef(loopEnd)
     litpos = newlit
     exepos = loopEnd
+
+    return changes
+  }
+  function compileIf() {
+    let kw, elsjumplit, endjumplit
+    let blockStart, blockEnd, elseEnd
+    let elslit, endlit, newlit
+    let changes = 0
+    kw = item(state, 0)
+    changes += compileLine()
+
+    elsjumplit = exepos
+    elslit = litpos
+    exepos += load(litpos, 1)
+    litpos++
+    changes += vstore(exepos, 1, 0x05) //jumpifz
+    exepos++
+
+    blockStart = exepos
+    changes += compile()
+
+    if (indexOf(kw, srcpos) === 10) { // else
+      endjumplit = exepos
+      endlit = litpos
+      exepos += load(litpos, 1)
+      litpos++
+      changes += vstore(exepos, 1, 0x04) //jump
+      exepos++
+      blockEnd = exepos
+      changes += compile()
+    } else { // end
+      endjumplit = elsjumplit
+      endlit = elslit
+      blockEnd = exepos
+    }
+    elseEnd = exepos
+
+    newlit = litpos
+    litpos = elslit
+    exepos = elsjumplit
+    changes += compileRef(blockEnd)
+
+    litpos = endlit
+    exepos = endjumplit
+    changes += compileRef(blockEnd)
+    litpos = newlit
+    exepos = elseEnd
 
     return changes
   }
