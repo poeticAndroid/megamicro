@@ -55,9 +55,9 @@ Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4
 Instructions
 ------------
 Each instruction will pop the required number of parameters off of the stack.
-Some will push a result (prefixed in the documentation with a `:`.) back onto the stack.
+Some will push a result (prefixed in the documentation with a `:`) back onto the stack.
 `adr` parameters can be given as either a relative or absolute address as described [above](#literals).
-Relative addresses are relative to the end of the instrction byte that operates on that address.
+Relative addresses are relative to the end of the instruction byte that operates on that address.
 
 ### `halt`
 Pause the cpu indefinately (and open a debugger?).
