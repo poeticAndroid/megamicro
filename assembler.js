@@ -181,6 +181,7 @@
           changes += vstore(exepos, 1, 0x19) //set
           exepos++
         } else {
+          if (!valueOf(item(state, 3), name, 0)) setValueOf(item(state, 3), name, 0, exepos)
           changes += vstore(exepos, 1, 0x44) //lit 4
           exepos++
           changes += compileRef(valueOf(item(state, 3), name, 0))
@@ -197,6 +198,7 @@
           changes += vstore(exepos, 1, 0x1a) //inc
           exepos++
         } else {
+          if (!valueOf(item(state, 3), name, 0)) setValueOf(item(state, 3), name, 0, exepos)
           changes += vstore(exepos, 1, 0x41) //lit 1
           exepos++
 
@@ -225,6 +227,7 @@
           changes += vstore(exepos, 1, 0x1b) //dec
           exepos++
         } else {
+          if (!valueOf(item(state, 3), name, 0)) setValueOf(item(state, 3), name, 0, exepos)
           changes += vstore(exepos, 1, 0x41) //lit 1
           exepos++
 
