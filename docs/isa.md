@@ -83,15 +83,16 @@ Start a new stack, move `paramcount` values over to the new stack in reverse ord
 (Note that a `result` might not be returned.)
 
 ### `return` `result`
-Like `endcall`, but push `result` onto the previous stack.
+Like [`endcall`](#endcall), but push `result` onto the previous stack.
 
-### `exec:err` `adr` `paramcount`
-Like `call`, but store the current stack and program counter as a safe state to return to, if a `break` is invoked by a program or user interupt.
-If there was already a safe state saved, this will just behave like a `call`.
+### `exec:err?` `adr` `paramcount`
+Like [`call`](#callresult-adr-paramcount), but store the current stack and program counter as a safe state to return to, if a [`break`](#break) is invoked by a program or user interupt.
+Useful for running untrusted programs.
+If there was already a safe state stored, this will just behave like a [`call`](#callresult-adr-paramcount).
 
 ### `break`
-If a safe state is stored, this will `return` `-1` to the safe state and clear it.
-If no safe state is stored, this will act as a `reset`.
+If a safe state is stored, this will [`return`](#return-result) `-1` to the safe state and clear it.
+If no safe state is stored, this will act as a [`reset`](#reset).
 
 ### `reset`
 Clear all stacks and safe state and set the program counter to the 32bit address
@@ -134,19 +135,19 @@ Read `len` number of bytes at `adr` and return it as an unsigned integer.
 Take a value from the stack and do nothing with it.
 
 ### `set` `index` `val`
-Like `get`, but overwrites the value in the stack with `val` without returning it.
+Like [`get`](#getval-index), but overwrites the value in the stack with `val` without returning it.
 
 ### `inc` `index`
-Like `set`, but increments the integer in stack by 1.
+Like [`set`](#set-index-val), but increments the integer in stack by 1.
 
 ### `dec` `index`
-Like `set`, but decrements the integer in stack by 1.
+Like [`set`](#set-index-val), but decrements the integer in stack by 1.
 
 ### `storebit` `adr` `bit` `bitlen` `val`
-Like `loadbit`, but stores `val` instead of reading and returning it.
+Like [`loadbit`](#loadbitval-adr-bit-bitlen), but stores `val` instead of reading and returning it.
 
 ### `store` `adr` `len` `val`
-Like `load`, but stores `val` instead of reading and returning it.
+Like [`load`](#loadval-adr-len), but stores `val` instead of reading and returning it.
 
 ### `add:n` `a` `b`
 Return the result of adding `a` and `b`.
@@ -170,19 +171,19 @@ Return `int` as a floating point number.
 Return `int` as a positive floating point number.
 
 ### `fadd:n` `a` `b`
-Like `add`, but for floating point numbers.
+Like [`add`](#addn-a-b), but for floating point numbers.
 
 ### `fsub:n` `a` `b`
-Like `sub`, but for floating point numbers.
+Like [`sub`](#subn-a-b), but for floating point numbers.
 
 ### `fmult:n` `a` `b`
-Like `mult`, but for floating point numbers.
+Like [`mult`](#multn-a-b), but for floating point numbers.
 
 ### `fdiv:n` `a` `b`
-Like `div`, but for floating point numbers. (and doing actual division, not integer division.)
+Like [`div`](#divn-a-b), but for floating point numbers. (and doing actual division, not integer division.)
 
 ### `ffloor:n` `a`
-Return the largest integer that is not larger than `a`.
+Return the largest integer (as a float) that is not larger than `a`.
 
 ### `ftoi:int` `float`
 Return `float` as an integer.
@@ -212,10 +213,10 @@ Return the result of bitwise `xor`ing `a` and `b`.
 Return the result of rotating `a` `b` bits to the left.
 
 ### `feq:bool` `a` `b`
-Like `eq`, but for floating point numbers.
+Like [`eq`](#eqbool-a-b), but for floating point numbers.
 
 ### `flt:bool` `a` `b`
-Like `lt`, but for floating point numbers.
+Like [`lt`](#ltbool-a-b), but for floating point numbers.
 
 ### `fgt:bool` `a` `b`
-Like `gt`, but for floating point numbers.
+Like [`gt`](#gtbool-a-b), but for floating point numbers.
