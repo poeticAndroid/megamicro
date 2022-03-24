@@ -457,12 +457,12 @@
     let end = adr + len
     while (adr < end) {
       txt += (adr == pc ? "> " : "  ")
-      txt += ("000000" + adr.toString(16)).slice(-5) + " "
-      txt += ("00" + mem[adr].toString(16)).slice(-2) + " "
+      txt += toHex(adr, 5, "") + " "
+      txt += toHex(mem[adr], 2, "") + " "
       txt += (opcodes[mem[adr]] || "") + " "
       if (opcodes[mem[adr]] === "lit") {
         uint8.set(mem.slice(adr + 1, adr + 5))
-        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        txt += toHex(int32[0]) + " " + int32[0]
         adr += 4
       }
       if (mem[adr] >= 0x40) {
@@ -474,7 +474,7 @@
         uint8[0] = mem[adr] << 4
         int32[0] = int32[0] >> 4
         if (op & 1) int32[0] = int32[0] ^ 0x40000000
-        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        txt += toHex(int32[0]) + " " + int32[0]
         adr += len - 1
       }
       txt += "\n"

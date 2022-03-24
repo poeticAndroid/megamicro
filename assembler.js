@@ -970,12 +970,12 @@
     let end = bin.length
     while (adr < end) {
       txt += (adr == pc ? "> " : "  ")
-      txt += ("000000" + adr.toString(16)).slice(-5) + " "
-      txt += ("00" + bin[adr].toString(16)).slice(-2) + " "
+      txt += toHex(adr, 5, "") + " "
+      txt += toHex(bin[adr], 2, "") + " "
       txt += (opcodes[bin[adr]] || "") + " "
       if (opcodes[bin[adr]] === "lit") {
         uint8.set(bin.slice(adr + 1, adr + 5))
-        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        txt += toHex(int32[0]) + " " + int32[0]
         adr += 4
       }
       if (bin[adr] >= 0x40) {
@@ -987,13 +987,20 @@
         uint8[0] = bin[adr] << 4
         int32[0] = int32[0] >> 4
         if (op & 1) int32[0] = int32[0] ^ 0x40000000
-        txt += "0x" + int32[0].toString(16) + " " + int32[0]
+        txt += toHex(int32[0]) + " " + int32[0]
         adr += len - 1
       }
       txt += "\n"
       adr++
     }
     return txt
+  }
+
+  function toHex(val, digs, pre = "0x") {
+    let str = Math.abs(val).toString(16)
+    if (digs) str = ("00000000" + str).slice(-digs)
+    str = (val < 0 ? "-" : "") + pre + str
+    return str
   }
 
   const keywords = [
@@ -1019,4 +1026,5 @@
   window.assemble = assemble
   window.opcodes = opcodes
   window.dumpBin = dumpBin
+  window.toHex = toHex
 })()
