@@ -116,7 +116,7 @@
         while (loadu(srcpos, 1) > 0x20) {
           addTo(item(state, 7), srcpos, 0)
           srcpos = nextWord(srcpos)
-          changes += vstore(exepos, 1, 0x40)// false
+          changes += vstore(exepos, 1, 0x40)// null
           exepos++
         }
       }
@@ -735,12 +735,12 @@
     if (loadu(a, 1) < 0x60 && loadu(b, 1) < 0x60) {
       return true
     }
-    return false
+    return null
   }
   function isNumber(pos) {
     if (loadu(pos, 1) === 0x2d && isNumber(pos + 1)) return true
     if (loadu(pos, 1) > 0x2f && loadu(pos, 1) < 0x3a) return true
-    return false
+    return null
   }
 
   function toLowerCase(adr) {
@@ -748,7 +748,7 @@
     while (loadu(adr, 1)) {
       while (inString && loadu(adr, 1) === 0x5c) adr += 2
       if (loadu(adr, 1) === 0x22) inString = !inString
-      if (loadu(adr, 1) === 0x0a) inString = false
+      if (loadu(adr, 1) === 0x0a) inString = null
       if (!inString) {
         if (loadu(adr, 1) > 0x40 && loadu(adr, 1) < 0x5b) {
           store(adr, 1, loadu(adr, 1) + 0x20)
@@ -762,8 +762,8 @@
     while (loadu(adr, 1)) {
       while (inString && loadu(adr, 1) === 0x5c) adr += 2
       if (loadu(adr, 1) === 0x22) inString = !inString
-      if (loadu(adr, 1) === 0x0a) inString = false
-      if (loadu(adr, 1) === 0x0a) erase = false
+      if (loadu(adr, 1) === 0x0a) inString = null
+      if (loadu(adr, 1) === 0x0a) erase = null
       if (loadu(adr, 1) === 0x3b && !inString) erase = true
       if (erase) store(adr, 1, 0x20)
       adr++
@@ -774,7 +774,7 @@
     while (loadu(adr, 1)) {
       while (inString && loadu(adr, 1) === 0x5c) adr += 2
       if (loadu(adr, 1) === 0x22) inString = !inString
-      if (loadu(adr, 1) === 0x0a) inString = false
+      if (loadu(adr, 1) === 0x0a) inString = null
       if (!inString) {
         if (loadu(adr, 1) === 0x21) store(adr, 1, 0x20)
         if (loadu(adr, 1) > 0x22 && loadu(adr, 1) < 0x2d) store(adr, 1, 0x20)
@@ -825,7 +825,7 @@
     store(list, 4, 0)
   }
   function has(list, word) {
-    if (indexOf(list, word) < 0) return false
+    if (indexOf(list, word) < 0) return null
     else return true
   }
   function valueOf(list, word, index) {
@@ -1006,7 +1006,7 @@
     "lit", "get", "stackptr", "memsize", "-", "loadbit", "load", "loadu", "drop", "set", "inc", "dec", "-", "storebit", "store", "-",
     "add", "sub", "mult", "div", "rem", "-", "itof", "uitof", "fadd", "fsub", "fmult", "fdiv", "ffloor", "-", "-", "ftoi",
     "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", "-", "-", "-", "-", "-",
-    "false", "true"
+    "null", "true"
   ]
 
   for (let i = 0; i < mem.length; i++) {
