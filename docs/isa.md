@@ -60,7 +60,7 @@ Some will push a result (prefixed in the documentation with a `:`) back onto the
 Relative addresses are relative to the end of the instruction byte that operates on that address.
 
 ### `halt`
-Pause the cpu indefinately (and open a debugger?).
+Pause the cpu indefinitely (and open a debugger?).
 
 ### `sleep` `ms`
 Pause the cpu for `ms` milliseconds.
@@ -86,7 +86,7 @@ Start a new stack, move `paramcount` values over to the new stack in reverse ord
 Like [`endcall`](#endcall), but push `result` onto the previous stack.
 
 ### `exec:err?` `adr` `paramcount`
-Like [`call`](#callresult-adr-paramcount), but store the current stack and program counter as a safe state to return to, if a [`break`](#break) is invoked by a program or user interupt.
+Like [`call`](#callresult-adr-paramcount), but store the current stack and program counter as a safe state to return to, if a [`break`](#break) is invoked by a program or user interrupt.
 Useful for running untrusted programs.
 If there was already a safe state stored, this will just behave like a [`call`](#callresult-adr-paramcount).
 
