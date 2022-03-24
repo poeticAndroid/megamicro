@@ -1,6 +1,6 @@
 (() => {
   let cpu,
-    ram = new WebAssembly.Memory({ initial: 2 }),
+    ram = new WebAssembly.Memory({ initial: 1 }),
     mem = new Uint8Array(ram.buffer),
     speed = 1,
     vsyncfps = 9000,
