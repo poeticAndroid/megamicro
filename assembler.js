@@ -456,6 +456,8 @@
         exepos++
         i = -2
       }
+      if (i === -1) error("unknown word")
+
       srcpos = prevWord(srcpos)
     }
 
@@ -853,6 +855,21 @@
     }
   }
 
+  function error(msg) {
+    let s = item(state, 2)
+    let line = 0, col = 0
+    line = 1
+    while (s < srcpos) {
+      col++
+      if (load(s, 1) === 0x0a) {
+        line++
+        col = 0
+      }
+      s++
+    }
+    throw console.error(msg, "on line", line, "column", col, "!")
+  }
+
   function mcopy(src, dest, len) {
     if (src > dest) {
       while (len) {
@@ -977,8 +994,7 @@
         uint8.set(bin.slice(adr + 1, adr + 5))
         txt += toHex(int32[0]) + " " + int32[0]
         adr += 4
-      }
-      if (bin[adr] >= 0x40) {
+      } else if (bin[adr] >= 0x40) {
         let op = bin[adr] >> 4
         let len = bin[adr] >> 6
         if (op & 2) uint8.fill(255)
