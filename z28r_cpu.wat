@@ -546,8 +546,12 @@
   )
 
   (func $jumpifz_instr
-    (if (call $pop) (then
-      (global.set $pc (call $abs (call $pop) ) )
+    (local $adr i32)
+    (local $val i32)
+    (local.set $adr (call $abs (call $pop) ) )
+    (local.set $val (call $pop) )
+    (if (i32.eqz (local.get $val) ) (then
+      (global.set $pc (local.get $adr) )
     ) )
   )
 
@@ -802,7 +806,7 @@
     (local $len i32)
     (local $val i32)
     (local.set $adr (call $abs (call $pop) ) )
-    (local.set $len (i32.mul (i32.const 8) (i32.sub (i32.const 4) (call $pop) ) ) )
+    (local.set $len (call $pop) )
     (local.set $val (call $pop) )
 
     (if (i32.and (local.get $len) (i32.const 0x2) ) (then
