@@ -153,7 +153,6 @@ end
 data filename
   "disk0:/kernal.prg\0"
 end
-
 data digits
   "0123456789abcdef\0"
 end
