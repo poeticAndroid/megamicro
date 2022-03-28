@@ -781,8 +781,10 @@
         if (loadu(adr, 1) === 0x21) store(adr, 1, 0x20)
         if (loadu(adr, 1) > 0x22 && loadu(adr, 1) < 0x2d) store(adr, 1, 0x20)
         if (loadu(adr, 1) === 0x2d && loadu(adr + 1, 1) < 0x21) store(adr, 1, 0x20)
+        if (loadu(adr, 1) === 0x2e && loadu(adr + 1, 1) < 0x21) store(adr, 1, 0x20)
         if (loadu(adr, 1) === 0x2f) store(adr, 1, 0x20)
         if (loadu(adr, 1) > 0x39 && loadu(adr, 1) < 0x61) store(adr, 1, 0x20)
+        if (loadu(adr, 1) > 0x7a) store(adr, 1, 0x20)
       }
       adr++
     }
