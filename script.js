@@ -84,8 +84,9 @@
   }
 
   function render(t = 0) {
-    if (t <= nextFrame) return requestAnimationFrame(render)
-    nextFrame = Math.ceil(t / 20) * 20
+    if (t < nextFrame) return requestAnimationFrame(render)
+    if (t - nextFrame > 256) nextFrame = Math.floor(t / 20) * 20
+    nextFrame += 20
     let opcode
     if (running) {
       if (kbBuffer.length && mem[0x4b04] === 0) {
@@ -272,6 +273,7 @@
     }
 
     if (e.type === "keyup") {
+      mem[0x4b06] = 0
       mem[0x4b07] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
     }
     if (e.type === "keydown") {
@@ -298,7 +300,7 @@
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "q") {
-        compileAsm()
+        cpu.break()
       }
     }
     if (!running) kbBuffer.length = 0
