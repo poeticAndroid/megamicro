@@ -84,7 +84,8 @@
   }
 
   function render(t = 0) {
-    if (t < nextFrame) return requestAnimationFrame(render)
+    requestAnimationFrame(render)
+    if (t < nextFrame) return
     if (t - nextFrame > 256) nextFrame = Math.floor(t / 20) * 20
     nextFrame += 20
     let opcode
@@ -176,6 +177,9 @@
       else canvas.style.backgroundColor = "#000"
       g.fillRect(0, 0, canvas.width, canvas.height)
       img = g.getImageData(0, 0, canvas.width, canvas.height)
+      mem[0x4805] = bpp
+      mem[0x4806] = w / 64
+      mem[0x4807] = h / 36
       gmode = mode
     }
     uint8.set(mem.slice(0x4800, 0x4804))
@@ -187,6 +191,7 @@
     }
 
     g.putImageData(img, 0, 0)
+    mem[0x4b17] += 5
 
     if (debugMode) {
       updateMonitor(cpu.getPC())
@@ -201,8 +206,6 @@
       }
     }
 
-    requestAnimationFrame(render)
-    // setTimeout(render, 256)
   }
 
   function renderbyte(madr, iadr, bpp, alt) {
