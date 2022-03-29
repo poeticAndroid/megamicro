@@ -178,8 +178,8 @@
       g.fillRect(0, 0, canvas.width, canvas.height)
       img = g.getImageData(0, 0, canvas.width, canvas.height)
       mem[0x4805] = bpp
-      mem[0x4806] = w / 64
-      mem[0x4807] = h / 36
+      mem[0x4806] = w / 8
+      mem[0x4807] = h / 8
       gmode = mode
     }
     uint8.set(mem.slice(0x4800, 0x4804))
@@ -498,11 +498,13 @@
     let adr = cpu.getVS()
     let cs = cpu.getCS()
     let txt = ""
-    while (len > 0) {
+    let first = true
+    while (first || len > 0) {
       if (cs === adr) {
         txt += "--------\n"
         cs = -1
         len--
+        first = false
       }
       uint8.set(mem.slice(adr, adr + 4))
       if (adr < mem.length) {
@@ -532,7 +534,7 @@
   }
 
   function updateStack() {
-    document.querySelector("#stackPre").textContent = "Stack size: 0x" + cpu.getVS().toString(16) + "\n" + dumpStack(10)
+    document.querySelector("#stackPre").textContent = "Stack size: " + toHex(cpu.getVS()) + "\n" + dumpStack(10)
   }
 
   function resize(e) {
