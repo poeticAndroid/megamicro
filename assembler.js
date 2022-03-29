@@ -17,9 +17,10 @@
   // 4:external list
   // 5:function list
   // 6:data list
-  // 7:local list
-  // 8:lit lengths
-  // 9:executable
+  // 7:const list
+  // 8:local list
+  // 9:lit lengths
+  // 10:executable
 
   function assemble(asm) {
     let adr, tries, maxlit
@@ -42,39 +43,41 @@
     store(adr - 4, 4, listFn())
     adr = item(state, 6)//data list
     store(adr - 4, 4, listData())
-    adr = item(state, 7)//local list
+    adr = item(state, 7)//const list
+    store(adr - 4, 4, listConst())
+    adr = item(state, 8)//local list
     store(adr - 4, 4, listLocals())
-    adr = item(state, 8)//lit lengths
+    adr = item(state, 9)//lit lengths
     store(adr, 4, 0)
     store(adr - 4, 4, 4)
-    adr = item(state, 9)//executable
+    adr = item(state, 10)//executable
     store(adr - 4, 4, 0)
 
     srcpos = item(state, 2)//source
-    litpos = item(state, 8)//lits
-    exepos = item(state, 9)//exe
+    litpos = item(state, 9)//lits
+    exepos = item(state, 10)//exe
     maxlit = 0
     tries = 8
     while (tries && compile()) {
       if (litpos > maxlit) {
         maxlit = litpos + 4
         store(litpos, 4, 0)
-        litpos = item(state, 8)//lits
+        litpos = item(state, 9)//lits
         while (litpos < maxlit) {
           store(litpos, 4, 0)
           litpos += 4
         }
-        litpos = item(state, 8)//lits
+        litpos = item(state, 9)//lits
         store(litpos - 4, 4, maxlit - litpos)
       }
       srcpos = item(state, 2)//source
-      litpos = item(state, 8)//lits
-      exepos = item(state, 9)//exe
+      litpos = item(state, 9)//lits
+      exepos = item(state, 10)//exe
       tries--
     }
     if (!tries) console.error("ran out of patience!")
 
-    return mem.slice(item(state, 9), exepos)
+    return mem.slice(item(state, 10), exepos)
   }
 
   function compile() {
@@ -97,7 +100,7 @@
         setValueOf(item(state, 4), name, 1, strToInt(srcpos, 10, -1))
       }
       if (kwid === 1) {//fn
-        store(item(state, 7), 4, 0)
+        store(item(state, 8), 4, 0)
         srcpos = nextWord(srcpos)
         name = srcpos
         setValueOf(item(state, 5), name, 0, exepos)
@@ -105,7 +108,7 @@
         srcpos = nextWord(srcpos)
         while (loadu(srcpos, 1) > 0x20) {
           i++
-          addTo(item(state, 7), srcpos, 0)
+          addTo(item(state, 8), srcpos, 0)
           srcpos = nextWord(srcpos)
         }
         setValueOf(item(state, 5), name, 1, i)
@@ -116,7 +119,7 @@
       if (kwid === 2) {//vars
         srcpos = nextWord(srcpos)
         while (loadu(srcpos, 1) > 0x20) {
-          addTo(item(state, 7), srcpos, 0)
+          addTo(item(state, 8), srcpos, 0)
           srcpos = nextWord(srcpos)
           changes += vstore(exepos, 1, 0x40)// null
           exepos++
@@ -139,6 +142,12 @@
           srcpos = nextWord(srcpos)
         }
       }
+      if (kwid === 5) {//const
+        srcpos = nextWord(srcpos)
+        name = srcpos
+        srcpos = nextWord(srcpos)
+        setValueOf(item(state, 7), name, 0, strToInt(srcpos, 10, -1))
+      }
       if (kwid === 6) {//skipby
         srcpos = nextWord(srcpos)
         i = strToInt(srcpos, 10, -1)
@@ -150,7 +159,7 @@
       }
       if (kwid === 7) {//skipto
         srcpos = nextWord(srcpos)
-        i = item(state, 9)
+        i = item(state, 10)
         i += strToInt(srcpos, 10, -1)
         while (exepos < i) {
           changes += vstore(exepos, 1, 0)
@@ -177,7 +186,7 @@
         name = srcpos
         srcpos = nextWord(srcpos)
         changes += compileLine()
-        i = indexOf(item(state, 7), name)
+        i = indexOf(item(state, 8), name)
         if (i > -1) {
           changes += compileLit(i * -1 - 1)
           changes += vstore(exepos, 1, 0x19) //set
@@ -194,7 +203,7 @@
       if (kwid === 13) {//inc
         srcpos = nextWord(srcpos)
         name = srcpos
-        i = indexOf(item(state, 7), name)
+        i = indexOf(item(state, 8), name)
         if (i > -1) {
           changes += compileLit(i * -1 - 1)
           changes += vstore(exepos, 1, 0x1a) //inc
@@ -223,7 +232,7 @@
       if (kwid === 14) {//dec
         srcpos = nextWord(srcpos)
         name = srcpos
-        i = indexOf(item(state, 7), name)
+        i = indexOf(item(state, 8), name)
         if (i > -1) {
           changes += compileLit(i * -1 - 1)
           changes += vstore(exepos, 1, 0x1b) //dec
@@ -393,14 +402,15 @@
     return changes
   }
   function compileLine() {
-    let ops, vars, datas, fns, exts, globals
+    let ops, vars, datas, fns, exts, globals, consts
     let changes = 0, start, end, i
     ops = item(state, 1)
-    vars = item(state, 7)
+    vars = item(state, 8)
     datas = item(state, 6)
     fns = item(state, 5)
     exts = item(state, 4)
     globals = item(state, 3)
+    consts = item(state, 7)
 
     end = srcpos - 1
     while (load(srcpos, 1) > 0x20) {
@@ -460,6 +470,11 @@
         changes += compileRef(valueOf(globals, srcpos, 0))
         changes += vstore(exepos, 1, 0x16) //load
         exepos++
+        i = -2
+      }
+      if (i === -1) i = indexOf(consts, srcpos)
+      if (i > -1) {
+        changes += compileLit(valueOf(consts, srcpos, 0))
         i = -2
       }
       if (i === -1) error("unknown word")
@@ -636,12 +651,39 @@
 
     return datalistPos - datalist
   }
+  function listConst() {
+    let kw, src, constlist, constlistPos, pos
+    kw = item(state, 0)
+    src = item(state, 2)
+    pos = src
+    constlist = item(state, 7) // const list
+    constlistPos = constlist
+    while (loadu(pos, 1)) {
+      pos = skipWS(pos)
+      if (indexOf(kw, pos) === 5) { //const
+        pos = nextWord(pos)
+        store(constlistPos, 4, wordLen(pos) + 5)
+        constlistPos += 4
+        mcopy(pos, constlistPos, wordLen(pos))
+        constlistPos += wordLen(pos)
+        store(constlistPos, 1, 0)
+        constlistPos += 1
+        store(constlistPos, 4, 0)
+        constlistPos += 4
+      }
+      pos = nextLine(pos)
+    }
+    store(constlistPos, 4, 0)
+    constlistPos += 4
+
+    return constlistPos - constlist
+  }
   function listLocals() {
     let kw, src, varlist, varlistPos, pos, maxpos
     kw = item(state, 0)
     src = item(state, 2)
     pos = src
-    varlist = item(state, 7) // local list
+    varlist = item(state, 8) // local list
     varlistPos = varlist
     maxpos = 0
     while (loadu(pos, 1)) {
@@ -677,7 +719,7 @@
     kw = item(state, 0)
     src = item(state, 2)
     pos = src
-    litlist = item(state, 8) // lit list
+    litlist = item(state, 9) // lit list
     litlistPos = litlist
     while (loadu(pos, 1)) {
       pos = skipWS(pos)
@@ -1034,7 +1076,7 @@
   }
 
   const keywords = [
-    "ext", "fn", "vars", "data", "globals", "-", "skipby", "skipto",
+    "ext", "fn", "vars", "data", "globals", "const", "skipby", "skipto",
     "while", "if", "else", "end", "let", "inc", "dec", "jump"
   ]
 
