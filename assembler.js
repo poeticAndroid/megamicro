@@ -45,7 +45,8 @@
     adr = item(state, 7)//local list
     store(adr - 4, 4, listLocals())
     adr = item(state, 8)//lit lengths
-    store(adr - 4, 4, 0)
+    store(adr, 4, 0)
+    store(adr - 4, 4, 4)
     adr = item(state, 9)//executable
     store(adr - 4, 4, 0)
 
@@ -71,6 +72,7 @@
       exepos = item(state, 9)//exe
       tries--
     }
+    if (!tries) console.error("ran out of patience!")
 
     return mem.slice(item(state, 9), exepos)
   }
@@ -319,7 +321,7 @@
 
     jumplit = exepos
     oldlit = litpos
-    exepos += load(litpos, 1)
+    exepos += getLit()
     litpos++
     changes += vstore(exepos, 1, 0x05) //jumpifz
     exepos++
@@ -340,49 +342,53 @@
     return changes
   }
   function compileIf() {
-    let kw, elsjumplit, endjumplit
-    let blockStart, blockEnd, elseEnd
-    let elslit, endlit, newlit
+    let kw, newlit, newpos
+    let ifref, iflit, ifpos
+    let elsref, elslit, elspos
     let changes = 0
     kw = item(state, 0)
     changes += compileLine()
 
-    elsjumplit = exepos
-    elslit = litpos
-    exepos += load(litpos, 1)
+    ifref = exepos
+    iflit = litpos
+    exepos += getLit()
     litpos++
     changes += vstore(exepos, 1, 0x05) //jumpifz
     exepos++
 
-    blockStart = exepos
     changes += compile()
 
     if (indexOf(kw, srcpos) === 10) { // else
-      endjumplit = exepos
-      endlit = litpos
-      exepos += load(litpos, 1)
+      srcpos = nextLine(srcpos)
+      elsref = exepos
+      elslit = litpos
+      exepos += getLit()
       litpos++
       changes += vstore(exepos, 1, 0x04) //jump
       exepos++
-      blockEnd = exepos
+      ifpos = exepos
       changes += compile()
+      elspos = exepos
     } else { // end
-      endjumplit = elsjumplit
-      endlit = elslit
-      blockEnd = exepos
+      ifpos = exepos
+      elsref = ifref
+      elslit = iflit
+      elspos = ifpos
     }
-    elseEnd = exepos
 
     newlit = litpos
-    litpos = elslit
-    exepos = elsjumplit
-    changes += compileRef(blockEnd)
+    newpos = exepos
 
-    litpos = endlit
-    exepos = endjumplit
-    changes += compileRef(blockEnd)
+    litpos = iflit
+    exepos = ifref
+    changes += compileRef(ifpos)
+
+    litpos = elslit
+    exepos = elsref
+    changes += compileRef(elspos)
+
     litpos = newlit
-    exepos = elseEnd
+    exepos = newpos
 
     return changes
   }
@@ -466,7 +472,7 @@
   }
   function compileRef(adr) {
     let i, changes = 0
-    i = exepos + load(litpos, 1) + 1
+    i = exepos + getLit() + 1
     changes += compileLit(adr - i)
     return changes
   }
@@ -486,7 +492,7 @@
     if (val > 0xfffff) size = 5
     if (neg) val = val ^ -1
     if (abs) val = val ^ 0x40000000
-    if (load(litpos, 1) > size) size = load(litpos, 1)
+    if (getLit() > size) size = getLit()
     store(litpos, 1, size)
     litpos++
 
@@ -507,6 +513,12 @@
     }
 
     return changes
+  }
+  function getLit() {
+    let size
+    size = loadu(litpos, 1)
+    if (size > 3) size = 5
+    return size
   }
 
   function listGlobals() {
@@ -723,7 +735,7 @@
 
   function wordLen(word) {
     let len = 0
-    while (loadu(word, 1) > 0x60) {
+    while (loadu(word, 1) > 0x20) {
       word++
       len++
     }
@@ -733,9 +745,9 @@
     while (loadu(a, 1) === loadu(b, 1)) {
       a++
       b++
-    }
-    if (loadu(a, 1) < 0x60 && loadu(b, 1) < 0x60) {
-      return true
+      if (loadu(a, 1) < 0x21 && loadu(b, 1) < 0x21) {
+        return true
+      }
     }
     return null
   }
@@ -906,16 +918,16 @@
     return int32[0]
   }
   function store(adr, len, val) {
-    if (adr < 0) throw console.error("attempting to load adr", adr)
+    if (adr < 0) throw console.error("attempting to store at adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
   }
   function vstore(adr, len, val) {
     let delta = loadu(adr, len)
-    if (adr < 0) throw console.error("attempting to load adr", adr)
+    if (adr < 0) throw console.error("attempting to vstore at adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
-    return !!(delta - loadu(adr, len))
+    return !(delta === loadu(adr, len))
   }
   function strToInt(str, base, maxlen) {
     let int = 0, fact = 0, i = 0, digs = 0
@@ -1038,7 +1050,6 @@
     mem[i] = Math.random() * 255
   }
   loadWordList(["0123456789abcdef"], 0)
-  console.log(mem)
 
 
   window.assemble = assemble
