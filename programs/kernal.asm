@@ -86,7 +86,7 @@ fn pset x y c
   vars bpp
   let bpp = loadu 0x40004805 1
 
-  storebit (xor 0x40000000 ^ loadu 0x40004800 4) (mult bpp * add x + mult y * w) bpp c
+  storebit (or 0x40000000 | loadu 0x40004800 4) (mult bpp * add x + mult y * w) bpp c
 end
 
 fn printchr char

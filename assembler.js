@@ -403,7 +403,7 @@
   }
   function compileLine() {
     let ops, vars, datas, fns, exts, globals, consts
-    let changes = 0, start, end, i
+    let changes = 0, start, words, i
     ops = item(state, 1)
     vars = item(state, 8)
     datas = item(state, 6)
@@ -412,13 +412,14 @@
     globals = item(state, 3)
     consts = item(state, 7)
 
-    end = srcpos - 1
+    words = 0
     while (load(srcpos, 1) > 0x20) {
       start = srcpos
+      words++
       srcpos = nextWord(srcpos)
     }
     srcpos = start
-    while (srcpos > end) {
+    while (words) {
       i = -1
       if (isNumber(srcpos)) {
         changes += compileLit(strToInt(srcpos, 10, -1))
@@ -480,6 +481,7 @@
       if (i === -1) error("unknown word")
 
       srcpos = prevWord(srcpos)
+      words--
     }
 
     srcpos = nextWord(start)
@@ -967,6 +969,7 @@
   function vstore(adr, len, val) {
     let delta = loadu(adr, len)
     if (adr < 0) throw console.error("attempting to vstore at adr", adr)
+    if (adr > mem.length - len) throw console.error("attempting to vstore at adr", adr)
     int32[0] = val
     mem.set(uint8.slice(0, len), adr)
     return !(delta === loadu(adr, len))
@@ -1098,4 +1101,5 @@
   window.opcodes = opcodes
   window.dumpBin = dumpBin
   window.toHex = toHex
+  window.mem = mem
 })()
