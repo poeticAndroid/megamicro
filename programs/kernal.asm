@@ -4,27 +4,21 @@ jump boot
 
 skipto 0x10
 
+data hello_str
+  "Hello World!\x9b\n\n|\n\n\0"
+end
 fn fun
   vars ptr
-  printchr 0x0a ;\n
-  printchr 0x48 ; H
-  printchr 0x65 ; e
-  printchr 0x6c ; l
-  printchr 0x6c ; l
-  printchr 0x6f ; o
-  printchr 0x0a ;\n
-  printchr 0x57 ; W
-  printchr 0x6f ; o
-  printchr 0x72 ; r
-  printchr 0x6c ; l
-  printchr 0x64 ; d
-  printchr 0x21 ; !
-  printchr 0x0a ;\n
-  while lt ptr < 0xa0
+  store 0x40004804 1 1
+  vsync
+  printstr hello_str -1
+  store 0x40004bfe 1 1
+  store 0x40004bff 1 2
+  let ptr = 1023
+  while ptr
     printchr ptr
-    inc ptr
+    dec ptr
   end
-  let ptr = 0
   sleep 4096
   while true
     store 0x40004800 4 ptr
@@ -89,6 +83,60 @@ fn pset x y c
   storebit (or 0x40000000 | loadu 0x40004800 4) (mult bpp * add x + mult y * w) bpp c
 end
 
+fn pget x y
+  if lt x < 0
+    return 0
+  end
+  if lt y < 0
+    return 0
+  end
+  vars w
+  let w = mult 8 * loadu 0x40004806 1
+  if gt x > sub w - 1
+    return 0
+  end
+  vars h
+  let h = mult 8 * loadu 0x40004807 1
+  if gt y > sub h - 1
+    return 0
+  end
+  vars bpp
+  let bpp = loadu 0x40004805 1
+
+  loadbit (or 0x40000000 | loadu 0x40004800 4) (mult bpp * add x + mult y * w) bpp
+end
+
+fn scroll px
+  if eqz px
+    endcall
+  end
+  vars adr offset end w bpp bg
+  let adr = or 0x40000000 | loadu 0x40004800 4
+  let end = add adr + 0x4800
+  let w = mult 8 * loadu 0x40004806 1
+  let bpp = loadu 0x40004805 1
+  let offset = div (mult px * mult bpp * w) / 8
+  let bg = loadu 0x40004bfe 1
+  storebit adr 0 bpp bg
+  let bg = loadbit adr 0 bpp
+  while lt bpp < 32
+    let bg = or bg | rot bg bpp
+    let bpp = mult bpp * 2
+  end
+
+  let end = sub end - offset
+  while lt adr end
+    store adr 4 loadu add adr + offset 4
+    let adr = add adr + 4
+  end
+
+  let end = add end + offset
+  while lt adr end
+    store adr 4 bg
+    let adr = add adr + 4
+  end
+end
+
 fn printchr char
   vars col row
   let col = load 0x40004bfc 1
@@ -145,7 +193,7 @@ fn printchr char
     let col = sub col - lastCol
   end
   if gt row > lastRow
-    ; todo: scroll
+    scroll mult 8 * sub row - lastRow
     let row = lastRow
   end
 
@@ -176,3 +224,13 @@ fn printchr char
   store 0x40004bfd 1 row
 end
 
+fn printstr str max
+  vars char
+  let char = loadu str 1
+  while and eqz eqz char & eqz eqz max
+    printchr char
+    inc str
+    let char = loadu str 1
+    dec max
+  end
+end
