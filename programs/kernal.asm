@@ -22,7 +22,7 @@ fn fun
   sleep 4096
   while true
     store 0x40004800 4 ptr
-    inc ptr
+    dec ptr
     if eqz rem ptr % 1024
       store 0x40004804 1 add loadu 0x40004804 1 + 1
     end
