@@ -134,7 +134,7 @@
           loadCPU("z28r_cpu.wasm", { env: { ram: ram } })
         }, 16384)
       }
-      // console.log(cpu.getReg(0), opcode)
+      mem[0x4b17] += 5
       switch (opcode) {
         case 0x00: // halt
           running = false
@@ -185,24 +185,25 @@
       pixelCache[mode] = pixelCache[mode] || []
       gmode = mode
     }
-    uint8.set(mem.slice(0x4800, 0x4804))
-    let start = int32[0] & (mem.length - 1)
-    let end = start + 0x4800
-    let i = 0
-    for (let m = start; m < end; m++) {
-      let byte = mem[m & mem.length - 1]
-      if (pixelCache[mode][byte]) {
-        img.data.set(pixelCache[mode][byte], i)
-        i += pixelCache[mode][byte].length
-      } else {
-        let len = renderbyte(m, i, bpp, mode & 4)
-        pixelCache[mode][byte] = img.data.slice(i, i + len)
-        i += len
+    if (t < nextFrame) {
+      uint8.set(mem.slice(0x4800, 0x4804))
+      let start = int32[0] & (mem.length - 1)
+      let end = start + 0x4800
+      let i = 0
+      for (let m = start; m < end; m++) {
+        let byte = mem[m & mem.length - 1]
+        if (pixelCache[mode][byte]) {
+          img.data.set(pixelCache[mode][byte], i)
+          i += pixelCache[mode][byte].length
+        } else {
+          let len = renderbyte(m, i, bpp, mode & 4)
+          pixelCache[mode][byte] = img.data.slice(i, i + len)
+          i += len
+        }
       }
+      g.putImageData(img, 0, 0)
     }
 
-    g.putImageData(img, 0, 0)
-    mem[0x4b17] += 5
 
     if (debugMode) {
       updateMonitor(cpu.getPC())
