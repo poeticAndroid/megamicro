@@ -119,13 +119,13 @@
       try {
         opcode = cpu.run(speed)
       } catch (err) {
-        mem[0x4804]--
+        mem[0x4800]--
         console.error("CPU CRASH!! OH NOEZ!! O_O", err)
         running = false
         opcode = 0
         let d = 1
         let blink = setInterval(() => {
-          mem[0x4804] += d
+          mem[0x4800] += d
           d *= -1
         }, 512)
         setTimeout(() => {
@@ -154,7 +154,7 @@
     }
 
     // rendering
-    let mode = mem[0x4804] & 7,
+    let mode = mem[0x4800] & 7,
       bpp = Math.pow(2, mode & 0x3)
     if (gmode !== mode) {
       let pw = 1, ph = 1
@@ -179,14 +179,14 @@
       else canvas.style.backgroundColor = "#000"
       g.fillRect(0, 0, canvas.width, canvas.height)
       img = g.getImageData(0, 0, canvas.width, canvas.height)
-      mem[0x4805] = bpp
-      mem[0x4806] = w / 8
-      mem[0x4807] = h / 8
+      mem[0x4801] = bpp
+      mem[0x4802] = w / 8
+      mem[0x4803] = h / 8
       pixelCache[mode] = pixelCache[mode] || []
       gmode = mode
     }
     if (t < nextFrame) {
-      uint8.set(mem.slice(0x4800, 0x4804))
+      uint8.set(mem.slice(0x4804, 0x4808))
       let start = int32[0] & (mem.length - 1)
       let end = start + 0x4800
       let i = 0

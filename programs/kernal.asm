@@ -9,7 +9,7 @@ data hello_str
 end
 fn fun
   vars ptr
-  store 0x40004804 1 1
+  store 0x40004800 1 1
   vsync
   printstr hello_str -1
   store 0x40004bfe 1 1
@@ -21,17 +21,17 @@ fn fun
   end
   sleep 4096
   while true
-    store 0x40004800 4 ptr
+    store 0x40004804 4 ptr
     dec ptr
     if eqz rem ptr % 1024
-      store 0x40004804 1 add loadu 0x40004804 1 + 1
+      store 0x40004800 1 add loadu 0x40004800 1 + 1
     end
     vsync
   end
 end
 
 fn boot
-  store 0x40004804 4 add 1 + loadu 0x40004804 1
+  store 0x40004800 1 add 1 + loadu 0x40004800 1
   sleep 0x100
   resethw
 
@@ -41,7 +41,7 @@ fn boot
 end
 
 fn resethw
-  store 0x40004804 4 -1
+  store 0x40004800 1 -1
   vsync
   fill 0 0x40000000 0x4c00
   store 0x40004bff 1 -1
@@ -68,19 +68,19 @@ fn pset x y c
     endcall
   end
   vars w
-  let w = mult 8 * loadu 0x40004806 1
+  let w = mult 8 * loadu 0x40004802 1
   if gt x > sub w - 1
     endcall
   end
   vars h
-  let h = mult 8 * loadu 0x40004807 1
+  let h = mult 8 * loadu 0x40004803 1
   if gt y > sub h - 1
     endcall
   end
   vars bpp
-  let bpp = loadu 0x40004805 1
+  let bpp = loadu 0x40004801 1
 
-  storebit (or 0x40000000 | loadu 0x40004800 4) (mult bpp * add x + mult y * w) bpp c
+  storebit (or 0x40000000 | loadu 0x40004808 4) (mult bpp * add x + mult y * w) bpp c
 end
 
 fn pget x y
@@ -91,19 +91,19 @@ fn pget x y
     return 0
   end
   vars w
-  let w = mult 8 * loadu 0x40004806 1
+  let w = mult 8 * loadu 0x40004802 1
   if gt x > sub w - 1
     return 0
   end
   vars h
-  let h = mult 8 * loadu 0x40004807 1
+  let h = mult 8 * loadu 0x40004803 1
   if gt y > sub h - 1
     return 0
   end
   vars bpp
-  let bpp = loadu 0x40004805 1
+  let bpp = loadu 0x40004801 1
 
-  loadbit (or 0x40000000 | loadu 0x40004800 4) (mult bpp * add x + mult y * w) bpp
+  loadbit (or 0x40000000 | loadu 0x40004808 4) (mult bpp * add x + mult y * w) bpp
 end
 
 fn scroll px
@@ -111,10 +111,10 @@ fn scroll px
     endcall
   end
   vars adr offset end w bpp bg
-  let adr = or 0x40000000 | loadu 0x40004800 4
+  let adr = or 0x40000000 | loadu 0x40004808 4
   let end = add adr + 0x4800
-  let w = mult 8 * loadu 0x40004806 1
-  let bpp = loadu 0x40004805 1
+  let w = mult 8 * loadu 0x40004802 1
+  let bpp = loadu 0x40004801 1
   let offset = div (mult px * mult bpp * w) / 8
   let bg = loadu 0x40004bfe 1
   storebit adr 0 bpp bg
@@ -145,7 +145,7 @@ fn printchr char
   if eq char == 0x08 ; backspace
     dec col
     if lt col < 0
-      let col = add loadu 0x40004806 1 + col
+      let col = add loadu 0x40004802 1 + col
       dec row
       if lt row < 0
         let col = 0
@@ -183,8 +183,8 @@ fn printchr char
   vars bg fg lastCol lastRow x y x1 y1 x2 y2 font bits
   let bg = loadu 0x40004bfe 1
   let fg = loadu 0x40004bff 1
-  let lastCol = sub loadu 0x40004806 1 - 1
-  let lastRow = sub loadu 0x40004807 1 - 1
+  let lastCol = sub loadu 0x40004802 1 - 1
+  let lastRow = sub loadu 0x40004803 1 - 1
   let font = add 0x40004c00 + mult 8 * and 127 & char
 
   while gt col > lastCol
