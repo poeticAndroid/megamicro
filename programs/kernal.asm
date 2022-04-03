@@ -4,28 +4,15 @@ jump boot
 
 skipto 0x10
 
-data hello_str
-  "Hello World!\x9b\n\n|\n\n\0"
-end
-fn fun
-  vars ptr
-  store 0x40004800 1 1
-  vsync
-  printstr hello_str -1
-  store 0x40004bfe 1 1
-  store 0x40004bff 1 2
-  let ptr = 1023
-  while ptr
-    printchr ptr
-    dec ptr
+fn playground
+  vars i
+  while lt i < 0xa0
+    printchr i
+    inc i
   end
-  sleep 4096
   while true
-    store 0x40004804 4 ptr
-    dec ptr
-    if eqz rem ptr % 1024
-      store 0x40004800 1 add loadu 0x40004800 1 + 1
-    end
+    printchr loadu 0x40004b05 1
+    store 0x40004b04 4 0
     vsync
   end
 end
@@ -37,7 +24,7 @@ fn boot
 
   ;call intro
   ;call launcher
-  fun
+  playground
 end
 
 fn resethw

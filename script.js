@@ -11,6 +11,7 @@
     sleep = false,
     kbEnabled = true,
     kbBuffer = [],
+    kbGfx,
     debugMode
 
   let diskInitialized = false,
@@ -291,12 +292,14 @@
     if (e.type === "keyup") {
       mem[0x4b06] = 0
       mem[0x4b07] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
+      if (!e.shiftKey) kbGfx = false
     }
     if (e.type === "keydown") {
       if (kbEnabled) {
         mem[0x4b06] = e.keyCode
         mem[0x4b07] = e.shiftKey + 2 * e.altKey + 4 * e.ctrlKey + 4 * e.metaKey
         if (!e.ctrlKey && !e.metaKey) {
+          if (e.altKey && e.shiftKey) kbGfx = true
           if (e.key === "Backspace") {
             kbBuffer.push(0x08)
           }
@@ -311,7 +314,18 @@
             kbBuffer.push(0x1b)
           }
           if (e.key.length === 1) {
-            kbBuffer.push(e.key.charCodeAt(0))
+            if (kbGfx) {
+              let char = e.keyCode
+              if (char < 0x40) {
+                char += 0x8
+              }
+              while (char < 0x80) {
+                char += 0x20
+              }
+              kbBuffer.push(char)
+            } else {
+              kbBuffer.push(e.key.charCodeAt(0))
+            }
           }
         }
       }
