@@ -6,19 +6,21 @@ skipto 0x10
 
 fn playground
   vars i
+  screenmode 1
+  store8 0x40004bfe 1
   while lt i < 0xa0
     printchr i
-    inc i
+    inc i 1
   end
   while true
-    printchr loadu 0x40004b05 1
-    store 0x40004b04 4 0
+    printchr load8u 0x40004b05
+    store 0x40004b04 0
     vsync
   end
 end
 
 fn boot
-  store 0x40004800 1 add 1 + loadu 0x40004800 1
+  store8 0x40004800 add 1 + load8u 0x40004800
   sleep 0x100
   resethw
 
@@ -28,21 +30,27 @@ fn boot
 end
 
 fn resethw
-  store 0x40004800 1 -1
-  vsync
+  screenmode -1
   fill 0 0x40000000 0x4c00
-  store 0x40004bff 1 -1
+  store8 0x40004bff -1
+  vsync
+end
+
+fn screenmode mode
+  store8 0x40004800 mode
   vsync
 end
 
 fn fill val dest len
   while gt len > 3
-    store dest 4 val
-    let dest = add dest + 4
-    let len = sub len - 4
+    store dest val
+    inc dest 4
+    inc len -4
   end
   if len
-    store dest len val
+    store8 dest val
+    inc dest 1
+    inc len -1
   end
   return
 end
@@ -55,19 +63,25 @@ fn pset x y c
     endcall
   end
   vars w
-  let w = mult 8 * loadu 0x40004802 1
+  let w = mult 8 * load8u 0x40004802
   if gt x > sub w - 1
     endcall
   end
   vars h
-  let h = mult 8 * loadu 0x40004803 1
+  let h = mult 8 * load8u 0x40004803
   if gt y > sub h - 1
     endcall
   end
-  vars bpp
-  let bpp = loadu 0x40004801 1
-
-  storebit (or 0x40000000 | loadu 0x40004808 4) (mult bpp * add x + mult y * w) bpp c
+  vars pal adr
+  let pal = and load8u 0x40004801 & 3
+  let adr = or 0x40000000 | rot load 0x40004808 << pal
+  inc adr += add x + mult y * w
+  adr c
+  jump mult pal * 2
+  endcall store8
+  endcall store4bit
+  endcall store2bit
+  endcall storebit
 end
 
 fn pget x y
@@ -78,89 +92,94 @@ fn pget x y
     return 0
   end
   vars w
-  let w = mult 8 * loadu 0x40004802 1
+  let w = mult 8 * load8u 0x40004802
   if gt x > sub w - 1
     return 0
   end
   vars h
-  let h = mult 8 * loadu 0x40004803 1
+  let h = mult 8 * load8u 0x40004803
   if gt y > sub h - 1
     return 0
   end
-  vars bpp
-  let bpp = loadu 0x40004801 1
-
-  loadbit (or 0x40000000 | loadu 0x40004808 4) (mult bpp * add x + mult y * w) bpp
+  vars pal adr
+  let pal = and load8u 0x40004801 & 3
+  let adr = or 0x40000000 | rot load 0x40004808 << pal
+  inc adr += add x + mult y * w
+  adr
+  jump mult pal * 2
+  return load8u
+  return load4bit
+  return load2bit
+  return loadbit
 end
 
 fn scroll px
   if eqz px
     endcall
   end
-  vars adr offset end w bpp bg
-  let adr = or 0x40000000 | loadu 0x40004808 4
+  vars adr offset end h bg i
+  let adr = or 0x40000000 | load 0x40004808
   let end = add adr + 0x4800
-  let w = mult 8 * loadu 0x40004802 1
-  let bpp = loadu 0x40004801 1
-  let offset = div (mult px * mult bpp * w) / 8
-  let bg = loadu 0x40004bfe 1
-  storebit adr 0 bpp bg
-  let bg = loadbit adr 0 bpp
-  while lt bpp < 32
-    let bg = or bg | rot bg bpp
-    let bpp = mult bpp * 2
+  let h = mult 8 * load8u 0x40004803
+  let offset = mult px * div 0x4800 / h
+  let bg = load8u 0x40004bfe
+  let i = 32
+  while i
+    inc i -1
+    pset i 0 bg
+  end
+  let bg = load adr
+
+  inc end sub 0 - offset
+  while lt adr end
+    store adr load add adr + offset
+    inc adr 4
   end
 
-  let end = sub end - offset
+  inc end offset
   while lt adr end
-    store adr 4 loadu add adr + offset 4
-    let adr = add adr + 4
-  end
-
-  let end = add end + offset
-  while lt adr end
-    store adr 4 bg
-    let adr = add adr + 4
+    store adr bg
+    inc adr 4
   end
 end
 
 fn printchr char
   vars col row
-  let col = load 0x40004bfc 1
-  let row = load 0x40004bfd 1
+  let col = load8s 0x40004bfc
+  let row = load8s 0x40004bfd
 
   if eq char == 0x08 ; backspace
-    dec col
+    inc col -1
     if lt col < 0
-      let col = add loadu 0x40004802 1 + col
-      dec row
+      let col = add load8u 0x40004802 + col
+      inc row -1
       if lt row < 0
         let col = 0
         let row = 0
       end
-      store 0x40004bfd 1 row
+      store8 0x40004bfd row
     end
-    store 0x40004bfc 1 col
+    store8 0x40004bfc col
     endcall
   end
   if eq char == 0x09 ; tab
-    inc col
+    inc col 1
     while rem col % 8
-      inc col
+      inc col 1
     end
-    store 0x40004bfc 1 col
+    store8 0x40004bfc col
     endcall
   end
   if eq char == 0x0a ; newline
     let col = 0
-    inc row
-    store 0x40004bfc 1 col
-    store 0x40004bfd 1 row
+    inc row 1
+    store8 0x40004bfc col
+    store8 0x40004bfd row
     endcall
   end
   if eq char == 0x0d ; carriage return
     let col = 0
-    store 0x40004bfc 1 col
+    store8 0x40004bfc col
     endcall
   end
   if lt char < 0x20 ; other control code
@@ -168,16 +187,16 @@ fn printchr char
   end
 
   vars bg fg lastCol lastRow x y x1 y1 x2 y2 font bits
-  let bg = loadu 0x40004bfe 1
-  let fg = loadu 0x40004bff 1
-  let lastCol = sub loadu 0x40004802 1 - 1
-  let lastRow = sub loadu 0x40004803 1 - 1
+  let bg = load8u 0x40004bfe
+  let fg = load8u 0x40004bff
+  let lastCol = sub load8u 0x40004802 - 1
+  let lastRow = sub load8u 0x40004803 - 1
   let font = add 0x40004c00 + mult 8 * and 127 & char
 
   while gt col > lastCol
-    inc row
-    dec col
-    let col = sub col - lastCol
+    inc row 1
+    inc col -1
+    inc col sub 0 - lastCol
   end
   if gt row > lastRow
     scroll mult 8 * sub row - lastRow
@@ -191,7 +210,7 @@ fn printchr char
 
   let y = y1
   while lt y < y2
-    let bits = rot loadu font 1 << -8
+    let bits = rot load8u font << -8
     let x = x1
     while lt x < x2
       let bits = rot bits << 1
@@ -200,24 +219,24 @@ fn printchr char
       else
         pset x y bg
       end
-      inc x
+      inc x 1
     end
-    inc font
-    inc y
+    inc font 1
+    inc y 1
   end
 
-  inc col
-  store 0x40004bfc 1 col
-  store 0x40004bfd 1 row
+  inc col 1
+  store8 0x40004bfc col
+  store8 0x40004bfd row
 end
 
 fn printstr str max
   vars char
-  let char = loadu str 1
+  let char = load8u str
   while and eqz eqz char & eqz eqz max
     printchr char
-    inc str
-    let char = loadu str 1
-    dec max
+    inc str 1
+    let char = load8u str
+    inc max -1
   end
 end

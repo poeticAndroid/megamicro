@@ -1,52 +1,52 @@
 ;; z28r asm
 
 fn main
-  store 0x40004900 4 0x64616f6c ; load
-  store 0x40004904 4 0x20202020 ; spaces
+  store 0x40004900 0x64616f6c ; load
+  store 0x40004904 0x20202020 ; spaces
   access filename 0x40005000
   reset
 end
 
 fn access file dest
   vars drive len
-  store 0x40004b00 4 0
-  while and (eqz eq loadu file 1 == 0x0) & (eqz eq loadu file 1 == 0x3a)
-    inc file
+  store 0x40004b00 0
+  while and (eqz eq load8u file == 0x0) & (eqz eq load8u file == 0x3a)
+    inc file 1
   end
-  dec file
-  let drive = sub loadu file 1 - 0x2f
-  inc file
-  inc file
+  inc file -1
+  let drive = sub load8u file - 0x2f
+  inc file 1
+  inc file 1
   vsync
   memCopy file 0x40004908 247
-  store 0x400049ff 1 0
-  store 0x40004b01 1 strLen 0x40004900 255
-  store 0x40004b00 1 drive
-  while eqz loadu 0x40004b02 1
-    if eqz loadu 0x40004b00 1
-      store 0x40004b00 4 0
+  store8 0x400049ff 0
+  store8 0x40004b01 strLen 0x40004900 255
+  store8 0x40004b00 drive
+  while eqz load8u 0x40004b02
+    if eqz load8u 0x40004b00
+      store 0x40004b00 0
       return 0
     end
   end
-  if eqz eq load 0x40004a00 4 == 0x20206b6f  ;; not ok
-    store 0x40004b00 4 0
+  if eqz eq load 0x40004a00 == 0x20206b6f  ;; not ok
+    store 0x40004b00 0
     return 0
   end
   let len = strToInt 0x40004a04 10 255
-  store 0x40004b02 1 0
+  store8 0x40004b02 0
   while gt len > 0 
-    while eqz loadu 0x40004b02 1
-      if eqz loadu 0x40004b00 1
-        store 0x40004b00 4 0
+    while eqz load8u 0x40004b02
+      if eqz load8u 0x40004b00
+        store 0x40004b00 0
         return 0
       end
     end
-    memCopy 0x40004a00 dest loadu 0x40004b02 1
-    let dest = add dest + loadu 0x40004b02 1
-    let len = sub len - loadu 0x40004b02 1
-    store 0x40004b02 1 0
+    memCopy 0x40004a00 dest load8u 0x40004b02
+    let dest = add dest + load8u 0x40004b02
+    let len = sub len - load8u 0x40004b02
+    store8 0x40004b02 0
   end
-  store 0x40004b00 4 0
+  store 0x40004b00 0
   return 1
 end
 
@@ -54,41 +54,45 @@ end
 fn memCopy src dest len
   if gt src > dest
     while gt len > 3
-      store dest 4 loadu src 4
-      let src = add src + 4
-      let dest = add dest + 4
-      let len = sub len - 4
+      store dest load src
+      inc src 4
+      inc dest 4
+      inc len -4
     end
-    if len
-      store dest len loadu src len
+    while len
+      store8 dest load8u src
+      inc src 1
+      inc dest 1
+      inc len -1
     end
   end
   if lt src < dest
-    let src = add src + len
-    let dest = add dest + len
+    inc src len
+    inc dest len
     while gt len > 3
-      let src = sub src - 4
-      let dest = sub dest - 4
-      store dest 4 loadu src 4
-      let len = sub len - 4
+      inc src -4
+      inc dest -4
+      store dest load src
+      inc len -4
     end
-    if len
-      let src = sub src - len
-      let dest = sub dest - len
-      store dest len loadu src 4
+    while len
+      inc src -1
+      inc dest -1
+      store8 dest load8u src
+      inc len -1
     end
   end
 end
 
 fn strLen str max
   vars len
-  dec str
-  dec len
+  inc str -1
+  inc len -1
   while max
-    inc str
-    inc len
-    dec max
-    if eqz loadu str 1
+    inc str 1
+    inc len 1
+    inc max -1
+    if eqz load8u str
       let max = 0
     end
   end
@@ -99,52 +103,52 @@ fn strToInt str base max
   vars int fact i digs
   let digs = digits
   let fact = 1
-  if eq loadu str 1 == 0x2d ;minus
+  if eq load8u str == 0x2d ;minus
     let fact = -1
-    inc str
+    inc str 1
     if max
-      dec max
+      inc max -1
     end
   end
-  while and (gt max 0) & (gt loadu str 1 0)
+  while and (gt max 0) & (gt load8u str 0)
     if eq base == 10
-      if eq loadu str 1 == 0x62 ; b
+      if eq load8u str == 0x62 ; b
         let base = 2
-        inc str
+        inc str 1
         if max
-          dec max
+          inc max -1
         end
       end
-      if eq loadu str 1 == 0x6f ; o
+      if eq load8u str == 0x6f ; o
         let base = 8
-        inc str
+        inc str 1
         if max
-          dec max
+          inc max -1
         end
       end
-      if eq loadu str 1 == 0x78 ; x
+      if eq load8u str == 0x78 ; x
         let base = 16
-        inc str
+        inc str 1
         if max
-          dec max
+          inc max -1
         end
       end
     end
     let i = 0
     while lt i < base
-      if or (eq loadu str 1 loadu add digs + i 1) | (eq add loadu str 1 + 0x20 loadu add digs + i 1)
+      if or (eq load8u str load8u add digs + i) | (eq add load8u str + 0x20 load8u add digs + i)
         let int = mult int * base
         let int = add int + i
         let i = base
       end
-      inc i
+      inc i 1
     end
     if eq i == base
       return mult int * fact
     end
-    inc str
+    inc str 1
     if max
-      dec max
+      inc max -1
     end
   end
   return mult int * fact

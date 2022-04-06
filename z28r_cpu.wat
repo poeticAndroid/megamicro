@@ -6,6 +6,7 @@
   (global $vs (mut i32) (i32.const 0x0) ) ;; value stack counter
   (global $safecs (mut i32) (i32.const 0x0) ) ;; safe call stack pointer
   (global $sleep (mut i32) (i32.const 0x0) ) ;; sleep duration
+  (global $adrmask (mut i32) (i32.const 0xffff) ) ;; address mask
 
   (func $getPC (result i32) (global.get $pc) )
   (export "getPC" (func $getPC) )
@@ -47,22 +48,22 @@
     (f32.load (global.get $vs) )
     (global.set $vs (i32.add (global.get $vs) (i32.const 4) ) )
   )
-  (func $abs (param $val i32) (result i32)
-    (if (i32.and (local.get $val) (i32.const 0x80000000) ) (then
-      (if (i32.and (local.get $val) (i32.const 0x40000000) ) (then
-        (local.set $val (i32.add (global.get $pc) (local.get $val) ) )
+  (func $abs (param $adr i32) (result i32)
+    (if (i32.and (local.get $adr) (i32.const 0x80000000) ) (then
+      (if (i32.and (local.get $adr) (i32.const 0x40000000) ) (then
+        (local.set $adr (i32.add (global.get $pc) (local.get $adr) ) )
       ) (else
-        (local.set $val (i32.xor (local.get $val) (i32.const 0x40000000) ) )
-        (local.set $val (i32.add (i32.mul (i32.const 0x10000) (memory.size) ) (local.get $val) ) )
+        (local.set $adr (i32.xor (local.get $adr) (i32.const 0x40000000) ) )
+        (local.set $adr (i32.add (i32.mul (i32.const 0x10000) (memory.size) ) (local.get $adr) ) )
       ) )
     ) (else
-      (if (i32.and (local.get $val) (i32.const 0x40000000) ) (then
-        (local.set $val (i32.xor (local.get $val) (i32.const 0x40000000) ) )
+      (if (i32.and (local.get $adr) (i32.const 0x40000000) ) (then
+        (local.set $adr (i32.xor (local.get $adr) (i32.const 0x40000000) ) )
       ) (else
-        (local.set $val (i32.add (global.get $pc) (local.get $val) ) )
+        (local.set $adr (i32.add (global.get $pc) (local.get $adr) ) )
       ) )
     ) )
-    (local.get $val)
+    (i32.and (local.get $adr) (global.get $adrmask) )
   )
 
   (func $run (param $count i32) (result i32)
@@ -259,7 +260,7 @@
                 ) (else ;; $24 - $25
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $25
 
-                    (call $noop_instr)
+                    (call $load8s_instr)
                     (br 7)
 
                   ) (else ;; $24
@@ -305,24 +306,24 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $1E - $1F
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $1F
 
-                    (call $noop_instr)
+                    (call $storebit_instr)
                     (br 7)
 
                   ) (else ;; $1E
 
-                    (call $store_instr)
+                    (call $store2bit_instr)
                     (br 7)
 
                   ) )
                 ) (else ;; $1C - $1D
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $1D
 
-                    (call $storebit_instr)
+                    (call $store4bit_instr)
                     (br 7)
 
                   ) (else ;; $1C
 
-                    (call $noop_instr)
+                    (call $store8_instr)
                     (br 7)
 
                   ) )
@@ -331,7 +332,7 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $1A - $1B
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $1B
 
-                    (call $dec_instr)
+                    (call $store_instr)
                     (br 7)
 
                   ) (else ;; $1A
@@ -359,24 +360,24 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $16 - $17
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $17
 
-                    (call $loadu_instr)
+                    (call $loadbit_instr)
                     (br 7)
 
                   ) (else ;; $16
 
-                    (call $load_instr)
+                    (call $load2bit_instr)
                     (br 7)
 
                   ) )
                 ) (else ;; $14 - $15
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $15
 
-                    (call $loadbit_instr)
+                    (call $load4bit_instr)
                     (br 7)
 
                   ) (else ;; $14
 
-                    (call $noop_instr)
+                    (call $load8u_instr)
                     (br 7)
 
                   ) )
@@ -385,7 +386,7 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $12 - $13
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $13
 
-                    (call $memsize_instr)
+                    (call $load_instr)
                     (br 7)
 
                   ) (else ;; $12
@@ -631,6 +632,7 @@
   ) (export "break" (func $break_instr) )
 
   (func $reset_instr
+    (global.set $adrmask (i32.sub (i32.mul (i32.const 0x10000) (memory.size) ) (i32.const 1) ) )
     (global.set $cs (i32.mul (i32.const 0x10000) (memory.size) ) )
     (global.set $vs (i32.mul (i32.const 0x10000) (memory.size) ) )
     (global.set $safecs (i32.const 0) )
@@ -644,7 +646,7 @@
   )
 
   (func $cpuver_instr
-    (call $push (i32.const 2) )
+    (call $push (i32.const 3) )
   )
 
   (func $noop_instr
@@ -701,46 +703,39 @@
     (call $push (i32.xor (i32.sub (global.get $vs) (i32.mul (i32.const 0x10000) (memory.size) ) ) (i32.const 0x40000000) ) )
   )
 
-  (func $memsize_instr
-    (call $push (i32.mul (i32.const 0x10000) (memory.size) ) )
+  (func $load_instr
+    (call $push (i32.load (call $abs (call $pop) ) ) )
+  )
+
+  (func $load8u_instr
+    (call $push (i32.load8_u (call $abs (call $pop) ) ) )
+  )
+
+  (func $load4bit_instr
+    (local $adr i32)
+    (local $bit i32)
+    (local.set $adr (call $pop) )
+    (local.set $bit (i32.mul (i32.and (local.get $adr) (i32.const 1) ) (i32.const 4) ) )
+    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 1) ) (global.get $adrmask) ) )
+    (call $push (i32.and (i32.shr_u (i32.load8_u (local.get $adr) ) (i32.sub (i32.const 4) (local.get $bit) ) ) (i32.const 15) ) )
+  )
+
+  (func $load2bit_instr
+    (local $adr i32)
+    (local $bit i32)
+    (local.set $adr (call $pop) )
+    (local.set $bit (i32.mul (i32.and (local.get $adr) (i32.const 3) ) (i32.const 2) ) )
+    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 2) ) (global.get $adrmask) ) )
+    (call $push (i32.and (i32.shr_u (i32.load8_u (local.get $adr) ) (i32.sub (i32.const 6) (local.get $bit) ) ) (i32.const 3) ) )
   )
 
   (func $loadbit_instr
     (local $adr i32)
     (local $bit i32)
-    (local $len i32)
-    (local $mask i32)
-    (local $val i32)
-    (local.set $adr (call $abs (call $pop) ) )
-    (local.set $bit (call $pop) )
-    (local.set $len (i32.sub (i32.const 8) (call $pop) ) )
-
-    (local.set $adr (i32.add (local.get $adr) (i32.shr_u (local.get $bit) (i32.const 3) ) ) )
-    (local.set $bit (i32.and (local.get $bit) (i32.const 0x7) ) )
-    (local.set $mask (i32.shr_u (i32.const 0xff) (local.get $bit) ) )
-    (local.set $val (i32.and (i32.load8_u (local.get $adr) ) (local.get $mask) ) )
-    (local.set $val (i32.shl (local.get $val) (local.get $bit) ) )
-    (local.set $val (i32.shr_u (local.get $val) (local.get $len) ) )
-
-    (call $push (local.get $val) )
-  )
-
-  (func $load_instr
-    (local $adr i32)
-    (local $len i32)
-    (local.set $adr (call $abs (call $pop) ) )
-    (local.set $len (i32.mul (i32.const 8) (i32.sub (i32.const 4) (call $pop) ) ) )
-
-    (call $push (i32.shr_s (i32.shl (i32.load (local.get $adr) ) (local.get $len) ) (local.get $len) ) )
-  )
-
-  (func $loadu_instr
-    (local $adr i32)
-    (local $len i32)
-    (local.set $adr (call $abs (call $pop) ) )
-    (local.set $len (i32.mul (i32.const 8) (i32.sub (i32.const 4) (call $pop) ) ) )
-
-    (call $push (i32.shr_u (i32.shl (i32.load (local.get $adr) ) (local.get $len) ) (local.get $len) ) )
+    (local.set $adr (call $pop) )
+    (local.set $bit (i32.and (local.get $adr) (i32.const 7) ) )
+    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 3) ) (global.get $adrmask) ) )
+    (call $push (i32.and (i32.shr_u (i32.load8_u (local.get $adr) ) (i32.sub (i32.const 7) (local.get $bit) ) ) (i32.const 1) ) )
   )
 
   (func $drop_instr
@@ -760,7 +755,6 @@
   (func $inc_instr
     (local $index i32)
     (local.set $index (call $pop) )
-    (call $push (i32.const 1) )
     (call $push (local.get $index) )
     (call $get_instr)
     (call $add_instr)
@@ -768,61 +762,51 @@
     (call $set_instr)
   )
 
-  (func $dec_instr
-    (local $index i32)
-    (local.set $index (call $pop) )
-    (call $push (i32.const 1) )
-    (call $push (local.get $index) )
-    (call $get_instr)
-    (call $sub_instr)
-    (call $push (local.get $index) )
-    (call $set_instr)
+  (func $store_instr
+    (i32.store (call $abs (call $pop) ) (call $pop) )
+  )
+
+  (func $store8_instr
+    (i32.store8 (call $abs (call $pop) ) (call $pop) )
+  )
+
+  (func $store4bit_instr
+    (local $adr i32)
+    (local $bit i32)
+    (local $val i32)
+    (local.set $adr (call $pop) )
+    (local.set $bit (i32.mul (i32.and (local.get $adr) (i32.const 1) ) (i32.const 4) ) )
+    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 1) ) (global.get $adrmask) ) )
+    (local.set $val (i32.shl (i32.and (call $pop) (i32.const 15) ) (i32.sub (i32.const 4) (local.get $bit) ) ) )
+    (i32.store8 (local.get $adr)
+      (i32.or (i32.and (i32.load8_u (local.get $adr) ) (i32.shr_u (i32.const 0xff0f) (local.get $bit) ) ) (local.get $val) )
+    )
+  )
+
+  (func $store2bit_instr
+    (local $adr i32)
+    (local $bit i32)
+    (local $val i32)
+    (local.set $adr (call $pop) )
+    (local.set $bit (i32.mul (i32.and (local.get $adr) (i32.const 3) ) (i32.const 2) ) )
+    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 2) ) (global.get $adrmask) ) )
+    (local.set $val (i32.shl (i32.and (call $pop) (i32.const 3) ) (i32.sub (i32.const 6) (local.get $bit) ) ) )
+    (i32.store8 (local.get $adr)
+      (i32.or (i32.and (i32.load8_u (local.get $adr) ) (i32.shr_u (i32.const 0xff3f) (local.get $bit) ) ) (local.get $val) )
+    )
   )
 
   (func $storebit_instr
     (local $adr i32)
     (local $bit i32)
-    (local $len i32)
     (local $val i32)
-    (local $mask i32)
-    (local.set $adr (call $abs (call $pop) ) )
-    (local.set $bit (call $pop) )
-    (local.set $len (i32.sub (i32.const 8) (call $pop) ) )
-    (local.set $val (call $pop) )
-
-    (local.set $adr (i32.add (local.get $adr) (i32.shr_u (local.get $bit) (i32.const 3) ) ) )
-    (local.set $bit (i32.and (local.get $bit) (i32.const 0x7) ) )
-
-    (local.set $mask (i32.shr_u (i32.const 0xff) (local.get $len) ) )
-    (local.set $mask (i32.shl (local.get $mask) (i32.sub (local.get $len) (local.get $bit) ) ) )
-    (local.set $val (i32.shl (local.get $val) (i32.sub (local.get $len) (local.get $bit) ) ) )
-
-    (local.set $val (i32.and (i32.xor (local.get $val) (i32.load8_u (local.get $adr) ) ) (local.get $mask) ) )
-    (i32.store8 (local.get $adr) (i32.xor (i32.load8_u (local.get $adr) ) (local.get $val) ) )
-  )
-
-  (func $store_instr
-    (local $adr i32)
-    (local $len i32)
-    (local $val i32)
-    (local.set $adr (call $abs (call $pop) ) )
-    (local.set $len (call $pop) )
-    (local.set $val (call $pop) )
-
-    (if (i32.and (local.get $len) (i32.const 0x2) ) (then
-      (if (i32.and (local.get $len) (i32.const 0x1) ) (then
-        (i32.store8 (local.get $adr) (local.get $val) )
-        (i32.store16 (i32.add (local.get $adr) (i32.const 1) ) (i32.shr_s (local.get $val) (i32.const 8) ) )
-      ) (else
-        (i32.store16 (local.get $adr) (local.get $val) )
-      ) )
-    ) (else
-      (if (i32.and (local.get $len) (i32.const 0x1) ) (then
-        (i32.store8 (local.get $adr) (local.get $val) )
-      ) (else
-        (i32.store (local.get $adr) (local.get $val) )
-      ) )
-    ) )
+    (local.set $adr (call $pop) )
+    (local.set $bit (i32.and (local.get $adr) (i32.const 7) ) )
+    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 3) ) (global.get $adrmask) ) )
+    (local.set $val (i32.shl (i32.and (call $pop) (i32.const 1) ) (i32.sub (i32.const 7) (local.get $bit) ) ) )
+    (i32.store8 (local.get $adr)
+      (i32.or (i32.and (i32.load8_u (local.get $adr) ) (i32.shr_u (i32.const 0xff7f) (local.get $bit) ) ) (local.get $val) )
+    )
   )
 
   (func $add_instr
@@ -843,6 +827,10 @@
 
   (func $rem_instr
     (call $push (i32.rem_s (call $pop) (call $pop) ) )
+  )
+
+  (func $load8s_instr
+    (call $push (i32.load8_s (call $abs (call $pop) ) ) )
   )
 
   (func $itof_instr
