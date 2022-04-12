@@ -28,7 +28,7 @@ CPU instruction set
 
 Literals
 --------
-Specific values can be pushed onto the stack using literals.
+Specific values are pushed onto the stack using literals.
 Smaller numbers can be compressed into fewer bytes as described in the following table.
 
 Type                    | Byte 0    | Byte 1    | Byte 2    | Byte 3    | Byte 4

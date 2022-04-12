@@ -6,53 +6,115 @@ skipto 0x10
 
 fn playground
   vars i
-  screenmode 1
-  store8 0x40004bfe 1
+  ;screenmode 1
   while lt i < 0xa0
-    printchr i
+    printChr i
     inc i 1
   end
   while true
-    printchr load8u 0x40004b05
+    printChr load8u 0x40004b05
     store 0x40004b04 0
     vsync
   end
 end
 
 fn boot
-  store8 0x40004800 add 1 + load8u 0x40004800
+  store 0x40004800 add 1 + load 0x40004800
   sleep 0x100
   resethw
 
-  ;call intro
-  ;call launcher
+  intro
+  ;launcher
   playground
 end
 
+data intro_str
+  "\t    Mega      ///\t\t/// MegaMicro ///\n\n\n\0"
+end
+data memory_str
+  "Memory: \0"
+end
+data bytes_str
+  " bytes\n\0"
+end
+data speed_str
+  "Speed: \0"
+end
+data ips_str
+  " ips\n\0"
+end
+fn intro
+  vars kb ins sec
+  colors -1 0
+  screenmode 1
+  cls
+  printStr intro_str -1
+  screenmode 0
+
+  printStr memory_str -1
+  let kb = 0x40000000
+  while lt kb < absadr stackptr
+    inc kb += 0x10000
+  end
+  let kb = xor kb ^ 0x40000000
+  intToStr kb 10 user_prg
+  printStr user_prg -1
+  printStr bytes_str -1
+
+  printStr speed_str -1
+  let sec = load8u 0x40004b16
+  while eq sec == load8u 0x40004b16
+  end
+  let sec = load8u 0x40004b16
+  while eq sec == load8u 0x40004b16
+    inc ins += 12
+  end
+  intToStr ins 10 user_prg
+  printStr user_prg -1
+  printStr ips_str -1
+
+  printChr 0x0a
+end
+
 fn resethw
-  screenmode -1
-  fill 0 0x40000000 0x4c00
-  store8 0x40004bff -1
-  vsync
+  fill 0 0x40004804 1016
+end
+
+
+;;; graphics ;;;
+
+fn cls
+  vars adr end bg i
+  let adr = or 0x40000000 | load 0x40004808
+  let end = add adr + 0x4800
+  let bg = load8u 0x40004bfe
+  let i = 32
+  while i
+    inc i -1
+    pset i 0 bg
+  end
+  let bg = load adr
+
+  while lt adr end
+    store adr bg
+    inc adr 4
+  end
+
+  store8 0x40004bfc 0
+  store8 0x40004bfd 0
 end
 
 fn screenmode mode
+  if eq load8u 0x40004800 == mode
+    endcall
+  end
   store8 0x40004800 mode
   vsync
 end
 
-fn fill val dest len
-  while gt len > 3
-    store dest val
-    inc dest 4
-    inc len -4
-  end
-  if len
-    store8 dest val
-    inc dest 1
-    inc len -1
-  end
-  return
+fn colors fg bg
+  store8 0x40004bff fg
+  store8 0x40004bfe bg
 end
 
 fn pset x y c
@@ -143,7 +205,7 @@ fn scroll px
   end
 end
 
-fn printchr char
+fn printChr char
   vars col row
   let col = load8s 0x40004bfc
   let row = load8s 0x40004bfd
@@ -230,13 +292,175 @@ fn printchr char
   store8 0x40004bfd row
 end
 
-fn printstr str max
+fn printStr str max
   vars char
   let char = load8u str
   while and eqz eqz char & eqz eqz max
-    printchr char
+    printChr char
     inc str 1
     let char = load8u str
     inc max -1
   end
+end
+
+
+;;; strings ;;;
+
+data digits
+  "0123456789abcdef\0"
+end
+
+fn strToInt str base max
+  vars int fact i digs
+  let digs = digits
+  let fact = 1
+  if eq load8u str == 0x2d ;minus
+    let fact = -1
+    inc str 1
+    if max
+      inc max -1
+    end
+  end
+  while and (gt max 0) & (gt load8u str 0)
+    if eq base == 10
+      if eq load8u str == 0x62 ; b
+        let base = 2
+        inc str 1
+        if max
+          inc max -1
+        end
+      end
+      if eq load8u str == 0x6f ; o
+        let base = 8
+        inc str 1
+        if max
+          inc max -1
+        end
+      end
+      if eq load8u str == 0x78 ; x
+        let base = 16
+        inc str 1
+        if max
+          inc max -1
+        end
+      end
+    end
+    let i = 0
+    while lt i < base
+      if or (eq load8u str load8u add digs + i) | (eq add load8u str + 0x20 load8u add digs + i)
+        let int = mult int * base
+        let int = add int + i
+        let i = base
+      end
+      inc i 1
+    end
+    if eq i == base
+      return mult int * fact
+    end
+    inc str 1
+    if max
+      inc max -1
+    end
+  end
+  return mult int * fact
+end
+
+fn intToStr int base dest
+  vars start len digs
+  let digs = digits
+  if lt int < 0   ;; minus
+    store8 dest 0x2d
+    inc dest += 1
+    let int = mult int * -1
+  end
+  let start = dest
+  while int
+    store8 dest load8u add digs + rem int % base
+    inc dest += 1
+    let int = div int / base
+  end
+  if eq start == dest
+    store8 dest 0x30
+    inc dest += 1
+  end
+  store8 dest 0
+  let len = div (sub dest - start) / 2
+  while len
+    let dest = sub dest - 1
+    let int = load8u dest
+    store8 dest load8u start
+    store8 start int
+    inc start += 1
+    inc len += -1
+  end
+end
+
+fn strLen str max
+  vars len
+  inc str -1
+  inc len -1
+  while max
+    inc str 1
+    inc len 1
+    inc max -1
+    if eqz load8u str
+      let max = 0
+    end
+  end
+  return len
+end
+
+
+;;; memory ;;;
+
+fn fill val dest len
+  while gt len > 3
+    store dest val
+    inc dest 4
+    inc len -4
+  end
+  if len
+    store8 dest val
+    inc dest 1
+    inc len -1
+  end
+  return
+end
+
+fn memCopy src dest len
+  if gt src > dest
+    while gt len > 3
+      store dest load src
+      inc src 4
+      inc dest 4
+      inc len -4
+    end
+    while len
+      store8 dest load8u src
+      inc src 1
+      inc dest 1
+      inc len -1
+    end
+  end
+  if lt src < dest
+    inc src len
+    inc dest len
+    while gt len > 3
+      inc src -4
+      inc dest -4
+      store dest load src
+      inc len -4
+    end
+    while len
+      inc src -1
+      inc dest -1
+      store8 dest load8u src
+      inc len -1
+    end
+  end
+end
+
+
+data user_prg
+  ; this is where programs are loaded to.
 end
