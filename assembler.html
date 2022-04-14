@@ -16,6 +16,7 @@
       <option class="sep"> --- </option>
       <option value="%new" class="newfile"><em>New file..</em></option>
     </select>
+    <button id="deleteBtn">❌</button>
   </p>
   <article>
     <p>
@@ -58,6 +59,15 @@
         document.querySelector("#binDump").textContent = " ¯\_(ツ)_/¯ "
         document.querySelector("#sourceTxt").value = load(e.target.value)
         document.querySelector("#binDump").textContent = dumpBin(load(e.target.value.replace(".asm", ".prg"), true))
+      }
+    })
+    document.querySelector("#deleteBtn").addEventListener("click", e => {
+      let asmFile = document.querySelector("#fileSel").value
+      let prgFile = asmFile.replace(".asm", ".prg")
+      if (confirm(`Are you sure you want to delete\n${asmFile} and\n${prgFile} ?😱`)) {
+        localStorage.removeItem(asmFile)
+        localStorage.removeItem(prgFile)
+        document.querySelector("#binDump").textContent = "Poof! It's gone!"
       }
     })
     document.querySelector("#sourceTxt").addEventListener("keydown", e => {
