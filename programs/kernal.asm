@@ -1,22 +1,44 @@
 ;; z28r asm
-skipto 0x00
 jump boot
 
+skipto 0x04
+jump resethw
+skipto 0x08
+jump cls
+skipto 0x0c
+jump pset
 skipto 0x10
+jump pget
+skipto 0x14
+jump rect
+skipto 0x18
+jump pxCopy
+skipto 0x1c
+jump printChr
+skipto 0x20
+jump printStr
+skipto 0x24
+jump readLn
+skipto 0x28
+jump strToInt
+skipto 0x2c
+jump intToStr
+skipto 0x30
+jump strLen
+skipto 0x34
+jump memCopy
+skipto 0x38
+jump fill
+skipto 0x3c
+jump open
+skipto 0x40
+jump read
+skipto 0x44
+jump write
 
-fn playground
-  vars i
-  ;screenmode 1
-  while lt i < 0xa0
-    printChr i
-    inc i 1
-  end
-  while true
-    printChr load8u 0x40004b05
-    store 0x40004b04 0
-    vsync
-  end
-end
+skipto 0x50
+
+
 
 fn boot
   store 0x40004800 add 1 + load 0x40004800
@@ -24,8 +46,37 @@ fn boot
   resethw
 
   intro
-  ;launcher
-  playground
+  bootDisk
+end
+
+data loading_str
+  "Loading \0"
+end
+data dots_str
+  " ... \0"
+end
+data mainFile_str
+  "main.prg\0"
+end
+data root_str
+  "/\0"
+end
+fn bootDisk
+  vars len
+  store 0x40004bf8 0
+  printStr loading_str -1
+  printStr mainFile_str -1
+  printStr dots_str -1
+  drop open 0x20206463 root_str 0 ; cd
+  let len = open 0x20746567 mainFile_str 0 ; get
+  printStr 0x40004a00 255
+  printChr 0x0a
+  if len
+    drop read user_prg len
+    call user_prg 1 0
+  else
+    reset
+  end
 end
 
 data intro_str
@@ -52,6 +103,9 @@ fn intro
   screenmode 0
 
   printStr memory_str -1
+  let sec = load8u 0x40004b11
+  while eq sec == load8u 0x40004b11
+  end
   let kb = 0x40000000
   while lt kb < absadr stackptr
     inc kb += 0x10000
@@ -62,11 +116,12 @@ fn intro
   printStr bytes_str -1
 
   printStr speed_str -1
-  let sec = load8u 0x40004b16
-  while eq sec == load8u 0x40004b16
+  let sec = load8u 0x40004b11
+  let ins = 8
+  while eq sec == load8u 0x40004b11
   end
-  let sec = load8u 0x40004b16
-  while eq sec == load8u 0x40004b16
+  let sec = load8u 0x40004b11
+  while eq sec == load8u 0x40004b11
     inc ins += 12
   end
   intToStr ins 10 user_prg
@@ -77,7 +132,7 @@ fn intro
 end
 
 fn resethw
-  fill 0 0x40004804 1016
+  fill 0 0x40004804 780
 end
 
 
@@ -173,6 +228,36 @@ fn pget x y
   return load4bit
   return load2bit
   return loadbit
+end
+
+fn rect x1 y1 w h c
+  vars x y x2 y2
+  let x2 = add x1 + w
+  let y2 = add y1 + h
+  let y = x1
+  while lt y < y2
+    let x = x1
+    while lt x < x2
+      pset x y c
+      inc x += 1
+    end
+    inc y += 1
+  end
+end
+
+fn pxCopy x1 y1 w h src
+  vars x y x2 y2
+  let x2 = add x1 + w
+  let y2 = add y1 + h
+  let y = x1
+  while lt y < y2
+    let x = x1
+    while lt x < x2
+      ; TODO!
+      inc x += 1
+    end
+    inc y += 1
+  end
 end
 
 fn scroll px
@@ -303,6 +388,44 @@ fn printStr str max
   end
 end
 
+fn readLn dest max
+  vars start end done
+  let start = dest
+  let end = sub add dest + max - 1
+  while gt load8u dest > 0x1f
+    printChr load8u dest
+    inc dest += 1
+  end
+  while eqz done
+    printChr 0x9e
+    printChr 0x08
+    while eqz load8u 0x40004b04
+      vsync
+    end
+    if eq load8u 0x40004b05 == 0x08
+      if gt dest > start
+        printChr 0x08
+        printChr 0x20
+        printChr 0x20
+        printChr 0x08
+        printChr 0x08
+        inc dest += -1
+      end
+    end
+    if eq load8u 0x40004b05 == 0x0a
+      let done = true
+    end
+    if gt load8u 0x40004b05 > 0x1f
+      if lt dest < end
+        store8 dest load8u 0x40004b05
+        printChr load8u dest
+        inc dest += 1
+      end
+    end
+    store 0x40004b04 0
+  end
+  store8 dest 0
+end
 
 ;;; strings ;;;
 
@@ -424,7 +547,6 @@ fn fill val dest len
     inc dest 1
     inc len -1
   end
-  return
 end
 
 fn memCopy src dest len
@@ -460,6 +582,96 @@ fn memCopy src dest len
   end
 end
 
+
+;;; filesystem ;;;
+
+fn open cmd path bytes
+  vars bytes
+  fill 0 0x40004900 516
+  vsync
+  store 0x40004900 cmd
+  memCopy path 0x40004904 strLen path 250
+  store add 0x40004900 + strLen 0x40004900 250 0x20
+  intToStr bytes 10 add 0x40004900 + strLen 0x40004900 250
+  store8 0x40004b01 strLen 0x40004900 255
+  store8 0x40004b00 add 1 + load8u 0x40004bf8
+  while load 0x40004b00
+    if eqz load8u 0x40004b00
+      store8 0x40004b01 0
+    end
+    if load8u 0x40004b02
+      if eq load 0x40004a00 == 0x20206b6f ; ok
+        let bytes = strToInt 0x40004a04 10 250
+        store8 0x40004b02 0
+        if bytes
+          return bytes
+        else
+          return true
+        end
+      else
+        store 0x40004b00 0
+      end
+    end
+  end
+  return null
+end
+
+globals readPos
+fn read dest max
+  vars bytes
+  if lt readPos < 0x40004a00
+    let readPos = 0x40004a00
+  end
+  while load 0x40004b00
+    if eqz load8u 0x40004b00
+      store8 0x40004b01 0
+    end
+    if max
+      if load8u 0x40004b02
+        store8 dest load8u readPos
+        inc dest += 1
+        inc readPos += 1
+        inc bytes += 1
+        inc max += -1
+        if eq load8u 0x40004b02 == 1
+          let readPos = 0x40004a00
+        end
+        store8 0x40004b02 sub load8u 0x40004b02 - 1
+      else
+        let readPos = 0x40004a00
+      end
+    else
+      return bytes
+    end
+  end
+  return bytes
+end
+
+fn write src len
+  vars bytes
+  while load8u 0x40004b00
+    if len
+      if eqz load8u 0x40004b01
+        if lt len < 255
+          memCopy src 0x40004900 len
+          store8 0x40004b01 len
+          inc bytes += len
+          inc src += len
+          inc len += sub 0 - len
+        else
+          memCopy src 0x40004900 255
+          store8 0x40004b01 255
+          inc bytes += 255
+          inc src += 255
+          inc len += -255
+        end
+      end
+    else
+      return bytes
+    end
+  end
+  return bytes
+end
 
 data user_prg
   ; this is where programs are loaded to.

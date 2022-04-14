@@ -14,9 +14,10 @@ Memory layout
 **0x4b04** | char queue          | key char          | key code      | key mods
 **0x4b08** |                     | mouse x           | mouse y       | mouse buttons
 **0x4b0c** | *player 1           | *player 2         | *player 3     | *player 4
-**0x4b10** | year                | month             | date          | weekday
-**0x4b14** | hour                | minute            | second        | second/250
+**0x4b10** | 1/250 second        | second            | minute        | hour
+**0x4b14** | weekday             | date              | month         | year
 ...        |                     |                   |               |
+**0x4bf8** | active drive        |                   |               |
 **0x4bfc** | cursor col          | cursor row        | text bg       | text fg
 **0x4c00** | system font         | _(1 KB)_          |               |
 ...        |                     |                   |               |
