@@ -57,6 +57,7 @@
         location.reload()
       } else {
         location.replace("#" + e.target.value)
+        document.querySelector("#sourceTxt").value = ""
         document.querySelector("#binDump").textContent = " ¯\_(ツ)_/¯ "
         document.querySelector("#sourceTxt").value = load(e.target.value)
         document.querySelector("#binDump").textContent = dumpBin(load(e.target.value.replace(".asm", ".prg"), true))
