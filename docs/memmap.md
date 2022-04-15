@@ -21,6 +21,6 @@ Memory layout
 **0x4bfc** | cursor col          | cursor row        | text bg       | text fg
 **0x4c00** | system font         | _(1 KB)_          |               |
 ...        |                     |                   |               |
-**0x5000** | *kernal             |                   |               |
+**0x5000** | kernal              |                   |               |
 
 *not yet implemented

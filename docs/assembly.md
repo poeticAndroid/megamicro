@@ -50,7 +50,7 @@ globals foo bar fizz buzz
 ```
 
 ### `const` `name` `value`
-Define a constant value.
+Define a constant value. This has to be a literal.
 ```
 const MEANING = 42
 ```

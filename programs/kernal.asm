@@ -144,7 +144,9 @@ fn intro
   printStr memory_str -1
   let sec = load8u 0x40004b11
   while eq sec == load8u 0x40004b11
+    vsync
   end
+  sleep 0x200
   let kb = 0x40000000
   while lt kb < absadr stackptr
     inc kb += 0x10000
@@ -452,6 +454,7 @@ fn readLn dest max
       end
     end
     if eq load8u 0x40004b05 == 0x0a
+      printChr 0x0a
       let done = true
     end
     if gt load8u 0x40004b05 > 0x1f
