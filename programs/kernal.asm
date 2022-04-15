@@ -55,28 +55,70 @@ end
 data dots_str
   " ... \0"
 end
+data drive_str
+  "drive\0"
+end
 data mainFile_str
   "main.prg\0"
 end
 data root_str
   "/\0"
 end
+data reboot_str
+  "\n\nInsert bootable media into any\ndrive and press Ctrl+Q to reboot\n\0"
+end
 fn bootDisk
-  vars len
-  store 0x40004bf8 0
-  printStr loading_str -1
-  printStr mainFile_str -1
-  printStr dots_str -1
-  drop open 0x20206463 root_str 0 ; cd
-  let len = open 0x20746567 mainFile_str 0 ; get
-  printStr 0x40004a00 255
-  printChr 0x0a
-  if len
-    drop read user_prg len
-    call user_prg 1 0
-  else
-    reset
+  vars len drive
+  let drive = 4
+  while drive
+    inc drive += -1
+    store 0x40004bf8 drive
+    drop open 0x20206463 root_str 0 ; cd
   end
+  while lt drive < 4
+    store 0x40004bf8 drive
+    if load8u 0x40004bfc
+      printChr 0x0a
+    end
+    printStr loading_str -1
+    printStr drive_str -1
+    intToStr drive 10 user_prg
+    printStr user_prg 4
+    printChr 0x3a
+    printStr root_str -1
+    printStr mainFile_str -1
+    printStr dots_str -1
+    let len = open 0x20746567 mainFile_str 0 ; get
+    if len
+      intToStr len 10 user_prg
+      printStr user_prg 16
+      printStr bytes_str -1
+      printChr 0x0a
+      drop read user_prg len
+      runUser
+    else
+      printStr 0x40004a00 255
+    end
+    inc drive += 1
+  end
+  printStr reboot_str -1
+  halt
+  reset
+end
+
+data return_str
+  "\nReturn code: \0"
+end
+fn runUser
+  store user_prg call user_prg 1 0 0
+  resethw
+  screenmode 0
+  colors -1 0
+  intToStr load user_prg 10 user_prg
+  printStr return_str -1
+  printStr user_prg 16
+  printChr 0x0a
+  printChr 0x0a
 end
 
 data intro_str
