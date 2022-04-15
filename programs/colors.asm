@@ -42,9 +42,7 @@ fn main args
   return 0
 end
 
-data mode_str
-  "Display mode: \0"
+data mode_str "Display mode: \0"
 end
 data input
-  "\0\0\0\0"
 end

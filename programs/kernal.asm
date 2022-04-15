@@ -49,20 +49,15 @@ fn boot
   bootDisk
 end
 
-data loading_str
-  "Loading \0"
+data loading_str "Loading \0"
 end
-data dots_str
-  " ... \0"
+data dots_str " ... \0"
 end
-data mainFile_str
-  "main.prg\0"
+data mainFile_str "main.prg\0"
 end
-data root_str
-  "/\0"
+data root_str "/\0"
 end
-data reboot_str
-  "\n\nInsert bootable media into any\ndrive and press Ctrl+Q to reboot\n\0"
+data reboot_str "\n\nInsert bootable media into any\ndrive and press Ctrl+Q to reboot\n\0"
 end
 fn bootDisk
   vars len drive
@@ -103,8 +98,7 @@ fn bootDisk
   reset
 end
 
-data return_str
-  "\nReturn code: \0"
+data return_str "\nReturn code: \0"
 end
 fn runUser
   store user_prg call user_prg 1 0 0
@@ -118,20 +112,15 @@ fn runUser
   printChr 0x0a
 end
 
-data intro_str
-  "\t    Mega      ///\t\t/// MegaMicro ///\n\n\n\0"
+data intro_str "\t    Mega      ///\t\t/// MegaMicro ///\n\n\n\0"
 end
-data memory_str
-  "Memory: \0"
+data memory_str "Memory: \0"
 end
-data bytes_str
-  " bytes\n\0"
+data bytes_str " bytes\n\0"
 end
-data speed_str
-  "Speed: \0"
+data speed_str "Speed: \0"
 end
-data ips_str
-  " ips\n\0"
+data ips_str " ips\n\0"
 end
 fn intro
   vars kb ins sec
@@ -471,8 +460,7 @@ end
 
 ;;; strings ;;;
 
-data digits
-  "0123456789abcdef\0"
+data digits "0123456789abcdef\0"
 end
 
 fn strToInt str base max
@@ -715,6 +703,5 @@ fn write src len
   return bytes
 end
 
-data user_prg
-  ; this is where programs are loaded to.
+data user_prg ; this is where programs are loaded to.
 end

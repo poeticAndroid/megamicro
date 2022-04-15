@@ -132,7 +132,6 @@
         name = srcpos
         srcpos = nextWord(srcpos)
         setValueOf(item(state, 6), name, 0, exepos)
-        srcpos = nextWord(srcpos)
         compileData()
       }
       if (kwid === 4) {//globals

@@ -38,8 +38,7 @@ Declare some local variables and initialize them to zero.
 ### `data` `name`
 Insert arbitrary data which can be referenced by `name`. Ends with `end`.
 ```
-data greeting_str
-  "Hello World!\x9b\n" 0
+data greeting_str "Hello World!\x9b\n" 0
 end
 ```
 
@@ -58,8 +57,7 @@ const MEANING = 42
 ### `skipby` `bytes`
 Insert a number of null bytes.
 ```
-data greeting_str
-  "Hello World!\x9b\n"
+data greeting_str "Hello World!\x9b\n"
 end
 skipby 1
 ```
