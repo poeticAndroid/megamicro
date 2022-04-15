@@ -898,7 +898,7 @@
       }
       s++
     }
-    throw console.error(msg, "on line", line, "column", col, "!")
+    throw [msg, "on line", line, "column", col, "!"].join(" ")
   }
 
   function mcopy(src, dest, len) {

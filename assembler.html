@@ -95,9 +95,15 @@
     })
     document.querySelector("#sourceTxt").addEventListener("change", e => {
       save(document.querySelector("#fileSel").value, document.querySelector("#sourceTxt").value.trim() + "\n")
-      let bin = assemble(document.querySelector("#sourceTxt").value)
-      document.querySelector("#binDump").textContent = dumpBin(bin)
-      save(document.querySelector("#fileSel").value.replace(".asm", ".prg"), bin)
+      let bin
+      try {
+        bin = assemble(document.querySelector("#sourceTxt").value)
+        document.querySelector("#binDump").textContent = dumpBin(bin)
+        save(document.querySelector("#fileSel").value.replace(".asm", ".prg"), bin)
+      } catch (error) {
+        document.querySelector("#binDump").textContent = error
+        console.error(error)
+      }
     })
     if (location.hash.replace("#", "")) {
       document.querySelector("#fileSel").value = location.hash.replace("#", "")
