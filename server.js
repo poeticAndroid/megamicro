@@ -5,7 +5,7 @@ const http = require("http"),
 const hostname = "127.0.0.1"
 const port = process.env.PORT
 
-let deleted = [],
+let updated = [],
   notfound = []
 
 const server = http.createServer((req, res) => {
@@ -40,19 +40,17 @@ const server = http.createServer((req, res) => {
     default:
       res.setHeader("Content-Type", "text/plain; charset=utf-8")
   }
-  if (!deleted.includes(path)) {
-    deleted.push(path)
-    try {
-      fs.unlinkSync(path)
-    } catch (error) {
-      //  ¯\_(ツ)_/¯ 
-    }
-  }
   fs.readFile(path, (err, data) => {
-    if (err) {
+    if (err || !updated.includes(path)) {
       fs.open(path, "w", (err, fd) => {
+        if (err) {
+          res.setHeader("Content-Type", "text/html; charset=utf-8")
+          res.end("<h1> could not write file :( ")
+          return
+        }
         https.get("https://raw.githubusercontent.com/poeticAndroid/megamicro/master/" + path.slice(2), (resp) => {
           if (resp.statusCode === 200) {
+            updated.push(path)
             resp.on("data", (d) => {
               fs.writeSync(fd, d, (err) => console.error)
               res.write(d)
