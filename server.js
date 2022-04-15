@@ -5,8 +5,8 @@ const http = require("http"),
 const hostname = "127.0.0.1"
 const port = process.env.PORT
 
-let deleted = ["./package.json"],
-  notfound = ["./server.js"]
+let deleted = [],
+  notfound = []
 
 const server = http.createServer((req, res) => {
   res.setHeader("Cache-Control", "max-age=4096")
@@ -42,7 +42,11 @@ const server = http.createServer((req, res) => {
   }
   if (!deleted.includes(path)) {
     deleted.push(path)
-    fs.unlinkSync(path)
+    try {
+      fs.unlinkSync(path)
+    } catch (error) {
+      //  ¯\_(ツ)_/¯ 
+    }
   }
   fs.readFile(path, (err, data) => {
     if (err) {

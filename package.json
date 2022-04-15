@@ -1,11 +1,16 @@
 {
   "name": "megamicro",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "An attempt to create my own fantasy cpu",
   "main": "server.js",
   "scripts": {
     "build": "foreach -g ./*.wat -x \"wat2wasm #{path}\"",
-    "watch": "sane \"npm run build\" . --glob=*.wat"
+    "watch": "sane \"npm run build\" . --glob=*.wat",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/poeticAndroid/megamicro.git"
   },
   "keywords": [
     "fantasy-console",
@@ -14,6 +19,10 @@
   ],
   "author": "poeticAndroid",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/poeticAndroid/megamicro/issues"
+  },
+  "homepage": "https://github.com/poeticAndroid/megamicro#readme",
   "dependencies": {
     "foreach-cli": "^1.8.1",
     "sane": "^5.0.1",
