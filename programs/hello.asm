@@ -18,10 +18,10 @@ ext open        0x503c 3 1 ; open:bytes cmd path bytes
 ext read        0x5040 2 1 ; read:bytes dest max
 ext write       0x5044 2 1 ; write:bytes src len
 
-data hello_str
+data greeting_str
   "Hello World!\x9b\n\0"
 end
 fn main args
-  printStr hello_str -1
+  printStr greeting_str -1
   return 0
 end
