@@ -40,6 +40,10 @@ const server = http.createServer((req, res) => {
     default:
       res.setHeader("Content-Type", "text/plain; charset=utf-8")
   }
+  if (!deleted.includes(path)) {
+    deleted.push(path)
+    fs.unlinkSync(path)
+  }
   fs.readFile(path, (err, data) => {
     if (err) {
       fs.open(path, "w", (err, fd) => {
@@ -66,10 +70,6 @@ const server = http.createServer((req, res) => {
     } else {
       res.statusCode = 200
       res.end(data)
-      if (!deleted.includes(path)) {
-        deleted.push(path)
-        fs.unlinkSync(path)
-      }
     }
   })
 })
