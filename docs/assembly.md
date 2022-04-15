@@ -1,10 +1,13 @@
 Z28R assembly language
 ======================
 
-
+Syntax
+------
+The source code is essentially parsed as a sequence of lines of words and numbers. All words are case-insensitive. All comments(starting with `;`) and non-alphanumeric characters(outside of strings) are ignored and used purely to make the code more readable.
 
 Keywords
 --------
+All keywords must be the first word of a line.
 
 ### `ext` `name` `adr` `paramCount`
 Register an external function located in memory `adr` as `name`.
@@ -19,7 +22,7 @@ fn pow a b
   vars z
   let z = 1
   while gt b > 0
-    let z mult z * a
+    let z = mult z * a
     inc b += -1
   end
   return z
@@ -36,7 +39,7 @@ Declare some local variables and initialize them to zero.
 Insert arbitrary data which can be referenced by `name`. Ends with `end`.
 ```
 data greeting_str
-  "Hello World!\x9b\n\0"
+  "Hello World!\x9b\n" 0
 end
 ```
 
