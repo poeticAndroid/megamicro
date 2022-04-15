@@ -55,9 +55,6 @@ end
 data dots_str
   " ... \0"
 end
-data drive_str
-  "drive\0"
-end
 data mainFile_str
   "main.prg\0"
 end
@@ -81,7 +78,7 @@ fn bootDisk
       printChr 0x0a
     end
     printStr loading_str -1
-    printStr drive_str -1
+    printChr 0x44
     intToStr drive 10 user_prg
     printStr user_prg 4
     printChr 0x3a
