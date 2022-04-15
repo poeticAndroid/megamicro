@@ -1,6 +1,7 @@
 const http = require("http"),
   https = require("https"),
-  fs = require("fs")
+  fs = require("fs"),
+  path = require("path")
 
 const hostname = "127.0.0.1"
 const port = process.env.PORT
@@ -10,23 +11,23 @@ let updated = [],
 
 const server = http.createServer((req, res) => {
   res.setHeader("Cache-Control", "max-age=4096")
-  let path = "." + req.url
-  if (path.slice(-1) === "/") {
-    path += "index.html"
+  let filename = "." + req.url
+  if (filename.slice(-1) === "/") {
+    filename += "index.html"
   }
-  if (path.slice(0, 3) === "./.") {
+  if (filename.slice(0, 3) === "./.") {
     res.statusCode = 404
     res.setHeader("Content-Type", "text/html; charset=utf-8")
     res.end("<h1> nope ")
     return
   }
-  if (notfound.includes(path)) {
+  if (notfound.includes(filename)) {
     res.statusCode = 404
     res.setHeader("Content-Type", "text/html; charset=utf-8")
     res.end("<h1> still nothing here ")
     return
   }
-  let ext = path.slice(path.lastIndexOf("."))
+  let ext = filename.slice(filename.lastIndexOf("."))
   switch (ext) {
     case ".html":
       res.setHeader("Content-Type", "text/html; charset=utf-8")
@@ -40,17 +41,18 @@ const server = http.createServer((req, res) => {
     default:
       res.setHeader("Content-Type", "text/plain; charset=utf-8")
   }
-  fs.readFile(path, (err, data) => {
-    if (err || !updated.includes(path)) {
-      fs.open(path, "w", (err, fd) => {
+  fs.readFile(filename, (err, data) => {
+    if (err || !updated.includes(filename)) {
+      fs.mkdirSync(path.dirname(filename), { recursive: true })
+      fs.open(filename, "w", (err, fd) => {
         if (err) {
           res.setHeader("Content-Type", "text/html; charset=utf-8")
           res.end("<h1> could not write file :( ")
           return
         }
-        https.get("https://raw.githubusercontent.com/poeticAndroid/megamicro/master/" + path.slice(2), (resp) => {
+        https.get("https://raw.githubusercontent.com/poeticAndroid/megamicro/master/" + filename.slice(2), (resp) => {
           if (resp.statusCode === 200) {
-            updated.push(path)
+            updated.push(filename)
             resp.on("data", (d) => {
               fs.writeSync(fd, d, (err) => console.error)
               res.write(d)
@@ -60,12 +62,21 @@ const server = http.createServer((req, res) => {
               res.end()
             })
           } else {
-            notfound.push(path)
-            fs.closeSync(fd, (err) => console.error)
-            fs.unlinkSync(path)
+            notfound.push(filename)
             res.statusCode = 404
             res.setHeader("Content-Type", "text/html; charset=utf-8")
             res.end("<h1>nothing here")
+            fs.closeSync(fd, (err) => console.error)
+            fs.unlinkSync(filename)
+            filename = path.dirname(filename)
+            while (filename.length > 2) {
+              try {
+                fs.rmdirSync(filename)
+              } catch (error) {
+                //  ¯\_(ツ)_/¯ 
+              }
+              filename = path.dirname(filename)
+            }
           }
         })
       })
