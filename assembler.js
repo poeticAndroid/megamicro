@@ -9,7 +9,6 @@
     srcpos = 0,
     litpos = 0,
     exepos = 0,
-    litgrowth,
     state = 0x42
   // 0:keywords
   // 1:opcodes
@@ -57,11 +56,9 @@
     srcpos = item(state, 2)//source
     litpos = item(state, 9)//lits
     exepos = item(state, 10)//exe
-    litgrowth = 1
     maxlit = 0
     tries = 8
-    compile()
-    while (tries) {
+    while (tries && compile()) {
       if (litpos > maxlit) {
         maxlit = litpos + 4
         store(litpos, 0)
@@ -76,26 +73,23 @@
       srcpos = item(state, 2)//source
       litpos = item(state, 9)//lits
       exepos = item(state, 10)//exe
-      litgrowth = 0
-      compile()
       tries--
     }
-    // if (!tries) console.error("ran out of patience!")
+    if (!tries) console.error("ran out of patience!")
 
-    compile()
     return mem.slice(item(state, 10), exepos)
   }
 
   function compile() {
     let kw, kwid, name, i
-
+    let changes = 0
     kw = item(state, 0)
     while (load8u(srcpos)) {
       srcpos = skipWS(srcpos)
 
       kwid = indexOf(kw, srcpos)
       if (kwid < 0) {
-        compileLine()
+        changes += compileLine()
       }
       if (kwid === 0) {//ext
         srcpos = nextWord(srcpos)
@@ -118,8 +112,8 @@
           srcpos = nextWord(srcpos)
         }
         setValueOf(item(state, 5), name, 1, i)
-        compile()
-        store8(exepos, 0x07)//endcall
+        changes += compile()
+        changes += vstore8(exepos, 0x07)//endcall
         exepos++
       }
       if (kwid === 2) {//vars
@@ -127,7 +121,7 @@
         while (load8u(srcpos) > 0x20) {
           addTo(item(state, 8), srcpos, 0)
           srcpos = nextWord(srcpos)
-          store8(exepos, 0x40)// null
+          changes += vstore8(exepos, 0x40)// null
           exepos++
         }
       }
@@ -137,13 +131,13 @@
         srcpos = nextWord(srcpos)
         setValueOf(item(state, 6), name, 0, exepos)
         srcpos = nextWord(srcpos)
-        compileData()
+        changes += compileData()
       }
       if (kwid === 4) {//globals
         srcpos = nextWord(srcpos)
         while (load8u(srcpos) > 0x20) {
           setValueOf(item(state, 3), srcpos, 0, exepos)
-          store(exepos, 0)
+          changes += vstore(exepos, 0)
           exepos += 4
           srcpos = nextWord(srcpos)
         }
@@ -158,7 +152,7 @@
         srcpos = nextWord(srcpos)
         i = strToInt(srcpos, 10, -1)
         while (i) {
-          store8(exepos, 0)
+          changes += vstore8(exepos, 0)
           exepos++
           i--
         }
@@ -168,39 +162,39 @@
         i = item(state, 10)
         i += strToInt(srcpos, 10, -1)
         while (exepos < i) {
-          store8(exepos, 0)
+          changes += vstore8(exepos, 0)
           exepos++
         }
       }
       if (kwid === 8) {//while
         srcpos = nextWord(srcpos)
-        compileWhile()
+        changes += compileWhile()
       }
       if (kwid === 9) {//if
         srcpos = nextWord(srcpos)
-        compileIf()
+        changes += compileIf()
       }
       if (kwid === 10) {//else
-        return
+        return changes
       }
       if (kwid === 11) {//end
         srcpos = nextWord(srcpos)
-        return
+        return changes
       }
       if (kwid === 12) {//let
         srcpos = nextWord(srcpos)
         name = srcpos
         srcpos = nextWord(srcpos)
-        compileLine()
+        changes += compileLine()
         i = indexOf(item(state, 8), name)
         if (i > -1) {
-          compileLit(i * -1 - 1)
-          store8(exepos, 0x19) //set
+          changes += compileLit(i * -1 - 1)
+          changes += vstore8(exepos, 0x19) //set
           exepos++
         } else {
           if (!valueOf(item(state, 3), name, 0)) setValueOf(item(state, 3), name, 0, exepos)
-          compileRef(valueOf(item(state, 3), name, 0))
-          store8(exepos, 0x1b) //store
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore8(exepos, 0x1b) //store
           exepos++
         }
       }
@@ -208,24 +202,24 @@
         srcpos = nextWord(srcpos)
         name = srcpos
         srcpos = nextWord(srcpos)
-        compileLine()
+        changes += compileLine()
         i = indexOf(item(state, 8), name)
         if (i > -1) {
-          compileLit(i * -1 - 1)
-          store8(exepos, 0x1a) //inc
+          changes += compileLit(i * -1 - 1)
+          changes += vstore8(exepos, 0x1a) //inc
           exepos++
         } else {
           if (!valueOf(item(state, 3), name, 0)) setValueOf(item(state, 3), name, 0, exepos)
 
-          compileRef(valueOf(item(state, 3), name, 0))
-          store8(exepos, 0x13) //load
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore8(exepos, 0x13) //load
           exepos++
 
-          store8(exepos, 0x20) //add
+          changes += vstore8(exepos, 0x20) //add
           exepos++
 
-          compileRef(valueOf(item(state, 3), name, 0))
-          store8(exepos, 0x1b) //store
+          changes += compileRef(valueOf(item(state, 3), name, 0))
+          changes += vstore8(exepos, 0x1b) //store
           exepos++
         }
       }
@@ -234,35 +228,35 @@
         name = srcpos
         i = indexOf(item(state, 5), name)
         if (i < 0) {
-          compileLine()
-          store8(exepos, 0x04) //jump
+          changes += compileLine()
+          changes += vstore8(exepos, 0x04) //jump
           exepos++
         } else {
           if (!valueOf(item(state, 5), name, 0)) setValueOf(item(state, 5), name, 0, exepos)
-          compileRef(valueOf(item(state, 5), name, 0))
-          store8(exepos, 0x04) //jump
+          changes += compileRef(valueOf(item(state, 5), name, 0))
+          changes += vstore8(exepos, 0x04) //jump
           exepos++
         }
       }
 
       srcpos = nextLine(srcpos)
     }
-
+    return changes
   }
   function compileData() {
     let kw, char
-
+    let changes = 0
     kw = item(state, 0)
     while (load8u(srcpos)) {
       srcpos = skipWS(srcpos)
 
       if (indexOf(kw, srcpos) === 11) {//end
         srcpos = nextWord(srcpos)
-        return
+        return changes
       }
       while (load8u(srcpos) > 0x20) {
         if (isNumber(srcpos)) {
-          store8(exepos, strToInt(srcpos, 10, -1))
+          changes += vstore8(exepos, strToInt(srcpos, 10, -1))
           exepos++
         }
         if (load8u(srcpos) === 0x22) { // "
@@ -288,7 +282,7 @@
                 srcpos++
               }
             }
-            store8(exepos, char)
+            changes += vstore8(exepos, char)
             exepos++
             srcpos++
           }
@@ -297,53 +291,53 @@
       }
       srcpos = nextLine(srcpos)
     }
-
+    return changes
   }
   function compileWhile() {
     let cond, jumplit, loopEnd
     let oldlit, newlit
-
+    let changes = 0
     cond = exepos
-    compileLine()
+    changes += compileLine()
 
     jumplit = exepos
     oldlit = litpos
     exepos += getLit()
     litpos++
-    store8(exepos, 0x05) //jumpifz
+    changes += vstore8(exepos, 0x05) //jumpifz
     exepos++
 
-    compile()
-    compileRef(cond)
-    store8(exepos, 0x04) //jump
+    changes += compile()
+    changes += compileRef(cond)
+    changes += vstore8(exepos, 0x04) //jump
     exepos++
     loopEnd = exepos
 
     newlit = litpos
     litpos = oldlit
     exepos = jumplit
-    compileRef(loopEnd)
+    changes += compileRef(loopEnd)
     litpos = newlit
     exepos = loopEnd
 
-
+    return changes
   }
   function compileIf() {
     let kw, newlit, newpos
     let ifref, iflit, ifpos
     let elsref, elslit, elspos
-
+    let changes = 0
     kw = item(state, 0)
-    compileLine()
+    changes += compileLine()
 
     ifref = exepos
     iflit = litpos
     exepos += getLit()
     litpos++
-    store8(exepos, 0x05) //jumpifz
+    changes += vstore8(exepos, 0x05) //jumpifz
     exepos++
 
-    compile()
+    changes += compile()
 
     if (indexOf(kw, srcpos) === 10) { // else
       srcpos = nextLine(srcpos)
@@ -351,10 +345,10 @@
       elslit = litpos
       exepos += getLit()
       litpos++
-      store8(exepos, 0x04) //jump
+      changes += vstore8(exepos, 0x04) //jump
       exepos++
       ifpos = exepos
-      compile()
+      changes += compile()
       elspos = exepos
     } else { // end
       ifpos = exepos
@@ -368,20 +362,20 @@
 
     litpos = iflit
     exepos = ifref
-    compileRef(ifpos)
+    changes += compileRef(ifpos)
 
     litpos = elslit
     exepos = elsref
-    compileRef(elspos)
+    changes += compileRef(elspos)
 
     litpos = newlit
     exepos = newpos
 
-
+    return changes
   }
   function compileLine() {
     let ops, vars, datas, fns, exts, globals, consts
-      , start, words, i
+    let changes = 0, start, words, i
     ops = item(state, 1)
     vars = item(state, 8)
     datas = item(state, 6)
@@ -396,63 +390,63 @@
       words++
       srcpos = nextWord(srcpos)
     }
-    if (!start) return
+    if (!start) return changes
     srcpos = start
     while (words) {
       i = -1
       if (isNumber(srcpos)) {
-        compileLit(strToInt(srcpos, 10, -1))
+        changes += compileLit(strToInt(srcpos, 10, -1))
         i = -2
       }
       if (i === -1) i = indexOf(ops, srcpos)
       if (i > -1) {
-        store8(exepos, i)
+        changes += vstore8(exepos, i)
         exepos++
         i = -2
       }
       if (i === -1) i = indexOf(vars, srcpos)
       if (i > -1) {
-        compileLit(i * -1 - 1)
-        store8(exepos, 0x11) //get
+        changes += compileLit(i * -1 - 1)
+        changes += vstore8(exepos, 0x11) //get
         exepos++
         i = -2
       }
       if (i === -1) i = indexOf(datas, srcpos)
       if (i > -1) {
         if (!valueOf(datas, srcpos, 0)) setValueOf(datas, srcpos, 0, exepos)
-        compileRef(valueOf(datas, srcpos, 0))
-        store8(exepos, 0x0d) //absadr
+        changes += compileRef(valueOf(datas, srcpos, 0))
+        changes += vstore8(exepos, 0x0d) //absadr
         exepos++
         i = -2
       }
       if (i === -1) i = indexOf(fns, srcpos)
       if (i > -1) {
         if (!valueOf(fns, srcpos, 0)) setValueOf(fns, srcpos, 0, exepos)
-        compileLit(valueOf(fns, srcpos, 1))
-        compileRef(valueOf(fns, srcpos, 0))
-        store8(exepos, 0x08) //call
+        changes += compileLit(valueOf(fns, srcpos, 1))
+        changes += compileRef(valueOf(fns, srcpos, 0))
+        changes += vstore8(exepos, 0x08) //call
         exepos++
         i = -2
       }
       if (i === -1) i = indexOf(exts, srcpos)
       if (i > -1) {
-        compileLit(valueOf(exts, srcpos, 1))
-        compileLit(valueOf(exts, srcpos, 0))
-        store8(exepos, 0x08) //call
+        changes += compileLit(valueOf(exts, srcpos, 1))
+        changes += compileLit(valueOf(exts, srcpos, 0))
+        changes += vstore8(exepos, 0x08) //call
         exepos++
         i = -2
       }
       if (i === -1) i = indexOf(globals, srcpos)
       if (i > -1) {
         if (!valueOf(globals, srcpos, 0)) setValueOf(globals, srcpos, 0, exepos)
-        compileRef(valueOf(globals, srcpos, 0))
-        store8(exepos, 0x13) //load
+        changes += compileRef(valueOf(globals, srcpos, 0))
+        changes += vstore8(exepos, 0x13) //load
         exepos++
         i = -2
       }
       if (i === -1) i = indexOf(consts, srcpos)
       if (i > -1) {
-        compileLit(valueOf(consts, srcpos, 0))
+        changes += compileLit(valueOf(consts, srcpos, 0))
         i = -2
       }
       if (i === -1) error("unknown word")
@@ -462,17 +456,17 @@
     }
 
     srcpos = nextWord(start)
-
+    return changes
   }
   function compileRef(adr) {
-    let i
+    let i, changes = 0
     i = exepos + getLit() + 1
-    compileLit(adr - i)
-
+    changes += compileLit(adr - i)
+    return changes
   }
   function compileLit(val) {
     let neg, abs, lownib, size
-
+    let changes = 0
     neg = !!(val & 0x80000000)
     abs = !!(val & 0x40000000)
     if (neg) abs = !abs
@@ -486,7 +480,6 @@
     if (val > 0xfffff) size = 5
     if (neg) val = val ^ -1
     if (abs) val = val ^ 0x40000000
-    if (getLit() < size) litgrowth++
     if (getLit() > size) size = getLit()
     store8(litpos, size)
     litpos++
@@ -499,18 +492,19 @@
       val += abs * 0x10
       val += lownib
       while (size) {
-        store8(exepos, val)
+        changes += vstore8(exepos, val)
         val = val >> 8
         exepos++
         size--
       }
     } else {
-      store8(exepos, 0x10)
+      changes += vstore8(exepos, 0x10)
       exepos++
-      store(exepos, val)
+      changes += vstore(exepos, val)
       exepos += 4
     }
 
+    return changes
   }
   function getLit() {
     let size
@@ -972,28 +966,49 @@
     return int * fact
   }
 
-  function load(adr) {
+  function load(adr, toomuch) {
+    if (toomuch) throw console.error("Too many arguments!")
     if (adr < 0) throw console.error("attempting to load adr", adr)
     if (adr > mem.length - 4) throw console.error("attempting to load adr", adr)
     uint8.set(mem.slice(adr, adr + 4))
     return int32[0]
   }
-  function load8u(adr) {
+  function load8u(adr, toomuch) {
+    if (toomuch) throw console.error("Too many arguments!")
     if (adr < 0) throw console.error("attempting to load8u adr", adr)
     if (adr > mem.length - 1) throw console.error("attempting to load8u adr", adr)
     if (typeof adr !== "number") throw console.error("attempting to load8u adr", adr)
     return mem[adr]
   }
-  function store(adr, val) {
+  function store(adr, val, toomuch) {
+    if (toomuch) throw console.error("Too many arguments!")
     if (adr < 0) throw console.error("attempting to store at adr", adr)
     if (adr > mem.length - 4) throw console.error("attempting to store at adr", adr)
     int32[0] = val
     mem.set(uint8, adr)
   }
-  function store8(adr, val) {
+  function store8(adr, val, toomuch) {
+    if (toomuch) throw console.error("Too many arguments!")
     if (adr < 0) throw console.error("attempting to store8 at adr", adr)
     if (adr > mem.length - 1) throw console.error("attempting to store8 at adr", adr)
     mem[adr] = val
+  }
+  function vstore(adr, val, toomuch) {
+    if (toomuch) throw console.error("Too many arguments!")
+    if (adr < 0) throw console.error("attempting to vstore at adr", adr)
+    if (adr > mem.length - 4) throw console.error("attempting to vstore at adr", adr)
+    let delta = load(adr)
+    int32[0] = val
+    mem.set(uint8, adr)
+    return delta !== load(adr)
+  }
+  function vstore8(adr, val, toomuch) {
+    if (toomuch) throw console.error("Too many arguments!")
+    if (adr < 0) throw console.error("attempting to vstore8 at adr", adr)
+    if (adr > mem.length - 1) throw console.error("attempting to vstore8 at adr", adr)
+    let delta = load8u(adr)
+    mem[adr] = val
+    return delta !== load8u(adr)
   }
 
   function loadFile(data, adr) {
