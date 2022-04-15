@@ -57,11 +57,11 @@
     srcpos = item(state, 2)//source
     litpos = item(state, 9)//lits
     exepos = item(state, 10)//exe
-    litgrowth = 0
+    litgrowth = 1
     maxlit = 0
     tries = 8
     compile()
-    while (tries && litgrowth) {
+    while (tries) {
       if (litpos > maxlit) {
         maxlit = litpos + 4
         store(litpos, 0)
@@ -80,8 +80,9 @@
       compile()
       tries--
     }
-    if (!tries) console.error("ran out of patience!")
+    // if (!tries) console.error("ran out of patience!")
 
+    compile()
     return mem.slice(item(state, 10), exepos)
   }
 
