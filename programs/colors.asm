@@ -12,7 +12,7 @@ fn main args
   while true
     store input 0
     printStr mode_str -1
-    readLn input 16
+    readLn input 2
     let mode = strToInt input 10 16
     store8 0x40004800 mode
     vsync
