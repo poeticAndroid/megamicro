@@ -362,6 +362,7 @@
     }
     cmd = cmd.trim().split(/\s+/)
     let file = "D" + driveNum + ":" + diskPath("" + diskCwd[driveNum] + cmd[1])
+    let dir = file + "/"
     diskBusy = true
     console.log("drive", driveNum, cmd.join(" "))
     console.log("File:", file)
@@ -369,6 +370,8 @@
       case "get":
         let data = localStorage.getItem(file)
         if (data) {
+          if (!localStorage.getItem("date:" + file))
+            localStorage.setItem("date:" + file, Date.now())
           diskStatus("ok  " + (data.length / 2) + " bytes")
           for (let b = 0; b < data.length; b += 510) {
             let buf = new Uint8Array(Math.min(255, (data.length - b) / 2))
@@ -385,29 +388,100 @@
       case "put":
         diskWrite = file
         localStorage.setItem(diskWrite, "")
+        localStorage.setItem("date:" + diskWrite, Date.now())
         diskStatus("ok  0 bytes")
         break
 
       case "del":
+        sessionStorage.removeItem(file)
         localStorage.removeItem(file)
+        localStorage.removeItem("date:" + file)
+        for (let i = 0; i < sessionStorage.length; i++) {
+          let entry = sessionStorage.key(i)
+          if (entry.slice(0, dir.length) === dir) {
+            sessionStorage.removeItem(entry)
+          }
+        }
+        for (let i = 0; i < localStorage.length; i++) {
+          let entry = localStorage.key(i)
+          if (entry.slice(0, dir.length) === dir) {
+            localStorage.removeItem(entry)
+            localStorage.removeItem("date:" + entry)
+          }
+        }
         diskStatus("ok  0 bytes")
         break
 
       case "inf":
-        diskStatus("not yet implemented")
+        if (localStorage.getItem(file)) {
+          diskStatus("ok  40 bytes")
+          sendFileInfo(file.slice(0, file.lastIndexOf("/") + 1), file.slice(file.lastIndexOf("/") + 1))
+        } else {
+          diskStatus("err file not found")
+        }
         break
 
       case "dir":
-        diskStatus("not yet implemented")
+        let entries = []
+        for (let i = 0; i < sessionStorage.length; i++) {
+          let entry = sessionStorage.key(i)
+          if (entry.slice(0, dir.length) === dir) {
+            entry = entry.slice(dir.length)
+            if (entry.includes("/")) {
+              entry = entry.slice(0, entry.indexOf("/") + 1)
+            }
+            if (!entries.includes(entry)) entries.push(entry)
+          }
+        }
+        for (let i = 0; i < localStorage.length; i++) {
+          let entry = localStorage.key(i)
+          if (!localStorage.getItem("date:" + entry))
+            localStorage.setItem("date:" + entry, Date.now())
+          if (entry.slice(0, dir.length) === dir) {
+            entry = entry.slice(dir.length)
+            if (entry.includes("/")) {
+              entry = entry.slice(0, entry.indexOf("/") + 1)
+            }
+            if (!entries.includes(entry)) entries.push(entry)
+          }
+        }
+        entries.sort()
+        diskStatus("ok  " + (entries.length * 40) + " bytes")
+        for (let entry of entries) {
+          sendFileInfo(dir, entry)
+        }
         break
 
       case "md":
+        sessionStorage.setItem(dir, Date.now())
         diskStatus("ok  0 bytes")
         break
 
       case "cd":
-        diskCwd[driveNum] = file.slice(file.indexOf("/")) + "/"
-        diskStatus("ok  0 bytes")
+        let found
+        for (let i = 0; i < sessionStorage.length; i++) {
+          let entry = sessionStorage.key(i)
+          if (entry.slice(0, dir.length) === dir) {
+            found = true
+          }
+        }
+        for (let i = 0; i < localStorage.length; i++) {
+          let entry = localStorage.key(i)
+          if (entry.slice(0, dir.length) === dir) {
+            found = true
+          }
+        }
+        if (found) {
+          diskCwd[driveNum] = file.slice(file.indexOf("/")) + "/"
+          diskStatus("ok  " + (diskCwd[driveNum].length + 1) + " bytes")
+          let buf = new Uint8Array(diskCwd[driveNum].length + 1)
+          for (let i = 0; i < entry.length; i++) {
+            buf[i] = diskCwd[driveNum].charCodeAt(i)
+          }
+          diskResp.push(buf)
+        } else {
+          diskStatus("err dir not found")
+        }
         break
 
       default:
@@ -442,6 +516,53 @@
       }
     }
     return "/" + valid.join("/")
+  }
+
+  function sendFileInfo(dir, entry) {
+    // filename.ext/ 9876543210  yymmddhhmmss
+    let buf = new Uint8Array(40)
+    let int, now = new Date()
+    let i = 0
+    for (let j = 0; j < entry.length; j++) {
+      buf[i++] = entry.charCodeAt(j)
+    }
+    while (i < 14) {
+      buf[i++] = 0x20
+    }
+    if (localStorage.getItem(dir + entry)) {
+      int = (localStorage.getItem(dir + entry).length / 2).toString()
+    } else {
+      int = "<dir>"
+    }
+    for (let j = 0; j < int.length; j++) {
+      buf[i++] = int.charCodeAt(j)
+    }
+    while (i < 26) {
+      buf[i++] = 0x20
+    }
+    if (localStorage.getItem("date:" + dir + entry)) {
+      now.setTime(parseInt(localStorage.getItem("date:" + dir + entry)))
+      int = now.getYear()
+      int *= 100
+      int += now.getMonth()
+      int *= 100
+      int += now.getDate()
+      int *= 100
+      int += now.getHours()
+      int *= 100
+      int += now.getMinutes()
+      int *= 100
+      int += now.getSeconds()
+      int = ("00000000" + int).slice(-12)
+      for (let j = 0; j < int.length; j++) {
+        buf[i++] = int.charCodeAt(j)
+      }
+    }
+    while (i < buf.length - 1) {
+      buf[i++] = 0x20
+    }
+    buf[i++] = 0x0a
+    diskResp.push(buf)
   }
 
   function diskStatus(str) {

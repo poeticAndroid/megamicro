@@ -68,7 +68,9 @@
       let prgFile = asmFile.replace(".asm", ".prg")
       if (confirm(`Are you sure you want to delete\n${asmFile} and\n${prgFile} ?😱`)) {
         localStorage.removeItem(asmFile)
+        localStorage.removeItem("date:" + asmFile)
         localStorage.removeItem(prgFile)
+        localStorage.removeItem("date:" + prgFile)
         document.querySelector("#binDump").textContent = "Poof! It's gone!"
       }
     })
@@ -131,6 +133,7 @@
       }
       console.log("save", file, src)
       localStorage.setItem(file, src)
+      localStorage.setItem("date:" + file, Date.now())
     }
     function diskPath(path) {
       let dirs = path.split("/")
