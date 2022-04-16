@@ -6,11 +6,17 @@ ext pget        0x5010 2 1 ; pget:c x y
 ext rect        0x5014 5 0 ; rect x y w h c
 ext pxCopy      0x5018 5 0 ; *pxCopy x y w h src
 
-globals mouseX mouseY
+globals mouseX mouseY color
 
 fn main args
+  let color = 0x40000100
+  while gt color > 0x40000000
+    inc color += -1
+    store8 color color
+  end
   let mouseX = -8
   let mouseY = -8
+  let color = -1
   while true
     xhair
     if load8u 0x40004b04
@@ -20,7 +26,12 @@ fn main args
     end
     readMouse
     if load8u 0x40004b0b ; mouse btn pressed
-      rect (sub mouseX - 4) (sub mouseY - 4) 8 8 -1
+      if eq load8u 0x40004b0b == 2
+        let color = pget mouseX mouseY
+        store8 0x40000100 color
+      else
+        rect (sub mouseX - 4) (sub mouseY - 4) 8 8 color
+      end
     end
     xhair
     vsync
@@ -32,34 +43,42 @@ fn readMouse
   if eq load8u 0x40004800 == 0
     let mouseX = mult load8u 0x40004b09 * 2
     let mouseY = mult load8u 0x40004b0a * 2
+    endcall
   end
   if eq load8u 0x40004800 == 1
     let mouseX = mult load8u 0x40004b09 * 2
     let mouseY =      load8u 0x40004b0a
+    endcall
   end
   if eq load8u 0x40004800 == 2
     let mouseX =      load8u 0x40004b09
     let mouseY =      load8u 0x40004b0a
+    endcall
   end
   if eq load8u 0x40004800 == 3
     let mouseX =      load8u 0x40004b09
     let mouseY = div  load8u 0x40004b0a / 2
+    endcall
   end
   if eq load8u 0x40004800 == 4
     let mouseX = mult load8u 0x40004b09 * 2
     let mouseY = mult load8u 0x40004b0a * 2
+    endcall
   end
   if eq load8u 0x40004800 == 5
     let mouseX =      load8u 0x40004b09
     let mouseY = mult load8u 0x40004b0a * 2
+    endcall
   end
   if eq load8u 0x40004800 == 6
     let mouseX =      load8u 0x40004b09
     let mouseY =      load8u 0x40004b0a
+    endcall
   end
   if eq load8u 0x40004800 == 7
     let mouseX = div  load8u 0x40004b09 / 2
     let mouseY =      load8u 0x40004b0a
+    endcall
   end
 end
 
