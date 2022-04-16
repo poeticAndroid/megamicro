@@ -57,7 +57,13 @@ data mainFile_str "main.prg\0"
 end
 data root_str "/\0"
 end
-data reboot_str "\n\nInsert bootable media into any\ndrive and press Ctrl+Q to reboot\n\0"
+data reboot_str
+  "\n\n"
+  "\t\t\x88\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x89\n"
+  "\t\t\x90Insert bootable media into any  \x90\n"
+  "\t\t\x90drive and press Ctrl+Q to reboot\x90\n"
+  "\t\t\x8a\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x8b\n"
+  0
 end
 fn bootDisk
   vars len drive
@@ -264,7 +270,7 @@ fn rect x1 y1 w h c
   vars x y x2 y2
   let x2 = add x1 + w
   let y2 = add y1 + h
-  let y = x1
+  let y = y1
   while lt y < y2
     let x = x1
     while lt x < x2
@@ -279,7 +285,7 @@ fn pxCopy x1 y1 w h src
   vars x y x2 y2
   let x2 = add x1 + w
   let y2 = add y1 + h
-  let y = x1
+  let y = y1
   while lt y < y2
     let x = x1
     while lt x < x2
