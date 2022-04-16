@@ -87,7 +87,7 @@
   function render(t = 0) {
     requestAnimationFrame(render)
     if (t < nextFrame) return
-    if (t - nextFrame > 1024) nextFrame = Math.floor(t / 20) * 20
+    if (t - nextFrame > 256) nextFrame = Math.floor(t / 20) * 20
     nextFrame += 20
     let opcode
     if (running) {
@@ -121,6 +121,7 @@
         mem[0x4800]--
         console.error("CPU CRASH!! OH NOEZ!! O_O", err)
         running = false
+        nextFrame = Math.floor(t / 20) * 20
         opcode = 0
         let d = 1
         let blink = setInterval(() => {
@@ -133,7 +134,7 @@
           loadCPU("z28r_cpu.wasm", { env: { ram: ram } })
         }, 16384)
       }
-      mem[0x4b10] += 5
+      if (mem[0x4b10] < 251) mem[0x4b10] += 5
       switch (opcode) {
         case 0x00: // halt
           running = false
@@ -142,6 +143,7 @@
           break
         case 0x01: // sleep
           running = false
+          nextFrame = Math.floor(t / 20) * 20
           sleep = setTimeout(() => {
             running = true
           }, cpu.getSleep())

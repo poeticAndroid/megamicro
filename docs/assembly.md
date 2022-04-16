@@ -73,7 +73,7 @@ skipto 0x0c
 jump pset
 ```
 
-### `while` `cond`
+### `while` `{cond}`
 Repeat enclosed block of code as long as `cond` is nonzero. Ends with `end`.
 ```
   let i = 3
@@ -83,23 +83,23 @@ Repeat enclosed block of code as long as `cond` is nonzero. Ends with `end`.
   end
 ```
 
-### `if` `cond`
+### `if` `{cond}`
 Only execute block of code if `cond` is nonzero, otherwise jump to the matching `else`. Ends with `end`.
 ```
-  if gt age > 18
-    printStr oldEnough_str -1
-  else
+  if lt age < 18
     printStr tooYoung_str -1
+  else
+    printStr oldEnough_str -1
   end
 ```
 
-### `let` `varname` `value`
+### `let` `varname` `{value}`
 Assign `value` to local or global `varname`.
 ```
   let four = add 2 + 2
 ```
 
-### `inc` `varname` `delta`
+### `inc` `varname` `{delta}`
 Increment local or global `varname` by `delta`.
 ```
   inc fourMore += add 2 + 2

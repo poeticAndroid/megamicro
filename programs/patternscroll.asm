@@ -24,7 +24,7 @@ fn main args
     end
 
     let adr = 0x40000000
-    vsync
+    ;vsync
   end
 
   return 0
