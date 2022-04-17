@@ -9,19 +9,25 @@ data prompt_str "\nProgram: \0"
 end
 fn main args
   vars len
-  let len = open 0x20726964 buffer 0
-  read buffer len
-  printStr buffer -1
-  printStr prompt_str -1
-  store buffer 0
-  readLn buffer 16
-  let len = open 0x20746567 buffer 0
-  if len
+  let len = true
+  while len
+    let len = open 0x20726964 buffer 0
     read buffer len
-    return exec buffer 1 0
-  else
-    return 404
+    printStr buffer -1
+    printStr prompt_str -1
+    store buffer 0
+    readLn buffer 16
+    let len = open 0x20746567 buffer 0
+    if len
+      read buffer len
+      drop run
+    end
   end
+
+  return 404
+end
+fn run
+  return exec buffer 1 0 -1
 end
 
 data buffer ".\0"

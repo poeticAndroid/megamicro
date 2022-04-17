@@ -17,6 +17,7 @@
       <option value="%new" class="newfile"><em>New file..</em></option>
     </select>
     <button id="deleteBtn">❌</button>
+    <button id="compileBtn">🧮 Compile!</button>
   </p>
   <article>
     <p>
@@ -31,7 +32,7 @@
   </article>
   <script>
     if (!localStorage.getItem("D0:/main.asm"))
-      localStorage.setItem("D0:/main.asm", "3b3b207a3238722061736d0a6a756d70206d61696e0a657874207072696e745374722030783530323020320a65787420726561644c6e2030783530323420320a657874206f70656e2030783530336320330a65787420726561642030783530343020320a0a646174612070726f6d70745f73747220225c6e50726f6772616d3a205c30220a656e640a666e206d61696e20617267730a202076617273206c656e0a20206c6574206c656e203d206f70656e20307832303732363936342062756666657220300a20207265616420627566666572206c656e0a20207072696e7453747220627566666572202d310a20207072696e745374722070726f6d70745f737472202d310a202073746f72652062756666657220300a2020726561644c6e206275666665722031360a20206c6574206c656e203d206f70656e20307832303734363536372062756666657220300a20206966206c656e0a202020207265616420627566666572206c656e0a2020202072657475726e206578656320627566666572203120300a2020656c73650a2020202072657475726e203430340a2020656e640a656e640a0a646174612062756666657220222e5c30220a656e640a")
+      localStorage.setItem("D0:/main.asm", "3b3b207a3238722061736d0a6a756d70206d61696e0a657874207072696e745374722030783530323020320a65787420726561644c6e2030783530323420320a657874206f70656e2030783530336320330a65787420726561642030783530343020320a0a646174612070726f6d70745f73747220225c6e50726f6772616d3a205c30220a656e640a666e206d61696e20617267730a202076617273206c656e0a20206c6574206c656e203d20747275650a20207768696c65206c656e0a202020206c6574206c656e203d206f70656e20307832303732363936342062756666657220300a202020207265616420627566666572206c656e0a202020207072696e7453747220627566666572202d310a202020207072696e745374722070726f6d70745f737472202d310a2020202073746f72652062756666657220300a20202020726561644c6e206275666665722031360a202020206c6574206c656e203d206f70656e20307832303734363536372062756666657220300a202020206966206c656e0a2020202020207265616420627566666572206c656e0a20202020202064726f702072756e0a20202020656e640a2020656e640a0a202072657475726e203430340a656e640a666e2072756e0a202072657475726e20657865632062756666657220312030202d310a656e640a0a646174612062756666657220222e5c30220a656e640a")
     let files = []
     for (let i = 0; i < localStorage.length; i++) {
       const file = localStorage.key(i)
@@ -77,6 +78,9 @@
         document.querySelector("#binDump").textContent = "Poof! It's gone!"
       }
     })
+    document.querySelector("#compileBtn").addEventListener("click", e => {
+      compile()
+    })
     document.querySelector("#sourceTxt").addEventListener("keydown", e => {
       setTimeout(() => {
         e.target.focus()
@@ -101,6 +105,15 @@
     })
     document.querySelector("#sourceTxt").addEventListener("change", e => {
       save(document.querySelector("#fileSel").value, document.querySelector("#sourceTxt").value.trim() + "\n")
+      compile()
+    })
+    if (location.hash.replace("#", "")) {
+      document.querySelector("#fileSel").value = location.hash.replace("#", "")
+      document.querySelector("#sourceTxt").value = load(location.hash.replace("#", ""))
+      document.querySelector("#binDump").textContent = dumpBin(load(location.hash.replace("#", "").replace(".asm", ".prg"), true))
+    }
+
+    function compile() {
       let bin
       try {
         bin = assemble(document.querySelector("#sourceTxt").value)
@@ -110,11 +123,6 @@
         document.querySelector("#binDump").textContent = error
         console.error(error)
       }
-    })
-    if (location.hash.replace("#", "")) {
-      document.querySelector("#fileSel").value = location.hash.replace("#", "")
-      document.querySelector("#sourceTxt").value = load(location.hash.replace("#", ""))
-      document.querySelector("#binDump").textContent = dumpBin(load(location.hash.replace("#", "").replace(".asm", ".prg"), true))
     }
 
     function load(file, bin = false) {
