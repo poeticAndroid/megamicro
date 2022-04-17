@@ -6,37 +6,65 @@ ext pget        0x5010 2 1 ; pget:c x y
 ext rect        0x5014 5 0 ; rect x y w h c
 ext pxCopy      0x5018 5 0 ; *pxCopy x y w h src
 
-globals mouseX mouseY color
+globals mouseX mouseY
 
 fn main args
-  let color = 0x40000100
-  while gt color > 0x40000000
-    inc color += -1
-    store8 color color
-  end
+  cls
   let mouseX = -8
   let mouseY = -8
-  let color = -1
   while true
-    xhair
+    readMouse xhair
     if load8u 0x40004b04
       store8 0x40004800 and 7 load8u 0x40004b05
       store 0x40004b04 0
       vsync
     end
-    readMouse
     if load8u 0x40004b0b ; mouse btn pressed
       if eq load8u 0x40004b0b == 2
-        let color = pget mouseX mouseY
-        store8 0x40000100 color
+        subColor mouseX mouseY 4
       else
-        rect (sub mouseX - 4) (sub mouseY - 4) 8 8 color
+        addColor mouseX mouseY 4
       end
     end
-    xhair
-    vsync
+    vsync xhair
   end
   return 0
+end
+
+fn addColor x y s
+  vars x1 y1 x2 y2
+  let x1 = sub x - s
+  let y1 = sub y - s
+  let x2 = add 1 + add x + s
+  let y2 = add 1 + add y + s
+  let y = y1
+  while lt y < y2
+    let x = x1
+    while lt x < x2
+      pset x y add 1 + pget x y
+      inc x += 1
+    end
+    inc y += 1
+  end
+end
+
+fn subColor x y s
+  vars x1 y1 x2 y2
+  let x1 = sub x - s
+  let y1 = sub y - s
+  let x2 = add 1 + add x + s
+  let y2 = add 1 + add y + s
+  let y = y1
+  while lt y < y2
+    let x = x1
+    while lt x < x2
+      if pget x y
+        pset x y sub (pget x y) - 1
+      end
+      inc x += 1
+    end
+    inc y += 1
+  end
 end
 
 fn readMouse
