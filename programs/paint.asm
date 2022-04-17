@@ -3,8 +3,6 @@ jump main
 ext cls         0x5008 0 0 ; cls
 ext pset        0x500c 3 0 ; pset x y c
 ext pget        0x5010 2 1 ; pget:c x y
-ext rect        0x5014 5 0 ; rect x y w h c
-ext pxCopy      0x5018 5 0 ; *pxCopy x y w h src
 
 globals mouseX mouseY
 
