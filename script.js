@@ -363,15 +363,14 @@
     cmd = cmd.trim().split(/\s+/)
     let file = "D" + driveNum + ":" + diskPath("" + diskCwd[driveNum] + cmd[1])
     let dir = file + "/"
+    dir = dir.replace("//", "/")
     diskBusy = true
     console.log("drive", driveNum, cmd.join(" "))
-    console.log("File:", file)
+    console.log("File:", file, dir)
     switch (cmd[0]) {
       case "get":
         let data = localStorage.getItem(file)
         if (data) {
-          if (!localStorage.getItem("date:" + file))
-            localStorage.setItem("date:" + file, Date.now())
           diskStatus("ok  " + (data.length / 2) + " bytes")
           for (let b = 0; b < data.length; b += 510) {
             let buf = new Uint8Array(Math.min(255, (data.length - b) / 2))
@@ -414,8 +413,9 @@
 
       case "inf":
         if (localStorage.getItem(file)) {
-          diskStatus("ok  40 bytes")
+          diskStatus("ok  41 bytes")
           sendFileInfo(file.slice(0, file.lastIndexOf("/") + 1), file.slice(file.lastIndexOf("/") + 1))
+          diskResp.push(new Uint8Array(1))
         } else {
           diskStatus("err file not found")
         }
@@ -435,9 +435,9 @@
         }
         for (let i = 0; i < localStorage.length; i++) {
           let entry = localStorage.key(i)
-          if (!localStorage.getItem("date:" + entry))
-            localStorage.setItem("date:" + entry, Date.now())
+          if (entry.slice(0, 10) === "date:date:") localStorage.removeItem(entry)
           if (entry.slice(0, dir.length) === dir) {
+            console.log(entry)
             entry = entry.slice(dir.length)
             if (entry.includes("/")) {
               entry = entry.slice(0, entry.indexOf("/") + 1)
@@ -446,10 +446,11 @@
           }
         }
         entries.sort()
-        diskStatus("ok  " + (entries.length * 40) + " bytes")
+        diskStatus("ok  " + (entries.length * 40 + 1) + " bytes")
         for (let entry of entries) {
           sendFileInfo(dir, entry)
         }
+        diskResp.push(new Uint8Array(1))
         break
 
       case "md":
@@ -475,7 +476,7 @@
           diskCwd[driveNum] = file.slice(file.indexOf("/")) + "/"
           diskStatus("ok  " + (diskCwd[driveNum].length + 1) + " bytes")
           let buf = new Uint8Array(diskCwd[driveNum].length + 1)
-          for (let i = 0; i < entry.length; i++) {
+          for (let i = 0; i < diskCwd[driveNum].length; i++) {
             buf[i] = diskCwd[driveNum].charCodeAt(i)
           }
           diskResp.push(buf)
@@ -544,7 +545,7 @@
       now.setTime(parseInt(localStorage.getItem("date:" + dir + entry)))
       int = now.getYear()
       int *= 100
-      int += now.getMonth()
+      int += now.getMonth() + 1
       int *= 100
       int += now.getDate()
       int *= 100
@@ -585,7 +586,7 @@
     mem[0x4b13] = now.getHours()
     mem[0x4b14] = now.getDay()
     mem[0x4b15] = now.getDate()
-    mem[0x4b16] = now.getMonth()
+    mem[0x4b16] = now.getMonth() + 1
     mem[0x4b17] = now.getYear()
     setTimeout(hwClock, 1000 - now.getMilliseconds())
   }
