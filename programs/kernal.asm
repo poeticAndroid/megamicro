@@ -449,6 +449,7 @@ fn readLn dest max
       end
     end
     if eq load8u 0x40004b05 == 0x0a
+      printChr 0x20
       printChr 0x0a
       let done = true
     end
