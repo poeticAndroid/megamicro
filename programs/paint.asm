@@ -4,7 +4,7 @@ ext cls         0x5008 0 0 ; cls
 ext pset        0x500c 3 0 ; pset x y c
 ext pget        0x5010 2 1 ; pget:c x y
 
-globals mouseX mouseY
+globals mouseX mouseY penX penY
 
 fn main args
   cls
@@ -12,17 +12,34 @@ fn main args
   let mouseY = -8
   while true
     readMouse xhair
-    if load8u 0x40004b04
+    if load8u 0x40004b04 ; key pressed
       store8 0x40004800 and 7 load8u 0x40004b05
       store 0x40004b04 0
       vsync
     end
     if load8u 0x40004b0b ; mouse btn pressed
-      if eq load8u 0x40004b0b == 2
-        subColor mouseX mouseY 4
-      else
-        addColor mouseX mouseY 4
+      while or (eqz eq penX != mouseX) | (eqz eq penY != mouseY)
+        if lt penX < mouseX
+          inc penX += 1
+        end
+        if gt penX > mouseX
+          inc penX += -1
+        end
+        if lt penY < mouseY
+          inc penY += 1
+        end
+        if gt penY > mouseY
+          inc penY += -1
+        end
+        if eq load8u 0x40004b0b == 2
+          subColor penX penY 4
+        else
+          addColor penX penY 4
+        end
       end
+    else
+      let penX = mouseX
+      let penY = mouseY
     end
     vsync xhair
   end

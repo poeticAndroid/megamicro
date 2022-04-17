@@ -60,7 +60,7 @@ end
 data reboot_str
   "\n\n"
   "\t\t\x88\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x89\n"
-  "\t\t\x90Insert bootable media into any  \x90\n"
+  "\t\t\x90 Insert bootable media into any \x90\n"
   "\t\t\x90drive and press Ctrl+Q to reboot\x90\n"
   "\t\t\x8a\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x91\x8b\n"
   0
@@ -80,19 +80,19 @@ fn bootDisk
     end
     printStr loading_str -1
     printChr 0x44
-    intToStr drive 10 user_prg
-    printStr user_prg 4
+    intToStr drive 10 main_prg
+    printStr main_prg 4
     printChr 0x3a
     printStr root_str -1
     printStr mainFile_str -1
     printStr dots_str -1
     let len = open 0x20746567 mainFile_str 0 ; get
     if len
-      intToStr len 10 user_prg
-      printStr user_prg 16
+      intToStr len 10 main_prg
+      printStr main_prg 16
       printStr bytes_str -1
       printChr 0x0a
-      drop read user_prg len
+      drop read main_prg len
       runUser
     else
       printStr 0x40004a00 255
@@ -107,13 +107,13 @@ end
 data return_str "\nReturn code: \0"
 end
 fn runUser
-  store user_prg call user_prg 1 0 0
+  store main_prg call main_prg 1 0 0
   resethw
   screenmode 0
   colors -1 0
-  intToStr load user_prg 10 user_prg
+  intToStr load main_prg 10 main_prg
   printStr return_str -1
-  printStr user_prg 16
+  printStr main_prg 16
   printChr 0x0a
   printChr 0x0a
 end
@@ -147,8 +147,8 @@ fn intro
     inc kb += 0x10000
   end
   let kb = xor kb ^ 0x40000000
-  intToStr kb 10 user_prg
-  printStr user_prg -1
+  intToStr kb 10 main_prg
+  printStr main_prg -1
   printStr bytes_str -1
 
   printStr speed_str -1
@@ -160,8 +160,8 @@ fn intro
   while eq sec == load8u 0x40004b11
     inc ins += 12
   end
-  intToStr ins 10 user_prg
-  printStr user_prg -1
+  intToStr ins 10 main_prg
+  printStr main_prg -1
   printStr ips_str -1
 
   printChr 0x0a
@@ -709,5 +709,5 @@ fn write src len
   return bytes
 end
 
-data user_prg ; this is where programs are loaded to.
+data main_prg ; this is where programs are loaded to.
 end
