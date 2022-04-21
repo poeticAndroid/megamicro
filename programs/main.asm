@@ -27,7 +27,8 @@ fn main args
   return 404
 end
 fn run
-  return exec buffer 1 0 -1
+  -1
+  return exec buffer 1 0
 end
 
 data buffer ".\0"

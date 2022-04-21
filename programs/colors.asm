@@ -16,7 +16,7 @@ fn main args
     let mode = strToInt input 10 16
     store8 0x40004800 mode
     vsync
-    let mode = and mode 3
+    let mode = and mode & 3
     if eq mode == 0
       let cols = 2
     end

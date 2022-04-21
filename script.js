@@ -520,7 +520,7 @@
   }
 
   function sendFileInfo(dir, entry) {
-    // filename.ext/ 9876543210  yymmddhhmmss
+    // filename.ext/ 9876543210 yyymmddhhmmss
     let buf = new Uint8Array(40)
     let int, now = new Date()
     let i = 0
@@ -538,7 +538,7 @@
     for (let j = 0; j < int.length; j++) {
       buf[i++] = int.charCodeAt(j)
     }
-    while (i < 26) {
+    while (i < 25) {
       buf[i++] = 0x20
     }
     if (localStorage.getItem("date:" + dir + entry)) {
@@ -554,7 +554,7 @@
       int += now.getMinutes()
       int *= 100
       int += now.getSeconds()
-      int = ("00000000" + int).slice(-12)
+      int = ("00000000" + int).slice(-13)
       for (let j = 0; j < int.length; j++) {
         buf[i++] = int.charCodeAt(j)
       }
