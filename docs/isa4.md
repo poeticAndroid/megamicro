@@ -6,21 +6,21 @@ Just an idea I had.. not implemented..
 
 \      | 0x Flow                                              | 1x Vars+Logic                             | 2x Math                          | 3x (Mode 0) Memory                                      | 3x (Mode 1) Gfx
 -------|------------------------------------------------------|-------------------------------------------|----------------------------------|---------------------------------------------------------|------------------------------------------------
-**x0** | [halt](#halt)                                        | [load](#loadval-adr):val adr              | [add](#addn-a-b):n a b           | [load8u](#load8uval-adr):val adr                        | [setbg]() col
-**x1** | [sleep](#sleep-ms) ms                                | [store](#store-adr-val) adr val           | [sub](#subn-a-b):n a b           | [load8s](#load8sval-adr):val adr                        | [getbg]():col
-**x2** | [vsync](#vsync)                                      | [incadr](#incadr-adr) adr                 | [mult](#multn-a-b):n a b         | [load16u](#load16uval-adr):val adr                      | [setfg]() col
-**x3** | [mode](#mode) mode                                   | [incadrby](#incadrby-adr-delta) adr delta | [div](#divn-a-b):n a b           | [load16s](#load16sval-adr):val adr                      | [getfg]():col
+**x0** | [halt](#halt)                                        | [load](#loadval-adr):val adr              | [add](#addn-a-b):n a b           | [load8u](#load8uval-adr):val adr                        | [fgcolor]():pcol col
+**x1** | [sleep](#sleep-ms) ms                                | [store](#store-adr-val) adr val           | [sub](#subn-a-b):n a b           | [load8s](#load8sval-adr):val adr                        | [pget]():col img x y
+**x2** | [vsync](#vsync)                                      | [incadr](#incadr-adr) adr                 | [mult](#multn-a-b):n a b         | [load16u](#load16uval-adr):val adr                      | [pset]() img x y
+**x3** | [mode](#modepmode-mode):pmode mode                   | [incadrby](#incadrby-adr-delta) adr delta | [div](#divn-a-b):n a b           | [load16s](#load16sval-adr):val adr                      | [rect]() img x y w h
 **x4** | [jump](#jump-adr) adr                                | [get](#getval-index):val index            | [rem](#remn-a-b):n a b           | [loadbit](#loadbitval-adr-bit):val adr bit              |
 **x5** | [jumpifz](#jumpifz-adr-val) adr val                  | [set](#set-index-val) index val           | [lt](#ltbool-a-b):bool a b       | [loadbits](#loadbitval-adr-bit-len):val adr bit len     |
 **x6** | [stackptr](#stackptrnegadr):negadr                   | [inc](#inc-index) index                   | [gt](#gtbool-a-b):bool a b       |                                                         |
 **x7** | [endcall](#endcall)                                  | [incby](#incby-index-delta) index delta   | [itof](#itoffloat-int):float int |                                                         |
-**x8** | [call](#callresult-adr-paramcount):result adr params | [eqz](#eqzbool-a):bool a                  | [fadd](#faddn-a-b):n a b         | [store8](#store8-adr-val) adr val                       | [pget]():col img x y
-**x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [pset]() img x y
-**xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [rect]() img x y w h
-**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         |
-**xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           | [copyimg]() simg dimg dx dy
-**xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val | [copyrect]() simg dimg sx sy dx dy w h
-**xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           | [copyscale]() simg dimg sx sy dx dy sw sh dw dh
+**x8** | [call](#callresult-adr-paramcount):result adr params | [eqz](#eqzbool-a):bool a                  | [fadd](#faddn-a-b):n a b         | [store8](#store8-adr-val) adr val                       | [bgcolor]():pcol col
+**x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [copyimg]() simg dimg dx dy
+**xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyrect]() simg dimg sx sy dx dy w h
+**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyscale]() simg dimg sx sy dx dy sw sh dw dh
+**xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           |
+**xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val |
+**xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           |
 **xF** | [lit](#literals):val                                 | [drop](#drop-val) val                     | [ftoi](#ftoiint-float):int float |                                                         |
 
  - All instructions are 1 byte, except for literals (read [below](#literals))
@@ -71,8 +71,8 @@ Pause the cpu for `ms` milliseconds.
 ### `vsync`
 Pause the cpu until next screen refresh.
 
-### `mode` `mode`
-Set the current memory mode.
+### `mode:pmode` `mode`
+Set the current memory mode if `mode >= 0` and return the previous mode.
 
 ### `jump` `adr`
 Jump to `adr`.
