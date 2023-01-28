@@ -5,7 +5,7 @@ Just an idea I had.. not implemented..
 `cpuver = 4`
 
 \      | 0x Flow                                              | 1x Vars+Logic                             | 2x Math                          | 3x (Mode 0) Memory                                      | 3x (Mode 1) Gfx
--------|------------------------------------------------------|-------------------------------------------|----------------------------------|---------------------------------------------------------|------------------------------------------------
+-------|------------------------------------------------------|-------------------------------------------|----------------------------------|---------------------------------------------------------|-------------------------------------------------
 **x0** | [halt](#halt)                                        | [load](#loadval-adr):val adr              | [add](#addn-a-b):n a b           | [load8u](#load8uval-adr):val adr                        | [fgcolor]():pcol col
 **x1** | [sleep](#sleep-ms) ms                                | [store](#store-adr-val) adr val           | [sub](#subn-a-b):n a b           | [load8s](#load8sval-adr):val adr                        | [pget]():col img x y
 **x2** | [vsync](#vsync)                                      | [incadr](#incadr-adr) adr                 | [mult](#multn-a-b):n a b         | [load16u](#load16uval-adr):val adr                      | [pset]() img x y
@@ -17,7 +17,7 @@ Just an idea I had.. not implemented..
 **x8** | [call](#callresult-adr-paramcount):result adr params | [eqz](#eqzbool-a):bool a                  | [fadd](#faddn-a-b):n a b         | [store8](#store8-adr-val) adr val                       | [bgcolor]():pcol col
 **x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [copyimg]() simg dimg dx dy
 **xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyrect]() simg dimg sx sy dx dy w h
-**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyscale]() simg dimg sx sy dx dy sw sh dw dh
+**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyscaled]() simg dimg sx sy dx dy sw sh dw dh
 **xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           |
 **xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val |
 **xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           |
