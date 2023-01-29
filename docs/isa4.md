@@ -5,20 +5,20 @@ Just an idea I had.. not implemented..
 `cpuver = 4`
 
 \      | 0x Flow                                              | 1x Vars+Logic                             | 2x Math                          | 3x (Mode 0) Memory                                      | 3x (Mode 1) Gfx
--------|------------------------------------------------------|-------------------------------------------|----------------------------------|---------------------------------------------------------|-------------------------------------------------
-**x0** | [halt](#halt)                                        | [load](#loadval-adr):val adr              | [add](#addn-a-b):n a b           | [load8u](#load8uval-adr):val adr                        | [fgcolor]():pcol col
-**x1** | [sleep](#sleep-ms) ms                                | [store](#store-adr-val) adr val           | [sub](#subn-a-b):n a b           | [load8s](#load8sval-adr):val adr                        | [pget]():col img x y
-**x2** | [vsync](#vsync)                                      | [incadr](#incadr-adr) adr                 | [mult](#multn-a-b):n a b         | [load16u](#load16uval-adr):val adr                      | [pset]() img x y
-**x3** | [mode](#modepmode-mode):pmode mode                   | [incadrby](#incadrby-adr-delta) adr delta | [div](#divn-a-b):n a b           | [load16s](#load16sval-adr):val adr                      | [rect]() img x y w h
+-------|------------------------------------------------------|-------------------------------------------|----------------------------------|---------------------------------------------------------|----------------------------------------------------------------------------------------------
+**x0** | [halt](#halt)                                        | [load](#loadval-adr):val adr              | [add](#addn-a-b):n a b           | [load8u](#load8uval-adr):val adr                        | [fgcolor](#fgcolorpcol-col):pcol col
+**x1** | [sleep](#sleep-ms) ms                                | [store](#store-adr-val) adr val           | [sub](#subn-a-b):n a b           | [load8s](#load8sval-adr):val adr                        | [pget](#pgetcol-img-x-y):col img x y
+**x2** | [vsync](#vsync)                                      | [incadr](#incadr-adr) adr                 | [mult](#multn-a-b):n a b         | [load16u](#load16uval-adr):val adr                      | [pset](#pset-img-x-y) img x y
+**x3** | [mode](#modepmode-mode):pmode mode                   | [incadrby](#incadrby-adr-delta) adr delta | [div](#divn-a-b):n a b           | [load16s](#load16sval-adr):val adr                      | [rect](#rect-img-x-y-w-h) img x y w h
 **x4** | [jump](#jump-adr) adr                                | [get](#getval-index):val index            | [rem](#remn-a-b):n a b           | [loadbit](#loadbitval-adr-bit):val adr bit              |
 **x5** | [jumpifz](#jumpifz-adr-val) adr val                  | [set](#set-index-val) index val           | [lt](#ltbool-a-b):bool a b       | [loadbits](#loadbitval-adr-bit-len):val adr bit len     |
 **x6** | [stackptr](#stackptrnegadr):negadr                   | [inc](#inc-index) index                   | [gt](#gtbool-a-b):bool a b       |                                                         |
 **x7** | [endcall](#endcall)                                  | [incby](#incby-index-delta) index delta   | [itof](#itoffloat-int):float int |                                                         |
-**x8** | [call](#callresult-adr-paramcount):result adr params | [eqz](#eqzbool-a):bool a                  | [fadd](#faddn-a-b):n a b         | [store8](#store8-adr-val) adr val                       | [bgcolor]():pcol col
-**x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [copyimg]() simg dimg dx dy
-**xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyrect]() simg dimg sx sy dx dy w h
-**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyscaled]() simg dimg sx sy dx dy sw sh dw dh
-**xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           |
+**x8** | [call](#callresult-adr-paramcount):result adr params | [eqz](#eqzbool-a):bool a                  | [fadd](#faddn-a-b):n a b         | [store8](#store8-adr-val) adr val                       | [bgcolor](#bgcolorpcol-col):pcol col
+**x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [pxdepth](#pxdepthpdepth-depth):pdepth depth
+**xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyimg](#copyimg-simg-dimg-dx-dy) simg dimg dx dy
+**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyrect](#copyrect-simg-dimg-sx-sy-dx-dy-w-h) simg dimg sx sy dx dy w h
+**xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           | [copyscaled](#copyscaled-simg-dimg-sx-sy-dx-dy-sw-sh-dw-dh) simg dimg sx sy dx dy sw sh dw dh
 **xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val |
 **xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           |
 **xF** | [lit](#literals):val                                 | [drop](#drop-val) val                     | [ftoi](#ftoiint-float):int float |                                                         |
@@ -72,7 +72,7 @@ Pause the cpu for `ms` milliseconds.
 Pause the cpu until next screen refresh.
 
 ### `mode:pmode` `mode`
-Set the current memory mode if `mode >= 0` and return the previous mode.
+Set the current memory mode and return the previous mode.
 
 ### `jump` `adr`
 Jump to `adr`.
@@ -249,4 +249,33 @@ Store the `len` least significant bits of `val` at the `bit`th bit of `adr`.
 
 ### `memcopy` `src` `dest` `len`
 Copy `len` bytes of data from `src` to `dest` in memory. `dest` _should_ be an absolute address.
+
+
+### `fgcolor:pcol` `col`
+Set the current foreground color and return the prevous foreground color.
+
+### `pget:col` `img` `x` `y`
+Get the pixel color from a image resource `img` at coordinates `x`,`y`.
+
+### `pset` `img` `x` `y`
+Set the pixel color of a image resource `img` at coordinates `x`,`y` to the current foreground color.
+
+### `rect` `img` `x` `y` `w` `h`
+Draw a filled rectangle in the current foreground color to `img`.
+
+### `bgcolor:pcol` `col`
+Set the current background color and return the prevous background color.
+
+### `pxdepth:pdepth` `depth`
+Set the current pixel color depth and return the prevous pixel color depth.
+
+### `copyimg` `simg` `dimg` `dx` `dy`
+Copy all of `simg` onto `dimg` starting at coordinates `dx`,`dy`, skipping all pixels in `simg` that match the current background color.
+
+### `copyrect` `simg` `dimg` `sx` `sy` `dx` `dy` `w` `h`
+Copy some of `simg`, specified by coordinates `sx`,`sy` and size `w`,`h`, onto `dimg` at starting at coordinates `dx`,`dy`, skipping all pixels in `simg` that match the current background color.
+
+### `copyscaled` `simg` `dimg` `sx` `sy` `dx` `dy` `sw` `sh` `dw` `dh`
+Copy some of `simg`, specified by coordinates `sx`,`sy` and size `sw`,`sh`, onto `dimg` at starting at coordinates `dx`,`dy` and scaling it to fit size `dw`,`dh`, skipping all pixels in `simg` that match the current background color.
+
 
