@@ -15,13 +15,13 @@ Just an idea I had.. not implemented..
 **x6** | [stackptr](#stackptrnegadr):negadr                   | [inc](#inc-index) index                   | [gt](#gtbool-a-b):bool a b       |                                                         |
 **x7** | [endcall](#endcall)                                  | [incby](#incby-index-delta) index delta   | [itof](#itoffloat-int):float int |                                                         |
 **x8** | [call](#callresult-adr-paramcount):result adr params | [eqz](#eqzbool-a):bool a                  | [fadd](#faddn-a-b):n a b         | [store8](#store8-adr-val) adr val                       | [bgcolor](#bgcolorpcol-col):pcol col
-**x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [pxdepth](#pxdepthpdepth-depth):pdepth depth
-**xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyimg](#copyimg-simg-dimg-dx-dy) simg dimg dx dy
-**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyrect](#copyrect-simg-dimg-sx-sy-dx-dy-w-h) simg dimg sx sy dx dy w h
-**xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           | [copyscaled](#copyscaled-simg-dimg-sx-sy-dx-dy-sw-sh-dw-dh) simg dimg sx sy dx dy sw sh dw dh
+**x9** | [return](#return-result) result                      | [eq](#eqbool-a-b):bool a b                | [fsub](#fsubn-a-b):n a b         |                                                         | [copyimg](#copyimg-simg-dimg-dx-dy) simg dimg dx dy
+**xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyrect](#copyrect-simg-dimg-sx-sy-dx-dy-w-h) simg dimg sx sy dx dy w h
+**xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyscaled](#copyscaled-simg-dimg-sx-sy-dx-dy-sw-sh-dw-dh) simg dimg sx sy dx dy sw sh dw dh
+**xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           |
 **xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val |
 **xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           |
-**xF** | [lit](#literals):val                                 | [drop](#drop-val) val                     | [ftoi](#ftoiint-float):int float |                                                         |
+**xF** | [lit](#literals):val                                 | [drop](#drop-val) val                     | [ftoi](#ftoiint-float):int float |                                                         | [pxdepth](#pxdepthpdepth-depth):pdepth depth
 
  - All instructions are 1 byte, except for literals (read [below](#literals))
  - Instruction parameters are popped in specified order and thus must be pushed in reverse order
@@ -266,9 +266,6 @@ Draw a filled rectangle in the current foreground color to `img`.
 ### `bgcolor:pcol` `col`
 Set the current background color and return the prevous background color.
 
-### `pxdepth:pdepth` `depth`
-Set the current pixel color depth and return the prevous pixel color depth.
-
 ### `copyimg` `simg` `dimg` `dx` `dy`
 Copy all of `simg` onto `dimg` starting at coordinates `dx`,`dy`, skipping all pixels in `simg` that match the current background color.
 
@@ -277,5 +274,8 @@ Copy some of `simg`, specified by coordinates `sx`,`sy` and size `w`,`h`, onto `
 
 ### `copyscaled` `simg` `dimg` `sx` `sy` `dx` `dy` `sw` `sh` `dw` `dh`
 Copy some of `simg`, specified by coordinates `sx`,`sy` and size `sw`,`sh`, onto `dimg` at starting at coordinates `dx`,`dy` and scaling it to fit size `dw`,`dh`, skipping all pixels in `simg` that match the current background color.
+
+### `pxdepth:pdepth` `depth`
+Set the current pixel color depth and return the prevous pixel color depth.
 
 
