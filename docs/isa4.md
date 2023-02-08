@@ -10,7 +10,7 @@ Just an idea I had.. not implemented..
 **x1** | [sleep](#sleep-ms) ms                                | [store](#store-adr-val) adr val           | [sub](#subn-a-b):n a b           | [load8s](#load8sval-adr):val adr                        | [pget](#pgetcol-img-x-y):col img x y
 **x2** | [vsync](#vsync)                                      | [incadr](#incadr-adr) adr                 | [mult](#multn-a-b):n a b         | [load16u](#load16uval-adr):val adr                      | [pset](#pset-img-x-y) img x y
 **x3** | [mode](#modepmode-mode):pmode mode                   | [incadrby](#incadrby-adr-delta) adr delta | [div](#divn-a-b):n a b           | [load16s](#load16sval-adr):val adr                      | [rect](#rect-img-x-y-w-h) img x y w h
-**x4** | [jump](#jump-adr) adr                                | [get](#getval-index):val index            | [rem](#remn-a-b):n a b           | [loadbit](#loadbitval-adr-bit):val adr bit              |
+**x4** | [jump](#jump-adr) adr                                | [get](#getval-index):val index            | [rem](#remn-a-b):n a b           | [loadbit](#loadbitval-adr-bit):val adr bit              | [invrect](#invrect-img-x-y-w-h) img x y w h
 **x5** | [jumpifz](#jumpifz-adr-val) adr val                  | [set](#set-index-val) index val           | [lt](#ltbool-a-b):bool a b       | [loadbits](#loadbitval-adr-bit-len):val adr bit len     |
 **x6** | [stackptr](#stackptrnegadr):negadr                   | [inc](#inc-index) index                   | [gt](#gtbool-a-b):bool a b       |                                                         |
 **x7** | [endcall](#endcall)                                  | [incby](#incby-index-delta) index delta   | [itof](#itoffloat-int):float int |                                                         |
@@ -19,9 +19,9 @@ Just an idea I had.. not implemented..
 **xA** | [exec](#execerr-adr-paramcount):err adr params       | [feq](#feqbool-a-b):bool a b              | [fmult](#fmultn-a-b):n a b       | [store16](#store16-adr-val) adr val                     | [copyrect](#copyrect-simg-dimg-sx-sy-dx-dy-w-h) simg dimg sx sy dx dy w h
 **xB** | [break](#break)                                      | [and](#andn-a-b):n a b                    | [fdiv](#fdivn-a-b):n a b         |                                                         | [copyscaled](#copyscaled-simg-dimg-sx-sy-dx-dy-sw-sh-dw-dh) simg dimg sx sy dx dy sw sh dw dh
 **xC** | [reset](#reset)                                      | [or](#orn-a-b):n a b                      | [ffloor](#ffloorn-a):n a         | [storebit](#storebit-adr-bit-val) adr bit val           |
-**xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val |
-**xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           |
-**xF** | [lit](#literals):val                                 | [drop](#drop-val) val                     | [ftoi](#ftoiint-float):int float |                                                         | [pxdepth](#pxdepthpdepth-depth):pdepth depth
+**xD** | [absadr](#absadrabsadr-adr):absadr adr               | [xor](#xorn-a-b):n a b                    | [flt](#fltbool-a-b):bool a b     | [storebits](#storebits-adr-bit-len-val) adr bit len val | [copyglyph](#copyglyph-simg-dimg-sx-sy-dx-dy-w-h) simg dimg sx sy dx dy w h
+**xE** | [cpuver](#cpuverversion):ver                         | [rot](#rotn-a-b):n a b                    | [fgt](#fgtbool-a-b):bool a b     | [memcopy](#memcopy-src-dest-len) src dest len           | [invglyph](#invglyph-simg-dimg-sx-sy-dx-dy-w-h) simg dimg sx sy dx dy w h
+**xF** | [lit](#literals):val                                 | [drop](#drop-val) val                     | [ftoi](#ftoiint-float):int float | [memfill](#memcopy-adr-len-byte) adr len byte           | [pxdepth](#pxdepthpdepth-depth):pdepth depth
 
  - All instructions are 1 byte, except for literals (read [below](#literals))
  - Instruction parameters are popped in specified order and thus must be pushed in reverse order
@@ -250,6 +250,9 @@ Store the `len` least significant bits of `val` at the `bit`th bit of `adr`.
 ### `memcopy` `src` `dest` `len`
 Copy `len` bytes of data from `src` to `dest` in memory. `dest` _should_ be an absolute address.
 
+### `memfill` `adr` `len` `byte`
+Fill `len` bytes of memory with `byte` starting from `adr`.
+
 
 ### `fgcolor:pcol` `col`
 Set the current foreground color and return the prevous foreground color.
@@ -263,6 +266,9 @@ Set the pixel color of a image resource `img` at coordinates `x`,`y` to the curr
 ### `rect` `img` `x` `y` `w` `h`
 Draw a filled rectangle in the current foreground color to `img`.
 
+### `invrect` `img` `x` `y` `w` `h`
+Invert the bits of all pixels in the given rectangle in `img`.
+
 ### `bgcolor:pcol` `col`
 Set the current background color and return the prevous background color.
 
@@ -274,6 +280,12 @@ Copy some of `simg`, specified by coordinates `sx`,`sy` and size `w`,`h`, onto `
 
 ### `copyscaled` `simg` `dimg` `sx` `sy` `dx` `dy` `sw` `sh` `dw` `dh`
 Copy some of `simg`, specified by coordinates `sx`,`sy` and size `sw`,`sh`, onto `dimg` at starting at coordinates `dx`,`dy` and scaling it to fit size `dw`,`dh`, skipping all pixels in `simg` that match the current background color.
+
+### `copyglyph` `simg` `dimg` `sx` `sy` `dx` `dy` `w` `h`
+Copy 1-bit `simg`, specified by coordinates `sx`,`sy` and size `w`,`h`, onto `dimg` at starting at coordinates `dx`,`dy`, replacing color 0 with current background color and color 1 with current foreground color.
+
+### `invglyph` `simg` `dimg` `sx` `sy` `dx` `dy` `w` `h`
+Like [copyglyph](#copyglyph-simg-dimg-sx-sy-dx-dy-w-h) but skipping color 0 and inverting the bits on color 1.
 
 ### `pxdepth:pdepth` `depth`
 Set the current pixel color depth and return the prevous pixel color depth.
