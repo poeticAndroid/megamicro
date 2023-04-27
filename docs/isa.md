@@ -1,25 +1,25 @@
 CPU instruction set
 ===================
-`cpuver = 3`
+`cpuver = 5`
 
-\      | 0x Flow                                              | 1x Memory                                       | 2x Math                            | 3x Logic
--------|------------------------------------------------------|-------------------------------------------------|------------------------------------|-----------------------------
-**x0** | [halt](#halt)                                        | [lit](#literals):val                            | [add](#addn-a-b):n a b             | [eq](#eqbool-a-b):bool a b
-**x1** | [sleep](#sleep-ms) ms                                | [get](#getval-index):val index                  | [sub](#subn-a-b):n a b             | [lt](#ltbool-a-b):bool a b
-**x2** | [vsync](#vsync)                                      | [stackptr](#stackptrnegadr):negadr              | [mult](#multn-a-b):n a b           | [gt](#gtbool-a-b):bool a b
-**x3** |                                                      | [load](#loadval-adr):val adr                    | [div](#divn-a-b):n a b             | [eqz](#eqzbool-a):bool a
-**x4** | [jump](#jump-adr) adr                                | [load8u](#load8uval-adr):val adr                | [rem](#remn-a-b):n a b             | [and](#andn-a-b):n a b
-**x5** | [jumpifz](#jumpifz-adr-val) adr val                  | [load4bit](#load4bitval-4bitadr):val 4bitadr    | [load8s](#load8sval-adr):val adr   | [or](#orn-a-b):n a b
-**x6** |                                                      | [load2bit](#load2bitval-2bitadr):val 2bitadr    | [itof](#itoffloat-int):float int   | [xor](#xorn-a-b):n a b
-**x7** | [endcall](#endcall)                                  | [loadbit](#loadbitval-1bitadr):val 1bitadr      | [uitof](#uitoffloat-int):float int | [rot](#rotn-a-b):n a b
-**x8** | [call](#callresult-adr-paramcount):result adr params | [drop](#drop-val) val                           | [fadd](#faddn-a-b):n a b           | [feq](#feqbool-a-b):bool a b
-**x9** | [return](#return-result) result                      | [set](#set-index-val) index val                 | [fsub](#fsubn-a-b):n a b           | [flt](#fltbool-a-b):bool a b
-**xA** | [exec](#execerr-adr-paramcount):err adr params       | [inc](#inc-index-delta) index delta             | [fmult](#fmultn-a-b):n a b         | [fgt](#fgtbool-a-b):bool a b
-**xB** | [break](#break)                                      | [store](#store-adr-val) adr val                 | [fdiv](#fdivn-a-b):n a b           |
-**xC** | [reset](#reset)                                      | [store8](#store8-adr-val) adr val               | [ffloor](#ffloorn-a):n a           |
-**xD** | [absadr](#absadrabsadr-adr):absadr adr               | [store4bit](#store4bit-4bitadr-val) 4bitadr val |                                    |
-**xE** | [cpuver](#cpuverversion):ver                         | [store2bit](#store2bit-2bitadr-val) 2bitadr val |                                    |
-**xF** | [noop](#noop)                                        | [storebit](#storebit-1bitadr-val) 1bitadr val   | [ftoi](#ftoiint-float):int float   |
+\      | 0x Flow                                              | 1x Memory                                  | 2x Math                          | 3x Logic
+-------|------------------------------------------------------|--------------------------------------------|----------------------------------|-----------------------------
+**x0** | [halt](#halt)                                        | [lit](#literals):val                       | [add](#addn-a-b):n a b           | [eq](#eqbool-a-b):bool a b
+**x1** | [sleep](#sleep-ms) ms                                | [get](#getval-index):val index             | [sub](#subn-a-b):n a b           | [lt](#ltbool-a-b):bool a b
+**x2** | [vsync](#vsync)                                      | [stackptr](#stackptrnegadr):negadr         | [mult](#multn-a-b):n a b         | [gt](#gtbool-a-b):bool a b
+**x3** |                                                      | [load](#loadval-adr):val adr               | [div](#divn-a-b):n a b           | [eqz](#eqzbool-a):bool a
+**x4** | [jump](#jump-adr) adr                                | [load8u](#load8uval-adr):val adr           | [rem](#remn-a-b):n a b           | [and](#andn-a-b):n a b
+**x5** | [jumpifz](#jumpifz-adr-val) adr val                  | [load8s](#load8sval-adr):val adr           |                                  | [or](#orn-a-b):n a b
+**x6** |                                                      |                                            |                                  | [xor](#xorn-a-b):n a b
+**x7** | [endcall](#endcall)                                  | [loadbit](#loadbitval-1bitadr):val 1bitadr | [itof](#itoffloat-int):float int | [rot](#rotn-a-b):n a b
+**x8** | [call](#callresult-adr-paramcount):result adr params | [drop](#drop-val) val                      | [fadd](#faddn-a-b):n a b         | [feq](#feqbool-a-b):bool a b
+**x9** | [return](#return-result) result                      | [set](#set-index-val) index val            | [fsub](#fsubn-a-b):n a b         | [flt](#fltbool-a-b):bool a b
+**xA** | [exec](#execerr-adr-paramcount):err adr params       | [inc](#inc-index-delta) index delta        | [fmult](#fmultn-a-b):n a b       | [fgt](#fgtbool-a-b):bool a b
+**xB** | [break](#break)                                      | [store](#store-adr-val) adr val            | [fdiv](#fdivn-a-b):n a b         |
+**xC** | [reset](#reset)                                      | [store8](#store8-adr-val) adr val          | [ffloor](#ffloorn-a):n a         |
+**xD** | [absadr](#absadrabsadr-adr):absadr adr               | [setbit](#setbit-bitadr) bitadr            |                                  |
+**xE** | [cpuver](#cpuverversion):ver                         | [clearbit](#clearbit-bitadr) bitadr        |                                  |
+**xF** | [noop](#noop)                                        | [flipbit](#flipbit-bitadr) bitadr          | [ftoi](#ftoiint-float):int float |
 
  - All instructions are 1 byte, except for literals (read [below](#literals))
  - Instruction parameters are popped in specified order and thus must be pushed in reverse order
@@ -125,17 +125,12 @@ Load a 32bit value from `adr` and return it.
 ### `load8u:val` `adr`
 Load a 8bit value from `adr` and return it as an unsigned integer.
 
-### `load4bit:val` `4bitadr`
-Load a 4bit value from `4bitadr` and return it as an unsigned integer.
-`4bitadr` is a multiple of 4 bits, counting from start of memory.
+### `load8s:val` `adr`
+Load a 8bit value from `adr` and return it as an signed integer.
 
-### `load2bit:val` `2bitadr`
-Load a 2bit value from `2bitadr` and return it as an unsigned integer.
-`2bitadr` is a multiple of 2 bits, counting from start of memory.
-
-### `loadbit:val` `1bitadr`
-Load a bit value from `1bitadr` and return it as an unsigned integer.
-`1bitadr` is the number of bits, counting from start of memory.
+### `loadbit:val` `bitadr`
+Load a bit from `bitadr` and return it.
+`bitadr` is the number of bits, counting from start of memory.
 
 ### `drop` `val`
 Take a value from the stack and do nothing with it.
@@ -152,17 +147,17 @@ Store a 32bit `val` at `adr`.
 ### `store8` `adr` `val`
 Store a 8bit `val` at `adr`.
 
-### `store4bit` `4bitadr` `val`
-Store a 4bit `val` at `4bitadr`.
-`4bitadr` is a multiple of 4 bits, counting from start of memory.
+### `setbit` `bitadr`
+Set bit at `bitadr` to `1`.
+`bitadr` is the number of bits, counting from start of memory.
 
-### `store2bit` `2bitadr` `val`
-Store a 2bit `val` at `2bitadr`.
-`2bitadr` is a multiple of 2 bits, counting from start of memory.
+### `clearbit` `bitadr`
+Set bit at `bitadr` to `0`.
+`bitadr` is the number of bits, counting from start of memory.
 
-### `storebit` `1bitadr` `val`
-Store a bit `val` at `1bitadr`.
-`1bitadr` is the number of bits, counting from start of memory.
+### `flipbit` `bitadr`
+Toggle bit at `bitadr`.
+`bitadr` is the number of bits, counting from start of memory.
 
 ### `add:n` `a` `b`
 Return the result of adding `a` and `b`.
@@ -179,14 +174,8 @@ Return the result of integer dividing `a` by `b`.
 ### `rem:n` `a` `b`
 Return the remainder of integer dividing `a` by `b`.
 
-### `load8s:val` `adr`
-Like [`load8u`](#load8uval-adr) but returning a signed integer.
-
 ### `itof:float` `int`
 Return `int` as a floating point number.
-
-### `uitof:float` `int`
-Return `int` as a positive floating point number.
 
 ### `fadd:n` `a` `b`
 Like [`add`](#addn-a-b), but for floating point numbers.
