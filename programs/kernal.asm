@@ -120,13 +120,15 @@ end
 
 data intro_str "\t    Mega      ///\t\t/// MegaMicro ///\n\n\n\0"
 end
+data cpu_str "CPU:    z28r \0"
+end
+data speed_str "Speed:  \0"
+end
+data ips_str " ips\n\0"
+end
 data memory_str "Memory: \0"
 end
 data bytes_str " bytes\n\0"
-end
-data speed_str "Speed: \0"
-end
-data ips_str " ips\n\0"
 end
 fn intro
   vars kb ins sec
@@ -136,20 +138,10 @@ fn intro
   printStr intro_str -1
   screenmode 0
 
-  printStr memory_str -1
-  let sec = load8u 0x40004b11
-  while eq sec == load8u 0x40004b11
-    vsync
-  end
-  sleep 0x200
-  let kb = 0x40000000
-  while lt kb < absadr stackptr
-    inc kb += 0x10000
-  end
-  let kb = xor kb ^ 0x40000000
-  intToStr kb 10 main_prg
+  printStr cpu_str -1
+  intToStr cpuver 10 main_prg
   printStr main_prg -1
-  printStr bytes_str -1
+  printChr 0x0a
 
   printStr speed_str -1
   let sec = load8u 0x40004b11
@@ -163,6 +155,17 @@ fn intro
   intToStr ins 10 main_prg
   printStr main_prg -1
   printStr ips_str -1
+
+  printStr memory_str -1
+  sleep 0x200
+  let kb = 0x40000000
+  while lt kb < absadr stackptr
+    inc kb += 0x10000
+  end
+  let kb = xor kb ^ 0x40000000
+  intToStr kb 10 main_prg
+  printStr main_prg -1
+  printStr bytes_str -1
 
   printChr 0x0a
 end
@@ -179,6 +182,7 @@ end
 fn cls
   vars adr end bg i
   let adr = or 0x40000000 | load 0x40004808
+  store 0x40004808 adr
   let end = add adr + 0x4800
   let bg = load8u 0x40004bfe
   let i = 32
@@ -359,9 +363,9 @@ fn printChr char
     endcall
   end
 
-  vars bg fg lastCol lastRow x y x1 y1 x2 y2 font bits
-  let bg = load8u 0x40004bfe
-  let fg = load8u 0x40004bff
+  vars lastCol lastRow x y font w linerest
+  let w = mult 8 * load8u 0x40004802
+  let linerest = sub w - 8
   let lastCol = sub load8u 0x40004802 - 1
   let lastRow = sub load8u 0x40004803 - 1
   let font = add 0x40004c00 + mult 8 * and 127 & char
@@ -376,26 +380,21 @@ fn printChr char
     let row = lastRow
   end
 
-  let x1 = mult 8 * col
-  let y1 = mult 8 * row
-  let x2 = add x1 + 8
-  let y2 = add y1 + 8
+  let x = mult 8 * col
+  let y = mult 8 * row
+  setwrite load 0x40004808 load8u 0x40004801
+  skipwrite add x + mult y * w
 
-  let y = y1
-  while lt y < y2
-    let bits = rot load8u font << -8
-    let x = x1
-    while lt x < x2
-      let bits = rot bits << 1
-      if and bits & 1
-        pset x y fg
-      else
-        pset x y bg
-      end
-      inc x 1
+  setread font 1
+  let y = 8
+  while y
+    let x = 8
+    while x
+      write load8u add 0x40004bfe + read
+      inc x -1
     end
-    inc font 1
-    inc y 1
+    skipwrite linerest
+    inc y -1
   end
 
   inc col 1
