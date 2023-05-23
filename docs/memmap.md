@@ -4,7 +4,7 @@ Memory layout
 \          | +0                  | +1                | +2            | +3
 -----------|---------------------|-------------------|---------------|--------------
 **0x0000** | display             | _(18 KB)_         |               |
-**0x4800** | display mode        | pixel adr length  | columns       | rows
+**0x4800** | display mode        | bits per pixel    | columns       | rows
 **0x4804** | visible display ptr | _(32bit address)_ |               |
 **0x4808** | active display ptr  | _(32bit address)_ |               |
 **0x4880** | *audio              | _(128 bytes)_     |               |

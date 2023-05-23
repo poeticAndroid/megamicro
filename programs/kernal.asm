@@ -30,11 +30,11 @@ jump memCopy
 skipto 0x38
 jump fill
 skipto 0x3c
-jump open
+jump openFile
 skipto 0x40
-jump read
+jump readFile
 skipto 0x44
-jump write
+jump writeFile
 
 skipto 0x50
 
@@ -71,7 +71,7 @@ fn bootDisk
   while drive
     inc drive += -1
     store 0x40004bf8 drive
-    drop open 0x20206463 root_str 0 ; cd
+    drop openFile 0x20206463 root_str 0 ; cd
   end
   while lt drive < 4
     store 0x40004bf8 drive
@@ -86,13 +86,13 @@ fn bootDisk
     printStr root_str -1
     printStr mainFile_str -1
     printStr dots_str -1
-    let len = open 0x20746567 mainFile_str 0 ; get
+    let len = openFile 0x20746567 mainFile_str 0 ; get
     if len
       intToStr len 10 main_prg
       printStr main_prg 16
       printStr bytes_str -1
       printChr 0x0a
-      drop read main_prg len
+      drop readFile main_prg len
       runUser
     else
       printStr 0x40004a00 255
@@ -169,6 +169,8 @@ end
 
 fn resethw
   fill 0 0x40004804 780
+  store 0x40004804 0x40000000
+  store 0x40004808 0x40000000
 end
 
 
@@ -186,7 +188,7 @@ fn cls
   end
   let bg = load adr
 
-  while lt adr end
+  while lt adr < end
     store adr bg
     inc adr 4
   end
@@ -225,16 +227,10 @@ fn pset x y c
   if gt y > sub h - 1
     endcall
   end
-  vars pal adr
-  let pal = and load8u 0x40004801 & 3
-  let adr = or 0x40000000 | rot load 0x40004808 << pal
-  inc adr += add x + mult y * w
-  adr c
-  jump mult pal * 2
-  endcall store8
-  endcall store4bit
-  endcall store2bit
-  endcall storebit
+
+  setwrite load 0x40004808 load8u 0x40004801
+  skipwrite add x + mult y * w
+  write c
 end
 
 fn pget x y
@@ -254,16 +250,10 @@ fn pget x y
   if gt y > sub h - 1
     return 0
   end
-  vars pal adr
-  let pal = and load8u 0x40004801 & 3
-  let adr = or 0x40000000 | rot load 0x40004808 << pal
-  inc adr += add x + mult y * w
-  adr
-  jump mult pal * 2
-  return load8u
-  return load4bit
-  return load2bit
-  return loadbit
+
+  setread load 0x40004804 load8u 0x40004801
+  skipread add x + mult y * w
+  return read
 end
 
 fn rect x1 y1 w h c
@@ -622,7 +612,7 @@ end
 
 ;;; filesystem ;;;
 
-fn open cmd path bytes
+fn openFile cmd path bytes
   vars bytes
   fill 0 0x40004900 516
   vsync
@@ -654,7 +644,7 @@ fn open cmd path bytes
 end
 
 globals readPos
-fn read dest max
+fn readFile dest max
   vars bytes
   if lt readPos < 0x40004a00
     let readPos = 0x40004a00
@@ -684,7 +674,7 @@ fn read dest max
   return bytes
 end
 
-fn write src len
+fn writeFile src len
   vars bytes
   while load8u 0x40004b00
     if len

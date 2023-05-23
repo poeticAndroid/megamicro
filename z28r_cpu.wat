@@ -8,6 +8,16 @@
   (global $sleep (mut i32) (i32.const 0x0) ) ;; sleep duration
   (global $adrmask (mut i32) (i32.const 0xffff) ) ;; address mask
 
+  (global $readpos (mut i32) (i32.const 0x0) ) ;; reading position
+  (global $readsize (mut i32) (i32.const 0x0) ) ;; reading chunk size
+  (global $readbits (mut i32) (i32.const 0x0) ) ;; number of bits read in current byte
+  (global $readmask (mut i32) (i32.const 0x0) ) ;; reading mask
+
+  (global $writepos (mut i32) (i32.const 0x0) ) ;; write position
+  (global $writesize (mut i32) (i32.const 0x0) ) ;; write chunk size
+  (global $writebits (mut i32) (i32.const 0x0) ) ;; number of bits written in current byte
+  (global $writemask (mut i32) (i32.const 0x0) ) ;; write mask
+
   (func $getPC (result i32) (global.get $pc) )
   (export "getPC" (func $getPC) )
 
@@ -66,6 +76,22 @@
     (i32.and (local.get $adr) (global.get $adrmask) )
   )
 
+  ;; reverse byte order
+  (func $rbo (param $in i32) (result i32)
+    (local $out i32)
+    (local.set $out (i32.and (local.get $in) (i32.const 0xff) ) )
+    (local.set $out (i32.rotl (local.get $out) (i32.const 8) ) )
+    (local.set $in (i32.rotr (local.get $in) (i32.const 8) ) )
+    (local.set $out (i32.or (local.get $out) (i32.and (local.get $in) (i32.const 0xff) ) ) )
+    (local.set $out (i32.rotl (local.get $out) (i32.const 8) ) )
+    (local.set $in (i32.rotr (local.get $in) (i32.const 8) ) )
+    (local.set $out (i32.or (local.get $out) (i32.and (local.get $in) (i32.const 0xff) ) ) )
+    (local.set $out (i32.rotl (local.get $out) (i32.const 8) ) )
+    (local.set $in (i32.rotr (local.get $in) (i32.const 8) ) )
+    (local.set $out (i32.or (local.get $out) (i32.and (local.get $in) (i32.const 0xff) ) ) )
+    (local.get $out)
+  )
+
   (func $run (param $count i32) (result i32)
     (local $opcode i32)
     (block(loop (br_if 1 (i32.eqz (local.get $count) ) )
@@ -86,7 +112,7 @@
     (global.set $pc (i32.add (global.get $pc) (i32.const 1) ) )
 
     ;; Execute!
-    (if (i32.and (local.get $opcode) (i32.const 0xC0) ) (then ;; $40 - $FF
+    (if (i32.and (local.get $opcode) (i32.const 0x80) ) (then ;; $80 - $FF
 
       (call $lit_instr)
       (br 0)
@@ -199,7 +225,7 @@
 
                   ) (else ;; $2E
 
-                    (call $noop_instr)
+                    (call $store16_instr)
                     (br 7)
 
                   ) )
@@ -253,14 +279,14 @@
 
                   ) (else ;; $26
 
-                    (call $noop_instr)
+                    (call $load16s_instr)
                     (br 7)
 
                   ) )
                 ) (else ;; $24 - $25
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $25
 
-                    (call $noop_instr)
+                    (call $load8s_instr)
                     (br 7)
 
                   ) (else ;; $24
@@ -306,19 +332,19 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $1E - $1F
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $1F
 
-                    (call $flipbit_instr)
+                    (call $write_instr)
                     (br 7)
 
                   ) (else ;; $1E
 
-                    (call $clearbit_instr)
+                    (call $skipwrite_instr)
                     (br 7)
 
                   ) )
                 ) (else ;; $1C - $1D
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $1D
 
-                    (call $setbit_instr)
+                    (call $setwrite_instr)
                     (br 7)
 
                   ) (else ;; $1C
@@ -360,19 +386,19 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $16 - $17
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $17
 
-                    (call $loadbit_instr)
+                    (call $read_instr)
                     (br 7)
 
                   ) (else ;; $16
 
-                    (call $noop_instr)
+                    (call $skipread_instr)
                     (br 7)
 
                   ) )
                 ) (else ;; $14 - $15
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $15
 
-                    (call $load8s_instr)
+                    (call $setread_instr)
                     (br 7)
 
                   ) (else ;; $14
@@ -646,7 +672,7 @@
   )
 
   (func $cpuver_instr
-    (call $push (i32.const 5) )
+    (call $push (i32.const 6) )
   )
 
   (func $noop_instr
@@ -711,17 +737,35 @@
     (call $push (i32.load8_u (call $abs (call $pop) ) ) )
   )
 
-  (func $load8s_instr
-    (call $push (i32.load8_s (call $abs (call $pop) ) ) )
+  (func $setread_instr
+    (local $count i32)
+    (global.set $readpos (call $abs (call $pop) ) )
+    (global.set $readsize (call $pop) )
+    (global.set $readbits (i32.const 0) )
+    (global.set $readmask (i32.const 0) )
+    (local.set $count (global.get $readsize) )
+    (block (loop (br_if 1 (i32.eqz (local.get $count) ) )
+      (global.set $readmask (i32.add (i32.mul (global.get $readmask) (i32.const 2) ) (i32.const 1) ) )
+      (local.set $count (i32.sub (local.get $count) (i32.const 1) ) )
+      (br 0)
+    ) )
   )
 
-  (func $loadbit_instr
-    (local $adr i32)
-    (local $bit i32)
-    (local.set $adr (call $pop) )
-    (local.set $bit (i32.and (local.get $adr) (i32.const 7) ) )
-    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 3) ) (global.get $adrmask) ) )
-    (call $push (i32.and (i32.shr_u (i32.load8_u (local.get $adr) ) (i32.sub (i32.const 7) (local.get $bit) ) ) (i32.const 1) ) )
+  (func $skipread_instr
+    (global.set $readpos (i32.add (global.get $readpos) (i32.div_u (global.get $readbits) (i32.const 8) ) ) )
+    (global.set $readbits (i32.add (i32.rem_u (global.get $readbits) (i32.const 8) ) (i32.mul (call $pop) (global.get $readsize) ) ) )
+  )
+
+  (func $read_instr
+    (global.set $readpos (i32.add (global.get $readpos) (i32.div_u (global.get $readbits) (i32.const 8) ) ) )
+    (global.set $readbits (i32.add (i32.rem_u (global.get $readbits) (i32.const 8) ) (global.get $readsize) ) )
+    (call $push (i32.and
+      (i32.rotl
+        (call $rbo (i32.load (global.get $readpos) ) )
+        (global.get $readbits)
+      )
+      (global.get $readmask)
+    ) )
   )
 
   (func $drop_instr
@@ -756,43 +800,41 @@
     (i32.store8 (call $abs (call $pop) ) (call $pop) )
   )
 
-  (func $setbit_instr
-    (local $adr i32)
-    (local $bit i32)
-    (local $val i32)
-    (local.set $adr (call $pop) )
-    (local.set $bit (i32.and (local.get $adr) (i32.const 7) ) )
-    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 3) ) (global.get $adrmask) ) )
-    (local.set $val (i32.shl (i32.const 1) (i32.sub (i32.const 7) (local.get $bit) ) ) )
-    (i32.store8 (local.get $adr)
-      (i32.or (i32.load8_u (local.get $adr) ) (local.get $val) )
-    )
+  (func $setwrite_instr
+    (local $count i32)
+    (global.set $writepos (call $abs (call $pop) ) )
+    (global.set $writesize (call $pop) )
+    (global.set $writebits (i32.const 0) )
+    (global.set $writemask (i32.const 0) )
+    (local.set $count (global.get $writesize) )
+    (block (loop (br_if 1 (i32.eqz (local.get $count) ) )
+      (global.set $writemask (i32.add (i32.mul (global.get $writemask) (i32.const 2) ) (i32.const 1) ) )
+      (local.set $count (i32.sub (local.get $count) (i32.const 1) ) )
+      (br 0)
+    ) )
   )
 
-  (func $clearbit_instr
-    (local $adr i32)
-    (local $bit i32)
-    (local $val i32)
-    (local.set $adr (call $pop) )
-    (local.set $bit (i32.and (local.get $adr) (i32.const 7) ) )
-    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 3) ) (global.get $adrmask) ) )
-    (local.set $val (i32.shl (i32.const 1) (i32.sub (i32.const 7) (local.get $bit) ) ) )
-    (i32.store8 (local.get $adr)
-      (i32.xor (i32.or (i32.load8_u (local.get $adr) ) (local.get $val) ) (local.get $val) )
-    )
+  (func $skipwrite_instr
+    (global.set $writepos (i32.add (global.get $writepos) (i32.div_u (global.get $writebits) (i32.const 8) ) ) )
+    (global.set $writebits (i32.add (i32.rem_u (global.get $writebits) (i32.const 8) ) (i32.mul (call $pop) (global.get $writesize) ) ) )
   )
 
-  (func $flipbit_instr
-    (local $adr i32)
-    (local $bit i32)
-    (local $val i32)
-    (local.set $adr (call $pop) )
-    (local.set $bit (i32.and (local.get $adr) (i32.const 7) ) )
-    (local.set $adr (i32.and (i32.shr_u (local.get $adr) (i32.const 3) ) (global.get $adrmask) ) )
-    (local.set $val (i32.shl (i32.const 1) (i32.sub (i32.const 7) (local.get $bit) ) ) )
-    (i32.store8 (local.get $adr)
-      (i32.xor (i32.load8_u (local.get $adr) ) (local.get $val) )
-    )
+  (func $write_instr
+    (local $bytes i32)
+    (global.set $writepos (i32.add (global.get $writepos) (i32.div_u (global.get $writebits) (i32.const 8) ) ) )
+    (global.set $writebits (i32.add (i32.rem_u (global.get $writebits) (i32.const 8) ) (global.get $writesize) ) )
+    (local.set $bytes (i32.and
+      (i32.rotl
+        (call $rbo (i32.load (global.get $writepos) ) )
+        (global.get $writebits)
+      )
+      (i32.xor (global.get $writemask) (i32.const -1) )
+    ) )
+    (local.set $bytes (i32.rotr
+      (i32.xor (local.get $bytes) (i32.and (call $pop) (global.get $writemask) ) )
+      (global.get $writebits)
+    ) )
+    (i32.store (global.get $writepos) (call $rbo (local.get $bytes) ) )
   )
 
   (func $add_instr
@@ -813,6 +855,14 @@
 
   (func $rem_instr
     (call $push (i32.rem_s (call $pop) (call $pop) ) )
+  )
+
+  (func $load8s_instr
+    (call $push (i32.load8_s (call $abs (call $pop) ) ) )
+  )
+
+  (func $load16s_instr
+    (call $push (i32.load16_s (call $abs (call $pop) ) ) )
   )
 
   (func $itof_instr
@@ -837,6 +887,10 @@
 
   (func $ffloor_instr
     (call $fpush (f32.floor (call $fpop) ) )
+  )
+
+  (func $store16_instr
+    (i32.store16 (call $abs (call $pop) ) (call $pop) )
   )
 
   (func $ftoi_instr

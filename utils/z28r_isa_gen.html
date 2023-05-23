@@ -83,8 +83,8 @@
 
       const opcodes = [
         "halt", "sleep", "vsync", null, "jump", "jumpifz", null, "endcall", "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
-        "lit", "get", "stackptr", "load", "load8u", "load8s", null, "loadbit", "drop", "set", "inc", "store", "store8", "setbit", "clearbit", "flipbit",
-        "add", "sub", "mult", "div", "rem", null, null, "itof", "fadd", "fsub", "fmult", "fdiv", "ffloor", null, null, "ftoi",
+        "lit", "get", "stackptr", "load", "load8u", "setread", "skipread", "read", "drop", "set", "inc", "store", "store8", "setwrite", "skipwrite", "write",
+        "add", "sub", "mult", "div", "rem", "load8s", "load16s", "itof", "fadd", "fsub", "fmult", "fdiv", "ffloor", null, "store16", "ftoi",
         "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", null, null, null, null, null
       ]
 

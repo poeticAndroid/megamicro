@@ -17,9 +17,9 @@ ext intToStr    0x502c 3 0 ; intToStr int base dest
 ext strLen      0x5030 2 1 ; strLen:len str max
 ext memCopy     0x5034 3 0 ; memCopy src dest len
 ext fill        0x5038 3 0 ; fill val dest len
-ext open        0x503c 3 1 ; open:bytes cmd path bytes
-ext read        0x5040 2 1 ; read:bytes dest max
-ext write       0x5044 2 1 ; write:bytes src len
+ext openFile        0x503c 3 1 ; open:bytes cmd path bytes
+ext readFile        0x5040 2 1 ; read:bytes dest max
+ext writeFile       0x5044 2 1 ; write:bytes src len
 ```
 
 *not yet implemented
