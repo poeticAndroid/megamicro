@@ -418,31 +418,127 @@ fn readLn dest max
   let start = dest
   let end = sub add dest + max - 1
   while gt load8u dest > 0x1f
+    inc dest += 1
+  end
+  while lt dest < end
+    store8 dest 0
+    inc dest += 1
+  end
+  store8 dest 0
+  let dest = start
+  while load8u dest
     printChr load8u dest
     inc dest += 1
   end
   while eqz done
-    printChr 0x9e
+    printChr 0x20
     printChr 0x08
-    while eqz load8u 0x40004b04
+    store8 0x40004bff xor -1 load8u 0x40004bff
+    store8 0x40004bfe xor -1 load8u 0x40004bfe
+    if load8u dest
+      printChr load8u dest
+    else
+      printChr 0x20
+    end
+    store8 0x40004bff xor -1 load8u 0x40004bff
+    store8 0x40004bfe xor -1 load8u 0x40004bfe
+    printChr 0x08
+    while eqz load 0x40004b04
       vsync
     end
-    if eq load8u 0x40004b05 == 0x08
-      if gt dest > start
+    if eq load8u 0x40004b06 == 0x23 ; End
+      while load8u dest
+        printChr load8u dest
+        inc dest += 1
+      end
+    end
+    if eq load8u 0x40004b06 == 0x24 ; Home
+      if load8u dest
+        printChr load8u dest
+      else
+        printChr 0x20
+      end
+      printChr 0x08
+      while gt dest > start
         printChr 0x08
-        printChr 0x20
-        printChr 0x20
+        inc dest += -1
+      end
+    end
+    if eq load8u 0x40004b06 == 0x25 ; Left
+      if gt dest > start
+        if load8u dest
+          printChr load8u dest
+        else
+          printChr 0x20
+        end
         printChr 0x08
         printChr 0x08
         inc dest += -1
       end
     end
-    if eq load8u 0x40004b05 == 0x0a
-      printChr 0x20
+    if eq load8u 0x40004b06 == 0x26 ; Up
+      let done = load8u 0x40004802
+      if load8u dest
+        printChr load8u dest
+      else
+        printChr 0x20
+      end
+      printChr 0x08
+      while done
+        if gt dest > start
+          printChr 0x08
+          inc dest += -1
+        end
+        inc done += -1
+      end
+    end
+    if eq load8u 0x40004b06 == 0x27 ; Right
+      if load8u dest
+        printChr load8u dest
+        inc dest += 1
+      end
+    end
+    if eq load8u 0x40004b06 == 0x28 ; Down
+      let done = load8u 0x40004802
+      while done
+        if load8u dest
+          printChr load8u dest
+          inc dest += 1
+        end
+        inc done += -1
+      end
+    end
+    if eq load8u 0x40004b05 == 0x08 ; Backspace
+      if gt dest > start
+        printChr 0x08
+        printChr 0x20
+        if load8u dest
+          printChr load8u dest
+        else
+          printChr 0x20
+        end
+        printChr 0x08
+        printChr 0x08
+        if load8u dest
+          inc dest += -1
+          store8 dest 0x20
+        else
+          inc dest += -1
+          store8 dest 0
+        end
+      end
+    end
+    if eq load8u 0x40004b05 == 0x0a ; Enter
+      if load8u dest
+        printChr load8u dest
+      else
+        printChr 0x20
+        printChr 0x08
+      end
       printChr 0x0a
       let done = true
     end
-    if gt load8u 0x40004b05 > 0x1f
+    if gt load8u 0x40004b05 > 0x1f ; any printable
       if lt dest < end
         store8 dest load8u 0x40004b05
         printChr load8u dest
@@ -450,6 +546,10 @@ fn readLn dest max
       end
     end
     store 0x40004b04 0
+  end
+  while gt load8u dest > 0x1f
+    printChr load8u dest
+    inc dest += 1
   end
   store8 dest 0
 end
