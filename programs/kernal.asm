@@ -535,7 +535,6 @@ fn readLn dest max
         printChr 0x20
         printChr 0x08
       end
-      printChr 0x0a
       let done = true
     end
     if gt load8u 0x40004b05 > 0x1f ; any printable
@@ -552,6 +551,7 @@ fn readLn dest max
     inc dest += 1
   end
   store8 dest 0
+  printChr 0x0a
 end
 
 ;;; strings ;;;
