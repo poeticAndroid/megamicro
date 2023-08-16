@@ -294,29 +294,51 @@ fn scroll px
   if eqz px
     endcall
   end
-  vars adr offset end h bg i
-  let adr = or 0x40000000 | load 0x40004808
-  let end = add adr + 0x4800
+  vars start edge end clear keep h bg i
+  let start = or 0x40000000 | load 0x40004808
+  let end = add start + 0x4800
   let h = mult 8 * load8u 0x40004803
-  let offset = mult px * div 0x4800 / h
+  let clear = mult px * div 0x4800 / h
+  let keep = sub 0x4800 - clear
   let bg = load8u 0x40004bfe
-  let i = 32
-  while i
-    inc i -1
-    pset i 0 bg
-  end
-  let bg = load adr
+  if gt clear > 0
+    if gt clear > 0x4800
+      let bg = load 0x40004bfc
+      cls
+      store 0x40004bfc bg
+      endcall
+    end
+    let i = 32
+    while i
+      inc i -1
+      pset i 0 bg
+    end
+    let bg = load start
 
-  inc end sub 0 - offset
-  while lt adr end
-    store adr load add adr + offset
-    inc adr 4
-  end
+    let edge = add start + clear
+    memCopy edge start keep
+    let edge = add start + keep
+    fill bg edge clear
+  else
+    let clear = mult clear * -1
+    if gt clear > 0x4800
+      let bg = load 0x40004bfc
+      cls
+      store 0x40004bfc bg
+      endcall
+    end
+    let keep = sub 0x4800 - clear
+    let edge = add start + clear
+    memCopy start edge keep
 
-  inc end offset
-  while lt adr end
-    store adr bg
-    inc adr 4
+    let i = 32
+    while i
+      inc i -1
+      pset i 0 bg
+    end
+    let bg = load start
+
+    fill bg start clear
   end
 end
 
@@ -327,13 +349,9 @@ fn printChr char
 
   if eq char == 0x08 ; backspace
     inc col -1
-    if lt col < 0
-      let col = add load8u 0x40004802 + col
+    while lt col < 0
+      inc col load8u 0x40004802
       inc row -1
-      if lt row < 0
-        let col = 0
-        let row = 0
-      end
       store8 0x40004bfd row
     end
     store8 0x40004bfc col
@@ -374,6 +392,10 @@ fn printChr char
     inc row 1
     inc col -1
     inc col sub 0 - lastCol
+  end
+  if lt row < 0
+    scroll mult 8 * row
+    let row = 0
   end
   if gt row > lastRow
     scroll mult 8 * sub row - lastRow
@@ -668,7 +690,7 @@ fn fill val dest len
     inc dest 4
     inc len -4
   end
-  if len
+  while len
     store8 dest val
     inc dest 1
     inc len -1

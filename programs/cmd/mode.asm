@@ -47,5 +47,7 @@ fn main args
 end
 
 data help_str
-  "Usage: mode [screen mode] [bg color] [fg color]\n\0"
+  "Usage:\n"
+  "  mode [screen mode] [bg color] [fg color]\n"
+  0
 end

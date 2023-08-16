@@ -8,9 +8,9 @@ fn main args
   vars i
   let i = 32
   while lt i < 160
-    printChr i
     intToStr i 16 int
     printStr int 4
+    printChr i
     printChr 0x20
     inc i += 1
   end
