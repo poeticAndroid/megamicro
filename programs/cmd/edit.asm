@@ -4,10 +4,10 @@ ext cls       0x5008 0
 ext printChr  0x501c 1
 ext printStr  0x5020 2
 ext readLn    0x5024 2
-ext strLen    0x5030 2 1 ; strLen:len str max
+ext strLen    0x5030 2
 ext openFile  0x503c 3
 ext readFile  0x5040 2
-ext writeFile 0x5044 2 1 ; write:bytes src len
+ext writeFile 0x5044 2
 ext memCopy   0x5034 3
 
 fn main args
@@ -55,6 +55,7 @@ fn edit dest
     inc end += 1
   end
   inc end += 1
+  let dest = goto_bottom dest
   while eqz done
     if gt dest > end
       let dest = end
@@ -198,19 +199,7 @@ fn edit dest
     end
     store 0x40004b04 0
   end
-  while load8u dest
-    printChrOvr load8u dest
-    inc dest += 1
-    if eq load8u 0x40004bfd == sub load8u 0x40004803 - 1
-      while gt load8u dest > 0x1f
-        printChr load8u dest
-        inc dest += 1
-      end
-      while load8u dest
-        inc dest += 1
-      end
-    end
-  end
+  let dest = goto_bottom dest
   printChr 0x0a
   printChr 0x0a
   return dirty
@@ -277,6 +266,21 @@ fn endline start
     printChr 0x08
     inc dest += -1
   end
+end
+
+fn goto_bottom dest
+  while load8u dest
+    printChrOvr load8u dest
+    inc dest += 1
+    if eq load8u 0x40004bfd == sub load8u 0x40004803 - 1
+      while gt load8u dest > 0x1f
+        printChr load8u dest
+        inc dest += 1
+      end
+      return dest
+    end
+  end
+  return dest
 end
 
 data help_str
