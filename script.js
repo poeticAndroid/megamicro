@@ -9,7 +9,7 @@
     running = false,
     waitingforuser = false,
     sleep = false,
-    // pasteBin = document.querySelector("#pasteBin"),
+    textEnabled = true,
     kbEnabled = true,
     kbBuffer = [],
     kbGfx,
@@ -43,7 +43,7 @@
     canvas.addEventListener("mousemove", onUser)
     canvas.addEventListener("mouseout", e => canvas.style.cursor = "crosshair")
 
-    document.querySelector("#pasteBin").addEventListener("focus", e => kbEnabled = false)
+    document.querySelector("#pasteBin").addEventListener("focus", e => textEnabled = false)
     document.querySelector("#pasteBin").addEventListener("keyup", pasteBin)
 
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "16"
@@ -289,6 +289,7 @@
       mem[0x4b0a] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
       if (mem[0x4b0b] = e.buttons) {
         kbEnabled = true
+        textEnabled = true
         canvas.style.cursor = "none"
       }
     }
@@ -307,28 +308,30 @@
           if (e.key === "Backspace") {
             kbBuffer.push(0x08)
           }
+          if (e.key === "Escape") {
+            kbBuffer.push(0x1b)
+          }
           if (e.key === "Tab") {
             kbBuffer.push(0x09)
             e.preventDefault()
           }
-          if (e.key === "Enter") {
-            kbBuffer.push(0x0a)
-          }
-          if (e.key === "Escape") {
-            kbBuffer.push(0x1b)
-          }
-          if (e.key.length === 1) {
-            if (kbGfx) {
-              let char = e.keyCode
-              if (char < 0x40) {
-                char += 0x8
+          if (textEnabled) {
+            if (e.key === "Enter") {
+              kbBuffer.push(0x0a)
+            }
+            if (e.key.length === 1) {
+              if (kbGfx) {
+                let char = e.keyCode
+                if (char < 0x40) {
+                  char += 0x8
+                }
+                while (char < 0x80) {
+                  char += 0x20
+                }
+                kbBuffer.push(char)
+              } else {
+                kbBuffer.push(e.key.charCodeAt(0))
               }
-              while (char < 0x80) {
-                char += 0x20
-              }
-              kbBuffer.push(char)
-            } else {
-              kbBuffer.push(e.key.charCodeAt(0))
             }
           }
         }
