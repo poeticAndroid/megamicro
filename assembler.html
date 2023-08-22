@@ -30,6 +30,7 @@
   <article>
     <pre id="binDump"> (Select a file!) </pre>
   </article>
+  <script src="disk.js"></script>
   <script>
     if (!localStorage.getItem("D0:/main.asm"))
       localStorage.setItem("D0:/main.asm", "3b3b207a3238722061736d0a6a756d70206d61696e0a657874207072696e744368722030783530316320310a657874207072696e745374722030783530323020320a65787420726561644c6e20202030783530323420320a657874206f70656e46696c652030783530336320330a657874207265616446696c652030783530343020320a0a646174612070726f6d70745f73747220225c6e50726f6772616d3a205c30220a656e640a666e206d61696e20617267730a202076617273206c656e2c206c730a20206c6574206c656e203d20747275650a20206c6574206c73203d206c6f6164206275666665720a20207768696c65206c656e0a2020202073746f726520627566666572206c730a202020206c6574206c656e203d206f70656e46696c6520307832303732363936342062756666657220300a202020207265616446696c6520627566666572206c656e0a202020207072696e7453747220627566666572202d310a202020207072696e745374722070726f6d70745f737472202d310a2020202073746f72652062756666657220300a20202020726561644c6e206275666665722031360a202020206c6574206c656e203d206f70656e46696c6520307832303734363536372062756666657220300a202020206966206c656e0a2020202020207265616446696c6520627566666572206c656e0a20202020202064726f702072756e0a20202020656e640a202020207072696e7443687220307830610a2020656e640a0a202072657475726e203430340a656e640a666e2072756e0a20202d310a202072657475726e206578656320627566666572203120300a656e640a0a646174612062756666657220222e5c30220a656e640a")
@@ -125,46 +126,6 @@
       }
     }
 
-    function load(file, bin = false) {
-      let src = localStorage.getItem(file)
-      console.log("load", file, src)
-      let out = ""
-      if (bin) out = new Uint8Array(src.length / 2)
-      for (let i = 0; i < src.length; i += 2) {
-        if (bin) out[i / 2] = parseInt(src.slice(i, i + 2), 16)
-        else out += String.fromCharCode(parseInt(src.slice(i, i + 2), 16))
-      }
-      return out
-    }
-    function save(file, data) {
-      let src = ""
-      for (let i = 0; i < data.length; i++) {
-        if (typeof data === "string") src += ("00" + data.charCodeAt(i).toString(16)).slice(-2)
-        else src += ("00" + data[i].toString(16)).slice(-2)
-      }
-      console.log("save", file, src)
-      localStorage.setItem(file, src)
-      localStorage.setItem("date:" + file, Date.now())
-    }
-    function diskPath(path) {
-      let dirs = path.split("/")
-      let valid = []
-      if (!dirs[dirs.length - 1]) dirs.pop()
-      for (let dir of dirs) {
-        if (dir === ".") {
-        } else if (dir === "..") {
-          valid.pop()
-        } else if (dir.includes(":")) {
-          valid = []
-        } else if (dir) {
-          let name = (dir.replaceAll(" ", "_") + ".").split(".")
-          valid.push(name[0].toLowerCase().slice(0, 8) + ".".slice(0, name[1].length) + name[1].toLowerCase().slice(0, 3))
-        } else {
-          valid = []
-        }
-      }
-      return "/" + valid.join("/")
-    }
   </script>
   <script src="/live.js"></script>
 </body>

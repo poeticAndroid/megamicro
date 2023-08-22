@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel data</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <p>
+    <select id="fileSel">
+      <option class="sep"> --- </option>
+      <option value="%new" class="newfile"><em>New file..</em></option>
+    </select>
+    <button id="deleteBtn">❌</button>
+    <button id="compileBtn">🧮 Compile!</button>
+  </p>
+  <p><select name="mode" id="mode">
+      <option value="0">0: 2 colors (black & white)</option>
+      <option value="1">1: 4 colors (tall pixels)</option>
+      <option value="2">2: 16 colors (color)</option>
+      <option value="3">3: 256 colors (tall pixels)</option>
+      <option value="4">4: 2 colors (light & dark)</option>
+      <option value="5">5: 4 colors (wide pixels)</option>
+      <option value="6">6: 16 colors (grayscale)</option>
+      <option value="7">7: 256 colors (wide pixels)</option>
+    </select></p>
+  <p> <canvas></canvas> </p>
+  <script src="disk.js"></script>
+  <script>
+    let files = []
+    let canvas = document.getElementsByTagName("canvas")[0]
+    let g = canvas.getContext("2d")
+    var img, pxData
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const file = localStorage.key(i)
+      if (file.slice(0, 10) === "date:date:") localStorage.removeItem(file)
+      if (file.slice(0, 4) === "D0:/" && file.slice(-3) === ".px") {
+        files.push(file)
+      }
+    }
+    files.sort()
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      let opt = document.createElement("option")
+      opt.setAttribute("value", file)
+      opt.textContent = file
+      document.querySelector("#fileSel").insertBefore(opt, document.querySelector(".sep"))
+    }
+    document.querySelector("#fileSel").addEventListener("change", e => {
+      if (e.target.value === "%new") {
+        let file = prompt("Filename:", "D0:/")
+        if (!file) return location.reload()
+        if (file.slice(-3) !== ".px") file += ".px"
+        file = "D0:" + diskPath(file)
+        localStorage.setItem(file, "00004024")
+        location.replace("#" + file)
+        location.reload()
+      } else {
+        location.replace("#" + e.target.value)
+        decode(load(e.target.value, true))
+      }
+    })
+    document.querySelector("#deleteBtn").addEventListener("click", e => {
+      let pxFile = document.querySelector("#fileSel").value
+      if (confirm(`Are you sure you want to delete\n${pxFile} ?😱`)) {
+        localStorage.removeItem(pxFile)
+        localStorage.removeItem("date:" + pxFile)
+        location.replace("#")
+      }
+    })
+    document.querySelector("#compileBtn").addEventListener("click", e => {
+      compile()
+    })
+
+    if (location.hash.replace("#", "")) {
+      document.querySelector("#fileSel").value = location.hash.replace("#", "")
+      decode(load(document.querySelector("#fileSel").value, true))
+    }
+
+    function compile() {
+      pxData = null
+      let mode = parseInt(document.querySelector("#mode").value) & 7
+      save(document.querySelector("#fileSel").value, encode(mode))
+    }
+
+
+
+
+    function init() {
+      img = new Image()
+      img.addEventListener("load", function () {
+        canvas.width = Math.round(img.width / 8) * 8
+        canvas.height = Math.round(img.height / 8) * 8
+        g.drawImage(img, 0, 0, canvas.width, canvas.height)
+      })
+      document.body.addEventListener("dragover", fileDrop)
+      document.body.addEventListener("drop", fileDrop)
+    }
+    init()
+
+    function encode(mode) {
+      let data = [mode, 0, canvas.width / 8, canvas.height / 8]
+      let bits = ""
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          let c = pget(x, y)
+          let g = zeropad(c[1].toString(2), 8)
+          let r = zeropad(c[0].toString(2), 8)
+          let b = zeropad(c[2].toString(2), 8)
+          switch (mode) {
+            case 0:
+              bits += g.slice(0, 1)
+              break
+            case 1:
+              bits += g.slice(0, 2)
+              break
+            case 2:
+              bits += g.slice(0, 2)
+              bits += r.slice(0, 1)
+              bits += b.slice(0, 1)
+              break
+            case 3:
+              bits += g.slice(0, 3)
+              bits += r.slice(0, 3)
+              bits += b.slice(0, 2)
+              break
+
+            case 4:
+              bits += 1 - parseInt(g.slice(0, 1))
+              break
+            case 5:
+              bits += g.slice(0, 2)
+              break
+            case 6:
+              bits += g.slice(0, 4)
+              break
+            case 7:
+              bits += g.slice(0, 3)
+              bits += r.slice(0, 3)
+              bits += b.slice(0, 2)
+              break
+          }
+          if (bits.length >= 8) {
+            let byte = parseInt(bits.slice(0, 8), 2)
+            bits = bits.slice(8)
+            data.push(byte)
+          }
+        }
+        // data += "\n "
+      }
+      return data
+    }
+
+    function decode(data) {
+      let mode = data[0]
+      document.querySelector("#mode").value = mode
+      canvas.width = data[2] * 8
+      canvas.height = data[3] * 8
+      let bits = "", i = 4
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          if (!bits) bits = zeropad((data[i++] || 0).toString(2), 8)
+          let c = [255, 255, 255, 255]
+          switch (mode) {
+            case 0:
+              c[1] = bitsToByte(bits.slice(0, 1))
+              c[0] = bitsToByte(bits.slice(0, 1))
+              c[2] = bitsToByte(bits.slice(0, 1))
+              bits = bits.slice(1)
+              break
+            case 1:
+              c[1] = bitsToByte(bits.slice(0, 2))
+              c[0] = bitsToByte(bits.slice(0, 1))
+              c[2] = bitsToByte(bits.slice(1, 2))
+              bits = bits.slice(2)
+              break
+            case 2:
+              c[1] = bitsToByte(bits.slice(0, 2))
+              c[0] = bitsToByte(bits.slice(2, 3))
+              c[2] = bitsToByte(bits.slice(3, 4))
+              bits = bits.slice(4)
+              break
+            case 3:
+              c[1] = bitsToByte(bits.slice(0, 3))
+              c[0] = bitsToByte(bits.slice(3, 6))
+              c[2] = bitsToByte(bits.slice(6, 8))
+              bits = bits.slice(8)
+              break
+
+            case 4:
+              c[1] = 255 - bitsToByte(bits.slice(0, 1))
+              c[0] = 255 - bitsToByte(bits.slice(0, 1))
+              c[2] = 255 - bitsToByte(bits.slice(0, 1))
+              bits = bits.slice(1)
+              break
+            case 5:
+              c[1] = bitsToByte(bits.slice(0, 2))
+              c[0] = bitsToByte(bits.slice(0, 1))
+              c[2] = bitsToByte(bits.slice(1, 2))
+              bits = bits.slice(2)
+              break
+            case 6:
+              c[1] = bitsToByte(bits.slice(0, 4))
+              c[0] = bitsToByte(bits.slice(0, 4))
+              c[2] = bitsToByte(bits.slice(0, 4))
+              bits = bits.slice(4)
+              break
+            case 7:
+              c[1] = bitsToByte(bits.slice(0, 3))
+              c[0] = bitsToByte(bits.slice(3, 6))
+              c[2] = bitsToByte(bits.slice(6, 8))
+              bits = bits.slice(8)
+              break
+          }
+          pset(x, y, c)
+        }
+      }
+      if (data.length > i) console.warn(data.length - i, "bytes left to decode!")
+      if (data.length < i) console.warn(i - data.length, "bytes missing to decode!")
+      return data
+    }
+
+    function zeropad(n, l) {
+      n = "" + n
+      while (n.length < l) n = "0" + n
+      return n
+    }
+
+    function bitsToByte(bits) {
+      if (!bits) bits = "0"
+      while (bits.length < 8) {
+        bits += bits
+      }
+      return parseInt(bits.slice(0, 8), 2)
+    }
+
+    function pget(x, y) {
+      var i
+      if (!pxData) {
+        pxData = g.getImageData(0, 0, canvas.width, canvas.height)
+      }
+      i = x * 4 + pxData.width * 4 * y
+      return pxData.data.slice(i, i + 4)
+    }
+
+    function pset(x, y, c) {
+      g.fillStyle = "rgb(" + c[0] + ", " + c[1] + ", " + c[2] + ")"
+      g.fillRect(x, y, 1, 1)
+    }
+
+    function fileDrop(e) {
+      var file, fileReader, i
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.dataTransfer) {
+        for (i = 0; i < e.dataTransfer.files.length; i++) {
+          file = e.dataTransfer.files[i]
+          console.log(file)
+          fileReader = new FileReader()
+          fileReader.onload = function (e) {
+            img.src = e.target.result
+            tickY = -32
+          }
+          fileReader.readAsDataURL(file)
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

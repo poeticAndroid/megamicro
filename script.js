@@ -506,26 +506,6 @@
     }
   }
 
-  function diskPath(path) {
-    let dirs = path.split("/")
-    let valid = []
-    if (!dirs[dirs.length - 1]) dirs.pop()
-    for (let dir of dirs) {
-      if (dir === ".") {
-      } else if (dir === "..") {
-        valid.pop()
-      } else if (dir.includes(":")) {
-        valid = []
-      } else if (dir) {
-        let name = (dir.replaceAll(" ", "_") + ".").split(".")
-        valid.push(name[0].toLowerCase().slice(0, 8) + ".".slice(0, name[1].length) + name[1].toLowerCase().slice(0, 3))
-      } else {
-        valid = []
-      }
-    }
-    return "/" + valid.join("/")
-  }
-
   function sendFileInfo(dir, entry) {
     // filename.ext/ 9876543210 yyymmddhhmmss
     let buf = new Uint8Array(40)
