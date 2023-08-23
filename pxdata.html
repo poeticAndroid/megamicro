@@ -74,6 +74,7 @@
         localStorage.removeItem(pxFile)
         localStorage.removeItem("date:" + pxFile)
         location.replace("#")
+        location.reload()
       }
     })
     document.querySelector("#compileBtn").addEventListener("click", e => {
@@ -88,7 +89,9 @@
     function compile() {
       pxData = null
       let mode = parseInt(document.querySelector("#mode").value) & 7
-      save(document.querySelector("#fileSel").value, encode(mode))
+      let data = encode(mode)
+      save(document.querySelector("#fileSel").value, data)
+      location.reload()
     }
 
 
