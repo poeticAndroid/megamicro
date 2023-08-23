@@ -16,9 +16,7 @@
       <option value="%new" class="newfile"><em>New file..</em></option>
     </select>
     <button id="deleteBtn">❌</button>
-    <button id="compileBtn">🧮 Compile!</button>
-  </p>
-  <p><select name="mode" id="mode">
+    <select name="mode" id="mode">
       <option value="0">0: 2 colors (black & white)</option>
       <option value="1">1: 4 colors (tall pixels)</option>
       <option value="2">2: 16 colors (color)</option>
@@ -27,7 +25,9 @@
       <option value="5">5: 4 colors (wide pixels)</option>
       <option value="6">6: 16 colors (grayscale)</option>
       <option value="7">7: 256 colors (wide pixels)</option>
-    </select></p>
+    </select>
+    <button id="compileBtn">💾 Encode!</button>
+  </p>
   <p> <canvas></canvas> </p>
   <p> <a href="javascript:history.back()">///</a>
     <a href="https://github.com/poeticAndroid/megamicro/tree/master/docs" target="_blank">docs</a>
@@ -91,10 +91,28 @@
       let mode = parseInt(document.querySelector("#mode").value) & 7
       let data = encode(mode)
       save(document.querySelector("#fileSel").value, data)
+      document.body.innerHTML = ""
       location.reload()
     }
 
 
+    function scale() {
+      let pagew = Math.min(1024, document.body.offsetWidth - 16)
+      let wk = 1, hk = 1
+      while (canvas.width * wk < pagew) {
+        wk++
+        hk++
+      }
+      while (canvas.width * wk > pagew) {
+        wk--
+        hk--
+      }
+      let mode = document.querySelector("#mode").value
+      if (mode == 1 || mode == 3) hk *= 2
+      if (mode == 5 || mode == 7) hk /= 2
+      canvas.style.width = (canvas.width * wk) + "px"
+      canvas.style.height = (canvas.height * hk) + "px"
+    }
 
 
     function init() {
@@ -103,6 +121,7 @@
         canvas.width = Math.round(img.width / 8) * 8
         canvas.height = Math.round(img.height / 8) * 8
         g.drawImage(img, 0, 0, canvas.width, canvas.height)
+        scale()
       })
       document.body.addEventListener("dragover", fileDrop)
       document.body.addEventListener("drop", fileDrop)
@@ -167,11 +186,12 @@
       document.querySelector("#mode").value = mode
       canvas.width = data[2] * 8
       canvas.height = data[3] * 8
+      scale()
       let bits = "", i = 4
       for (let y = 0; y < canvas.height; y++) {
         for (let x = 0; x < canvas.width; x++) {
           if (!bits) bits = zeropad((data[i++] || 0).toString(2), 8)
-          let c = [255, 255, 255, 255]
+          let c = [0, 0, 0, 255]
           switch (mode) {
             case 0:
               c[1] = bitsToByte(bits.slice(0, 1))
@@ -199,9 +219,9 @@
               break
 
             case 4:
-              c[1] = 255 - bitsToByte(bits.slice(0, 1))
-              c[0] = 255 - bitsToByte(bits.slice(0, 1))
-              c[2] = 255 - bitsToByte(bits.slice(0, 1))
+              c[1] = 191 - bitsToByte(bits.slice(0, 1)) / 2
+              // c[0] = 255 - bitsToByte(bits.slice(0, 1))
+              // c[2] = 255 - bitsToByte(bits.slice(0, 1))
               bits = bits.slice(1)
               break
             case 5:
