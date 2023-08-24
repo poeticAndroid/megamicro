@@ -99,6 +99,8 @@
     function scale() {
       let pagew = Math.min(1024, document.body.offsetWidth - 16)
       let wk = 1, hk = 1
+      if (!canvas.width) canvas.width = 8
+      if (!canvas.height) canvas.height = 8
       while (canvas.width * wk < pagew) {
         wk++
         hk++

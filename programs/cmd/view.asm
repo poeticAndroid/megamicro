@@ -17,8 +17,12 @@ fn main args
   
   let len = openFile 0x20746567 args 0 ; get
   if len
+    store 0x40004bfc 0
     readFile 0x40004800 1
-    readFile 0x40000000 3
+    readFile 0x40004bfe 1
+    store8 0x40004bff xor -1 load8u 0x40004bfe
+    readFile 0x40000000 2
+    
     while load 0x40004b00
       readFile 0x40000000 0x4800
       vsync
