@@ -9,6 +9,7 @@ function load(file, bin = false) {
   }
   return out
 }
+
 function save(file, data) {
   let src = ""
   for (let i = 0; i < data.length; i++) {
@@ -19,6 +20,7 @@ function save(file, data) {
   localStorage.setItem(file, src)
   localStorage.setItem("date:" + file, Date.now())
 }
+
 function diskPath(path) {
   let dirs = path.split("/")
   let valid = []
@@ -39,3 +41,7 @@ function diskPath(path) {
   return "/" + valid.join("/")
 }
 
+function dirname(path) {
+  if (path.includes("/")) return path.slice(0, path.lastIndexOf("/"))
+  return path
+}

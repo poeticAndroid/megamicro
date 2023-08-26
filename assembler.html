@@ -52,7 +52,7 @@
     }
     document.querySelector("#fileSel").addEventListener("change", e => {
       if (e.target.value === "%new") {
-        let file = prompt("Filename:", "D0:/")
+        let file = prompt("Filename:", dirname(location.hash.replace("#", "") || "D0:") + "/")
         if (!file) return location.reload()
         file = file.replace(".prg", "")
         if (file.slice(-4) !== ".asm") file += ".asm"

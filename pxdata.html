@@ -56,7 +56,7 @@
     }
     document.querySelector("#fileSel").addEventListener("change", e => {
       if (e.target.value === "%new") {
-        let file = prompt("Filename:", "D0:/")
+        let file = prompt("Filename:", dirname(location.hash.replace("#", "") || "D0:") + "/")
         if (!file) return location.reload()
         if (file.slice(-3) !== ".px") file += ".px"
         file = "D0:" + diskPath(file)
