@@ -336,7 +336,7 @@
           }
         }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "q") {
+      if ((e.ctrlKey || e.metaKey || e.altKey) && e.key === "q") {
         cpu.break()
         running = true
       }
