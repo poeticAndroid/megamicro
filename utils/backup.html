@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backup / Restore</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <h1>Backup / Restore</h1>
+  <p><textarea autofocus spellcheck=false id="json" cols="80" rows="20">{}</textarea></p>
+  <script>
+    backup()
+    document.getElementById("json").addEventListener("change", restore)
+    function backup() {
+      let out = {}
+      let keys = []
+      for (let i = 0; i < localStorage.length; i++) {
+        keys.push(localStorage.key(i))
+      }
+      keys.sort()
+      for (let key of keys) {
+        out[key] = localStorage.getItem(key)
+      }
+      document.getElementById("json").value = JSON.stringify(out, null, 2)
+    }
+    function restore() {
+      let json = JSON.parse(document.getElementById("json").value)
+      for (const key in json) {
+        localStorage.setItem(key, json[key])
+      }
+    }
+  </script>
+</body>
+
+</html>
