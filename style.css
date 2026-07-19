@@ -12,25 +12,30 @@ canvas {
   image-rendering: pixelated;
   padding: .5em;
 }
+
 textarea {
   background-color: rgba(0, 0, 255, 10%);
   color: inherit;
   padding: .5em;
 }
+
 input {
   max-width: 8em;
 }
+
 section {
   overflow: hidden;
   transition-duration: 1s;
   max-height: 768px;
 }
+
 article {
   display: inline-block;
   overflow: hidden;
   text-align: left;
   vertical-align: top;
 }
+
 pre {
   width: 20em;
 }
@@ -43,12 +48,23 @@ pre {
   max-height: 0;
 }
 
+#pasteBin {
+  position: absolute;
+  cursor: crosshair;
+  border: none;
+  padding: 0px;
+  opacity: 0;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     background-color: #111;
     color: #eee;
   }
-  a,a:link,a:visited{
+
+  a,
+  a:link,
+  a:visited {
     color: #9cf;
   }
 }

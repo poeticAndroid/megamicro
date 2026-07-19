@@ -9,7 +9,7 @@
     running = false,
     waitingforuser = false,
     sleep = false,
-    textEnabled = true,
+    textEnabled = false,
     kbEnabled = true,
     kbBuffer = [],
     kbGfx,
@@ -28,7 +28,8 @@
     gmode = -1,
     nextFrame = 1024,
     pixelCache = [],
-    bitsprpx = [1, 2, 4, 8]
+    bitsprpx = [1, 2, 4, 8],
+    pasteBinEl = document.querySelector("#pasteBin")
 
   let uint8 = new Uint8Array(4),
     int32 = new Int32Array(uint8.buffer),
@@ -38,13 +39,13 @@
     addEventListener("resize", resize); resize()
     addEventListener("keydown", onUser)
     addEventListener("keyup", onUser)
-    canvas.addEventListener("mousedown", onUser)
-    canvas.addEventListener("mouseup", onUser)
-    canvas.addEventListener("mousemove", onUser)
-    canvas.addEventListener("mouseout", e => canvas.style.cursor = "crosshair")
+    pasteBinEl.addEventListener("mousedown", onUser)
+    pasteBinEl.addEventListener("mouseup", onUser)
+    pasteBinEl.addEventListener("mousemove", onUser)
+    pasteBinEl.addEventListener("mouseout", e => pasteBinEl.style.cursor = "crosshair")
 
-    document.querySelector("#pasteBin").addEventListener("focus", e => textEnabled = false)
-    document.querySelector("#pasteBin").addEventListener("keyup", pasteBin)
+    pasteBinEl.addEventListener("focus", e => textEnabled = false)
+    pasteBinEl.addEventListener("keydown", pasteBin)
 
     document.querySelector("#speedTxt").value = localStorage.getItem("?speed") || "16"
     document.querySelector("#speedTxt").addEventListener("change", changeSpeed); changeSpeed()
@@ -70,6 +71,8 @@
     console.log("mem", mem)
     console.log("img", img)
     setTimeout(loadROM, 256)
+    setTimeout(resize, 1024)
+    setTimeout(resize, 8192)
   } init()
 
   async function loadCPU(path, imports) {
@@ -289,8 +292,8 @@
       mem[0x4b0a] = Math.max(0, (e.offsetY / e.target.clientHeight) * 144)
       if (mem[0x4b0b] = e.buttons) {
         kbEnabled = true
-        textEnabled = true
-        canvas.style.cursor = "none"
+        //textEnabled = true
+        pasteBinEl.style.cursor = "none"
       }
     }
 
@@ -580,8 +583,10 @@
   }
 
   function pasteBin(e) {
-    kbBuffer.push(...(e.target.value.split("").map(c => c.charCodeAt(0))))
-    e.target.value = ""
+    setTimeout(() => {
+      kbBuffer.push(...(e.target.value.split("").map(c => c.charCodeAt(0))))
+      e.target.value = ""
+    })
   }
 
   function changeSpeed(e) {
@@ -671,6 +676,12 @@
       maxwidth = 1024
     }
     gmode = -1
+    setTimeout(() => {
+      pasteBinEl.style.left = canvas.offsetLeft + "px"
+      pasteBinEl.style.top = canvas.offsetTop + "px"
+      pasteBinEl.style.width = canvas.offsetWidth + "px"
+      pasteBinEl.style.height = canvas.offsetHeight + "px"
+    }, 20)
   }
 
   function toggleDebug(e) {
