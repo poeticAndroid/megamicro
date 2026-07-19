@@ -13,11 +13,11 @@ ext memCopy   0x5034 3
 fn main args
   vars len
   
-  if eqz args
+  if not args
     printStr help_str -1
     return 1
   end
-  if eqz load8u args
+  if not load8u args
     printStr help_str -1
     return 1
   end
@@ -29,7 +29,7 @@ fn main args
   end
   if edit buffer
     let len = strLen buffer -1
-    while eqz load8u input_str
+    while not load8u input_str
       printStr save_str -1
       readLn input_str 4
     end
@@ -56,10 +56,10 @@ fn edit dest
   end
   inc end += 1
   let dest = goto_bottom dest
-  while eqz done
+  while not done
     if gt dest > end
       let dest = end
-      while eqz load8u dest
+      while not load8u dest
         inc dest += -1
       end
       while load8u dest
@@ -76,7 +76,7 @@ fn edit dest
     cursor dest
     store8 0x40004bff xor -1 load8u 0x40004bff
     store8 0x40004bfe xor -1 load8u 0x40004bfe    
-    while eqz load 0x40004b04
+    while not load 0x40004b04
       vsync
     end
     cursor dest
@@ -166,7 +166,7 @@ fn edit dest
       end
     end
     if eq load8u 0x40004b05 == 0x0a ; Enter
-      if eqz load8u dest
+      if not load8u dest
         store dest 0
       end
       memCopy dest add dest + 1 sub end - dest
@@ -185,7 +185,7 @@ fn edit dest
       let done = true
     end
     if gt load8u 0x40004b05 > 0x1f ; any printable
-      if eqz load8u dest
+      if not load8u dest
         store dest 0
       end
       memCopy dest add dest + 1 sub end - dest

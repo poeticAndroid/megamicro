@@ -190,7 +190,7 @@
                 (if (i32.and (local.get $opcode) (i32.const 0x02) ) (then ;; $32 - $33
                   (if (i32.and (local.get $opcode) (i32.const 0x01) ) (then ;; $33
 
-                    (call $eqz_instr)
+                    (call $not_instr)
                     (br 7)
 
                   ) (else ;; $32
@@ -909,7 +909,7 @@
     (call $push (i32.gt_s (call $pop) (call $pop) ) )
   )
 
-  (func $eqz_instr
+  (func $not_instr
     (call $push (i32.eqz (call $pop) ) )
   )
 

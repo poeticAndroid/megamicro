@@ -8,10 +8,10 @@ ext readFile 0x5040 2
 fn main args
   vars len
   
-  if eqz args
+  if not args
     let args = buffer
   end
-  if eqz load8u args
+  if not load8u args
     let args = buffer
   end
   

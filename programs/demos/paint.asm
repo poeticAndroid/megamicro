@@ -18,7 +18,7 @@ fn main args
       vsync
     end
     if load8u 0x40004b0b ; mouse btn pressed
-      while or (eqz eq penX != mouseX) | (eqz eq penY != mouseY)
+      while or (not eq penX != mouseX) | (not eq penY != mouseY)
         if lt penX < mouseX
           inc penX += 1
         end

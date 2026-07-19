@@ -7,7 +7,7 @@ CPU instruction set
 **x0** | [halt](#halt)                                        | [lit](#literals):val                        | [add](#addn-a-b):n a b              | [eq](#eqbool-a-b):bool a b
 **x1** | [sleep](#sleep-ms) ms                                | [get](#getval-index):val index              | [sub](#subn-a-b):n a b              | [lt](#ltbool-a-b):bool a b
 **x2** | [vsync](#vsync)                                      | [stackptr](#stackptrnegadr):negadr          | [mult](#multn-a-b):n a b            | [gt](#gtbool-a-b):bool a b
-**x3** |                                                      | [load](#loadval-adr):val adr                | [div](#divn-a-b):n a b              | [eqz](#eqzbool-a):bool a
+**x3** |                                                      | [load](#loadval-adr):val adr                | [div](#divn-a-b):n a b              | [not](#notbool-a):bool a
 **x4** | [jump](#jump-adr) adr                                | [load8u](#load8uval-adr):val adr            | [rem](#remn-a-b):n a b              | [and](#andn-a-b):n a b
 **x5** | [jumpifz](#jumpifz-adr-val) adr val                  | [setread](#setread-adr-chsize) adr chsize   | [load8s](#load8sval-adr):val adr    | [or](#orn-a-b):n a b
 **x6** |                                                      | [skipread](#skipread-chunks) chunks         | [load16s](#load16sval-adr):val adr  | [xor](#xorn-a-b):n a b
@@ -203,7 +203,7 @@ Return 1 if `a` is less than `b`, else return 0.
 ### `gt:bool` `a` `b`
 Return 1 if `a` is greater than `b`, else return 0.
 
-### `eqz:bool` `a`
+### `not:bool` `a`
 Return 1 if `a` is zero, else return 0.
 
 ### `and:n` `a` `b`

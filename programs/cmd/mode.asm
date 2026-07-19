@@ -5,7 +5,7 @@ ext strToInt    0x5028 3 1 ; strToInt:int str base max
 
 
 fn main args
-  if eqz args
+  if not args
     printStr help_str -1
     return 1
   end

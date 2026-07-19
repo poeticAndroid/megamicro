@@ -55,7 +55,7 @@ fn execute cmd
   while eq load8u args == 0x20
     inc args += 1
   end
-  if eqz load8u cmd
+  if not load8u cmd
     return 0
   end
   

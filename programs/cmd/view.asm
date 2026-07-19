@@ -8,10 +8,10 @@ ext readFile 0x5040 2
 fn main args
   vars len
   
-  if eqz args
+  if not args
     let args = buffer
   end
-  if eqz load8u args
+  if not load8u args
     let args = buffer
   end
   
@@ -31,7 +31,7 @@ fn main args
       store 0x40004b04 0
       vsync
     end
-    while eqz load 0x40004b04
+    while not load 0x40004b04
       vsync
     end
   else

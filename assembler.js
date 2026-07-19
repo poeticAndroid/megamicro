@@ -28,8 +28,10 @@
 
     adr = item(state, 0)//keywords
     store(adr - 4, loadWordList(keywords, adr))
+    console.log("data keywords", uint8.join(" "))
     adr = item(state, 1)//opcodes
     store(adr - 4, loadWordList(opcodes, adr))
+    console.log("data opcodes", uint8.join(" "))
     adr = item(state, 2)//source
     store(adr - 4, loadFile(asm, adr))
     toLowerCase(adr)
@@ -1021,14 +1023,19 @@
     return data.length + 1
   }
   function loadWordList(words, adr) {
+    let asm = ""
     let start = adr
     for (let word of words) {
       store(adr, word.length + 1)
+      asm += "  " + uint8.join(" ")
       adr += 4
       adr += loadFile(word, adr)
+      asm += "  " + JSON.stringify(word + "\0").replaceAll("\\u0000", "\\0")
     }
     store(adr, 0)
+    asm += "  0 0 0 0\n"
     adr += 4
+    console.log(asm)
     return adr - start
   }
 
@@ -1079,7 +1086,7 @@
     "halt", "sleep", "vsync", "-", "jump", "jumpifz", "-", "endcall", "call", "return", "exec", "break", "reset", "absadr", "cpuver", "noop",
     "lit", "get", "stackptr", "load", "load8u", "setread", "skipread", "read", "drop", "set", "inc", "store", "store8", "setwrite", "skipwrite", "write",
     "add", "sub", "mult", "div", "rem", "load8s", "load16s", "itof", "fadd", "fsub", "fmult", "fdiv", "ffloor", "-", "store16", "ftoi",
-    "eq", "lt", "gt", "eqz", "and", "or", "xor", "rot", "feq", "flt", "fgt", "-", "-", "-", "-", "-",
+    "eq", "lt", "gt", "not", "and", "or", "xor", "rot", "feq", "flt", "fgt", "-", "-", "-", "-", "-",
     "null", "true"
   ]
 

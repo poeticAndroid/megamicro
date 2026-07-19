@@ -291,7 +291,7 @@ fn pxCopy x1 y1 w h src
 end
 
 fn scroll px
-  if eqz px
+  if not px
     endcall
   end
   vars start edge end clear keep h bg i
@@ -427,7 +427,7 @@ end
 fn printStr str max
   vars char
   let char = load8u str
-  while and eqz eqz char & eqz eqz max
+  while and not not char & not not max
     printChr char
     inc str 1
     let char = load8u str
@@ -452,7 +452,7 @@ fn readLn dest max
     printChr load8u dest
     inc dest += 1
   end
-  while eqz done
+  while not done
     printChr 0x20
     printChr 0x08
     store8 0x40004bff xor -1 load8u 0x40004bff
@@ -465,7 +465,7 @@ fn readLn dest max
     store8 0x40004bff xor -1 load8u 0x40004bff
     store8 0x40004bfe xor -1 load8u 0x40004bfe
     printChr 0x08
-    while eqz load 0x40004b04
+    while not load 0x40004b04
       vsync
     end
     if eq load8u 0x40004b06 == 0x23 ; End
@@ -674,7 +674,7 @@ fn strLen str max
     inc str 1
     inc len 1
     inc max -1
-    if eqz load8u str
+    if not load8u str
       let max = 0
     end
   end
@@ -744,7 +744,7 @@ fn openFile cmd path bytes
   store8 0x40004b01 strLen 0x40004900 255
   store8 0x40004b00 add 1 + load8u 0x40004bf8
   while load 0x40004b00
-    if eqz load8u 0x40004b00
+    if not load8u 0x40004b00
       store8 0x40004b01 0
     end
     if load8u 0x40004b02
@@ -771,7 +771,7 @@ fn readFile dest max
     let readPos = 0x40004a00
   end
   while load 0x40004b00
-    if eqz load8u 0x40004b00
+    if not load8u 0x40004b00
       store8 0x40004b01 0
     end
     if max
@@ -799,7 +799,7 @@ fn writeFile src len
   vars bytes
   while load8u 0x40004b00
     if len
-      if eqz load8u 0x40004b01
+      if not load8u 0x40004b01
         if lt len < 255
           memCopy src 0x40004900 len
           store8 0x40004b01 len
