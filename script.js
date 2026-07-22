@@ -673,7 +673,7 @@
   }
 
   function updateStack() {
-    document.querySelector("#stackPre").textContent = "Stack ptr: " + toHex(cpu.getVS()) + "\n" + dumpStack(20)
+    document.querySelector("#stackPre").textContent = "Stack size: " + ("00000000" + (mem.length - cpu.getVS())).slice(-6) + " bytes\n" + dumpStack(20)
   }
 
   function resize(e) {
