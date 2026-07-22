@@ -626,30 +626,37 @@
     return txt
   }
 
-  function dumpStack(len) {
+  let _dumpStackLen = 0
+  setInterval(() => {
+    if (_dumpStackLen > 16) _dumpStackLen = 16
+  }, 4096)
+  function dumpStack() {
+    let len = 0
     let adr = cpu.getVS()
     let cs = cpu.getCS()
     let txt = ""
-    let first = true
-    while (first || len > 0) {
+    while (adr >= 0 && adr < mem.length) {
       if (cs === adr) {
         txt += "--------\n"
         cs = -1
-        len--
-        first = false
+        len++
       }
       uint8.set(mem.slice(adr, adr + 4))
-      if (adr < mem.length) {
-        txt += toHex(int32[0], 8) + " " + int32[0] + " "
-        if (float32[0]) txt += float32[0]
-      }
       if (cs == 0) cs = int32[0]
       if (cs < 0) cs++
-      len--
-      adr += 4
-      if (adr <= 0) len = 0
+
+      txt += toHex(int32[0], 8) + " " + int32[0] + " "
+      if (float32[0]) txt += float32[0]
       txt += "\n"
+      len++
+
+      adr += 4
     }
+    while (len < _dumpStackLen) {
+      txt = "\n" + txt
+      len++
+    }
+    _dumpStackLen = Math.max(_dumpStackLen, len)
     return txt
   }
 
@@ -661,12 +668,12 @@
     txt = txt.slice(0, txt.indexOf(">"))
     txt = txt.split("\n").slice(-6).join("\n")
     txt += dumpMem(pc, 64, pc)
-    txt = txt.split("\n").slice(0, 17).join("\n")
+    txt = txt.split("\n").slice(0, _dumpStackLen + 1).join("\n")
     document.querySelector("#monitorPre").textContent = txt
   }
 
   function updateStack() {
-    document.querySelector("#stackPre").textContent = "Stack ptr: " + toHex(cpu.getVS()) + "\n" + dumpStack(10)
+    document.querySelector("#stackPre").textContent = "Stack ptr: " + toHex(cpu.getVS()) + "\n" + dumpStack(20)
   }
 
   function resize(e) {
