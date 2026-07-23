@@ -22,7 +22,7 @@ fn main args
   while len
     store buffer ls
     let len = openFile 0x20206463 buffer 0
-    readFile cwd len
+    drop readFile cwd len
     
     print_prompt
     store cmd 0
@@ -63,14 +63,14 @@ fn execute cmd
   memCopy cmd absadr buffer verblen
   let len = openFile 0x20746567 buffer 0
   if len
-    readFile buffer len
+    drop readFile buffer len
     return run args
   end
   
   store add verblen + absadr buffer 0x6772702e ; .prg
   let len = openFile 0x20746567 buffer 0
   if len
-    readFile buffer len
+    drop readFile buffer len
     return run args
   end
   
@@ -80,7 +80,7 @@ fn execute cmd
   store buffer 0x646d632f ; /cmd
   let len = openFile 0x20746567 buffer 0
   if len
-    readFile buffer len
+    drop readFile buffer len
     return run args
   end
   
