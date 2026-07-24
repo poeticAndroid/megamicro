@@ -628,6 +628,7 @@
 
   let _dumpStackLen = 0
   setInterval(() => {
+    _stackSize = 0
     if (_dumpStackLen > 16) _dumpStackLen = 16
   }, 4096)
   function dumpStack() {
@@ -672,8 +673,10 @@
     document.querySelector("#monitorPre").textContent = txt
   }
 
+  let _stackSize = 0
   function updateStack() {
-    document.querySelector("#stackPre").textContent = "Stack size: " + ("00000000" + (mem.length - cpu.getVS())).slice(-6) + " bytes\n" + dumpStack(20)
+    _stackSize = Math.max(_stackSize, mem.length - cpu.getVS())
+    document.querySelector("#stackPre").textContent = "Stack size: " + ("00000000" + _stackSize).slice(-6) + " bytes\n" + dumpStack(20)
   }
 
   function resize(e) {
