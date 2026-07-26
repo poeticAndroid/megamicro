@@ -1,5 +1,5 @@
 (() => {
-  let mem = new Uint8Array(1024 * 64)
+  let mem = new Uint8Array(1024 * 1024)
 
   let uint8 = new Uint8Array(4),
     int32 = new Int32Array(uint8.buffer),
