@@ -172,8 +172,8 @@ end
 
 fn resethw
   fill 0 0x40000004 780
-  store 0x40000004 absadr 0xbfffb666
-  store 0x40000008 absadr 0xbfffb666
+  store 0x40000004 absadr 0xbfffb000
+  store 0x40000008 absadr 0xbfffb000
 end
 
 
