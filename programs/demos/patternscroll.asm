@@ -2,28 +2,31 @@
 jump main
 
 fn main args
-  vars adr
-  let adr = 0x40000000
+  vars adr, last
+  let adr = load 0x40000008
+  let last = add adr + 0x4800
 
-  while lt adr < 0x40004800
+  while lt adr < last
     store8 adr adr
     inc adr += 1
   end
 
-  let adr = 0x40000000
+  let adr = load 0x40000008
+  let last = add adr + 0x4800
 
   while true
-    if load8u 0x40004b04
-      store8 0x40004800 load8u 0x40004b05
-      store 0x40004b04 0
+    if load8u 0x40000304
+      store8 0x40000000 load8u 0x40000305
+      store 0x40000304 0
     end
 
-    while lt adr < 0x40004800
+    while lt adr < last
       store8 adr add 1 + load8u adr
       inc adr += 1
     end
 
-    let adr = 0x40000000
+    let adr = load 0x40000008
+    let last = add adr + 0x4800
     ;vsync
   end
 

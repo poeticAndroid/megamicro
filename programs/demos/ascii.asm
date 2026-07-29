@@ -1,8 +1,8 @@
 ;; z28r asm
 jump main
-ext printChr    0x501c 1 0 ; printChr char
-ext printStr    0x5020 2 0 ; printStr str max
-ext intToStr    0x502c 3 0 ; intToStr int base dest
+ext printChr    0x081c 1 0 ; printChr char
+ext printStr    0x0820 2 0 ; printStr str max
+ext intToStr    0x082c 3 0 ; intToStr int base dest
 
 fn main args
   vars i

@@ -1,9 +1,9 @@
 ;; z28r asm
 jump main
-ext cls         0x5008 0 0 ; cls
-ext printChr    0x501c 1 0 ; printChr char
-ext readLn      0x5024 2 0 ; readLn dest max
-ext strToInt    0x5028 3 1 ; strToInt:int str base max
+ext cls         0x0808 0 0 ; cls
+ext printChr    0x081c 1 0 ; printChr char
+ext readLn      0x0824 2 0 ; readLn dest max
+ext strToInt    0x0828 3 1 ; strToInt:int str base max
 
 fn main args
   vars i_str
@@ -13,16 +13,16 @@ fn main args
     store input_str 0
     readLn input_str 1024
     if eq 0x3d62 == load16s input_str ; b=
-      store8 0x40004bfe strToInt i_str 10 4
+      store8 0x400003fe strToInt i_str 10 4
     end
     if eq 0x00736c63 == load input_str ; cls
       cls
     end
     if eq 0x3d66 == load16s input_str ; f=
-      store8 0x40004bff strToInt i_str 10 4
+      store8 0x400003ff strToInt i_str 10 4
     end
     if eq 0x3d6d == load16s input_str ; m=
-      store8 0x40004800 strToInt i_str 10 4
+      store8 0x40000000 strToInt i_str 10 4
       vsync
     end
   end

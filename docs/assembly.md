@@ -12,7 +12,7 @@ All keywords must be the first word of a line.
 ### `ext` `name` `adr` `paramCount`
 Register an external function located in memory `adr` as `name`.
 ```
-ext printStr 0x5020 2
+ext printStr 0x0820 2
 ```
 
 ### `fn` `name` `params...`

@@ -41,7 +41,7 @@ skipto 0x50
 
 
 fn boot
-  store 0x40004800 add 1 + load 0x40004800
+  store 0x40000000 add 1 + load 0x40000000
   sleep 0x100
   resethw
 
@@ -70,12 +70,12 @@ fn bootDisk
   let drive = 4
   while drive
     inc drive += -1
-    store 0x40004bf8 drive
+    store 0x400003f8 drive
     drop openFile 0x20206463 root_str 0 ; cd
   end
   while lt drive < 4
-    store 0x40004bf8 drive
-    if load8u 0x40004bfc
+    store 0x400003f8 drive
+    if load8u 0x400003fc
       printChr 0x0a
     end
     printStr loading_str -1
@@ -95,7 +95,7 @@ fn bootDisk
       drop readFile main_prg len
       runUser
     else
-      printStr 0x40004a00 255
+      printStr 0x40000200 255
     end
     inc drive += 1
   end
@@ -144,12 +144,12 @@ fn intro
   printChr 0x0a
 
   printStr speed_str -1
-  let sec = load8u 0x40004b11
+  let sec = load8u 0x40000311
   let ins = 8
-  while eq sec == load8u 0x40004b11
+  while eq sec == load8u 0x40000311
   end
-  let sec = load8u 0x40004b11
-  while eq sec == load8u 0x40004b11
+  let sec = load8u 0x40000311
+  while eq sec == load8u 0x40000311
     inc ins += 12
   end
   intToStr ins 10 main_prg
@@ -171,9 +171,9 @@ fn intro
 end
 
 fn resethw
-  fill 0 0x40004804 780
-  store 0x40004804 0x40000000
-  store 0x40004808 0x40000000
+  fill 0 0x40000004 780
+  store 0x40000004 absadr 0xbfffb666
+  store 0x40000008 absadr 0xbfffb666
 end
 
 
@@ -181,10 +181,10 @@ end
 
 fn cls
   vars adr end bg i
-  let adr = or 0x40000000 | load 0x40004808
-  store 0x40004808 adr
+  let adr = or 0x40000000 | load 0x40000008
+  store 0x40000008 adr
   let end = add adr + 0x4800
-  let bg = load8u 0x40004bfe
+  let bg = load8u 0x400003fe
   let i = 32
   while i
     inc i -1
@@ -197,21 +197,21 @@ fn cls
     inc adr 4
   end
 
-  store8 0x40004bfc 0
-  store8 0x40004bfd 0
+  store8 0x400003fc 0
+  store8 0x400003fd 0
 end
 
 fn screenmode mode
-  if eq load8u 0x40004800 == mode
+  if eq load8u 0x40000000 == mode
     endcall
   end
-  store8 0x40004800 mode
+  store8 0x40000000 mode
   vsync
 end
 
 fn colors fg bg
-  store8 0x40004bff fg
-  store8 0x40004bfe bg
+  store8 0x400003ff fg
+  store8 0x400003fe bg
 end
 
 fn pset x y c
@@ -222,17 +222,17 @@ fn pset x y c
     endcall
   end
   vars w
-  let w = mult 8 * load8u 0x40004802
+  let w = mult 8 * load8u 0x40000002
   if gt x > sub w - 1
     endcall
   end
   vars h
-  let h = mult 8 * load8u 0x40004803
+  let h = mult 8 * load8u 0x40000003
   if gt y > sub h - 1
     endcall
   end
 
-  setwrite load 0x40004808 load8u 0x40004801
+  setwrite load 0x40000008 load8u 0x40000001
   skipwrite add x + mult y * w
   write c
 end
@@ -245,17 +245,17 @@ fn pget x y
     return 0
   end
   vars w
-  let w = mult 8 * load8u 0x40004802
+  let w = mult 8 * load8u 0x40000002
   if gt x > sub w - 1
     return 0
   end
   vars h
-  let h = mult 8 * load8u 0x40004803
+  let h = mult 8 * load8u 0x40000003
   if gt y > sub h - 1
     return 0
   end
 
-  setread load 0x40004804 load8u 0x40004801
+  setread load 0x40000004 load8u 0x40000001
   skipread add x + mult y * w
   return read
 end
@@ -295,17 +295,17 @@ fn scroll px
     endcall
   end
   vars start edge end clear keep h bg i
-  let start = or 0x40000000 | load 0x40004808
+  let start = or 0x40000000 | load 0x40000008
   let end = add start + 0x4800
-  let h = mult 8 * load8u 0x40004803
+  let h = mult 8 * load8u 0x40000003
   let clear = mult px * div 0x4800 / h
   let keep = sub 0x4800 - clear
-  let bg = load8u 0x40004bfe
+  let bg = load8u 0x400003fe
   if gt clear > 0
     if gt clear > 0x4800
-      let bg = load 0x40004bfc
+      let bg = load 0x400003fc
       cls
-      store 0x40004bfc bg
+      store 0x400003fc bg
       endcall
     end
     let i = 32
@@ -322,9 +322,9 @@ fn scroll px
   else
     let clear = mult clear * -1
     if gt clear > 0x4800
-      let bg = load 0x40004bfc
+      let bg = load 0x400003fc
       cls
-      store 0x40004bfc bg
+      store 0x400003fc bg
       endcall
     end
     let keep = sub 0x4800 - clear
@@ -344,17 +344,17 @@ end
 
 fn printChr char
   vars col row
-  let col = load8s 0x40004bfc
-  let row = load8s 0x40004bfd
+  let col = load8s 0x400003fc
+  let row = load8s 0x400003fd
 
   if eq char == 0x08 ; backspace
     inc col -1
     while lt col < 0
-      inc col load8u 0x40004802
+      inc col load8u 0x40000002
       inc row -1
-      store8 0x40004bfd row
+      store8 0x400003fd row
     end
-    store8 0x40004bfc col
+    store8 0x400003fc col
     endcall
   end
   if eq char == 0x09 ; tab
@@ -362,19 +362,19 @@ fn printChr char
     while rem col % 8
       inc col 1
     end
-    store8 0x40004bfc col
+    store8 0x400003fc col
     endcall
   end
   if eq char == 0x0a ; newline
     let col = 0
     inc row 1
-    store8 0x40004bfc col
-    store8 0x40004bfd row
+    store8 0x400003fc col
+    store8 0x400003fd row
     endcall
   end
   if eq char == 0x0d ; carriage return
     let col = 0
-    store8 0x40004bfc col
+    store8 0x400003fc col
     endcall
   end
   if lt char < 0x20 ; other control code
@@ -382,11 +382,11 @@ fn printChr char
   end
 
   vars lastCol lastRow x y font w linerest
-  let w = mult 8 * load8u 0x40004802
+  let w = mult 8 * load8u 0x40000002
   let linerest = sub w - 8
-  let lastCol = sub load8u 0x40004802 - 1
-  let lastRow = sub load8u 0x40004803 - 1
-  let font = add 0x40004c00 + mult 8 * and 127 & char
+  let lastCol = sub load8u 0x40000002 - 1
+  let lastRow = sub load8u 0x40000003 - 1
+  let font = add 0x40000400 + mult 8 * and 127 & char
 
   while gt col > lastCol
     inc row 1
@@ -404,7 +404,7 @@ fn printChr char
 
   let x = mult 8 * col
   let y = mult 8 * row
-  setwrite load 0x40004808 load8u 0x40004801
+  setwrite load 0x40000008 load8u 0x40000001
   skipwrite add x + mult y * w
 
   setread font 1
@@ -412,7 +412,7 @@ fn printChr char
   while y
     let x = 8
     while x
-      write load8u add 0x40004bfe + read
+      write load8u add 0x400003fe + read
       inc x -1
     end
     skipwrite linerest
@@ -420,8 +420,8 @@ fn printChr char
   end
 
   inc col 1
-  store8 0x40004bfc col
-  store8 0x40004bfd row
+  store8 0x400003fc col
+  store8 0x400003fd row
 end
 
 fn printStr str max
@@ -455,26 +455,26 @@ fn readLn dest max
   while not done
     printChr 0x20
     printChr 0x08
-    store8 0x40004bff xor -1 load8u 0x40004bff
-    store8 0x40004bfe xor -1 load8u 0x40004bfe
+    store8 0x400003ff xor -1 load8u 0x400003ff
+    store8 0x400003fe xor -1 load8u 0x400003fe
     if load8u dest
       printChr load8u dest
     else
       printChr 0x20
     end
-    store8 0x40004bff xor -1 load8u 0x40004bff
-    store8 0x40004bfe xor -1 load8u 0x40004bfe
+    store8 0x400003ff xor -1 load8u 0x400003ff
+    store8 0x400003fe xor -1 load8u 0x400003fe
     printChr 0x08
-    while not load 0x40004b04
+    while not load 0x40000304
       vsync
     end
-    if eq load8u 0x40004b06 == 0x23 ; End
+    if eq load8u 0x40000306 == 0x23 ; End
       while load8u dest
         printChr load8u dest
         inc dest += 1
       end
     end
-    if eq load8u 0x40004b06 == 0x24 ; Home
+    if eq load8u 0x40000306 == 0x24 ; Home
       if load8u dest
         printChr load8u dest
       else
@@ -486,7 +486,7 @@ fn readLn dest max
         inc dest += -1
       end
     end
-    if eq load8u 0x40004b06 == 0x25 ; Left
+    if eq load8u 0x40000306 == 0x25 ; Left
       if gt dest > start
         if load8u dest
           printChr load8u dest
@@ -498,8 +498,8 @@ fn readLn dest max
         inc dest += -1
       end
     end
-    if eq load8u 0x40004b06 == 0x26 ; Up
-      let done = load8u 0x40004802
+    if eq load8u 0x40000306 == 0x26 ; Up
+      let done = load8u 0x40000002
       if load8u dest
         printChr load8u dest
       else
@@ -514,14 +514,14 @@ fn readLn dest max
         inc done += -1
       end
     end
-    if eq load8u 0x40004b06 == 0x27 ; Right
+    if eq load8u 0x40000306 == 0x27 ; Right
       if load8u dest
         printChr load8u dest
         inc dest += 1
       end
     end
-    if eq load8u 0x40004b06 == 0x28 ; Down
-      let done = load8u 0x40004802
+    if eq load8u 0x40000306 == 0x28 ; Down
+      let done = load8u 0x40000002
       while done
         if load8u dest
           printChr load8u dest
@@ -530,7 +530,7 @@ fn readLn dest max
         inc done += -1
       end
     end
-    if eq load8u 0x40004b05 == 0x08 ; Backspace
+    if eq load8u 0x40000305 == 0x08 ; Backspace
       if gt dest > start
         printChr 0x08
         printChr 0x20
@@ -550,7 +550,7 @@ fn readLn dest max
         end
       end
     end
-    if eq load8u 0x40004b05 == 0x0a ; Enter
+    if eq load8u 0x40000305 == 0x0a ; Enter
       if load8u dest
         printChr load8u dest
       else
@@ -559,14 +559,14 @@ fn readLn dest max
       printChr 0x08
       let done = true
     end
-    if gt load8u 0x40004b05 > 0x1f ; any printable
+    if gt load8u 0x40000305 > 0x1f ; any printable
       if lt dest < end
-        store8 dest load8u 0x40004b05
+        store8 dest load8u 0x40000305
         printChr load8u dest
         inc dest += 1
       end
     end
-    store 0x40004b04 0
+    store 0x40000304 0
   end
   while gt load8u dest > 0x1f
     printChr load8u dest
@@ -735,29 +735,29 @@ end
 
 fn openFile cmd path bytes
   vars bytes
-  fill 0 0x40004900 516
+  fill 0 0x40000100 516
   vsync
-  store 0x40004900 cmd
-  memCopy path 0x40004904 strLen path 250
-  store add 0x40004900 + strLen 0x40004900 250 0x20
-  intToStr bytes 10 add 0x40004900 + strLen 0x40004900 250
-  store8 0x40004b01 strLen 0x40004900 255
-  store8 0x40004b00 add 1 + load8u 0x40004bf8
-  while load 0x40004b00
-    if not load8u 0x40004b00
-      store8 0x40004b01 0
+  store 0x40000100 cmd
+  memCopy path 0x40000104 strLen path 250
+  store add 0x40000100 + strLen 0x40000100 250 0x20
+  intToStr bytes 10 add 0x40000100 + strLen 0x40000100 250
+  store8 0x40000301 strLen 0x40000100 255
+  store8 0x40000300 add 1 + load8u 0x400003f8
+  while load 0x40000300
+    if not load8u 0x40000300
+      store8 0x40000301 0
     end
-    if load8u 0x40004b02
-      if eq load 0x40004a00 == 0x20206b6f ; ok
-        let bytes = strToInt 0x40004a04 10 250
-        store8 0x40004b02 0
+    if load8u 0x40000302
+      if eq load 0x40000200 == 0x20206b6f ; ok
+        let bytes = strToInt 0x40000204 10 250
+        store8 0x40000302 0
         if bytes
           return bytes
         else
           return true
         end
       else
-        store 0x40004b00 0
+        store 0x40000300 0
       end
     end
   end
@@ -767,26 +767,26 @@ end
 globals readPos
 fn readFile dest max
   vars bytes
-  if lt readPos < 0x40004a00
-    let readPos = 0x40004a00
+  if lt readPos < 0x40000200
+    let readPos = 0x40000200
   end
-  while load 0x40004b00
-    if not load8u 0x40004b00
-      store8 0x40004b01 0
+  while load 0x40000300
+    if not load8u 0x40000300
+      store8 0x40000301 0
     end
     if max
-      if load8u 0x40004b02
+      if load8u 0x40000302
         store8 dest load8u readPos
         inc dest += 1
         inc readPos += 1
         inc bytes += 1
         inc max += -1
-        if eq load8u 0x40004b02 == 1
-          let readPos = 0x40004a00
+        if eq load8u 0x40000302 == 1
+          let readPos = 0x40000200
         end
-        store8 0x40004b02 sub load8u 0x40004b02 - 1
+        store8 0x40000302 sub load8u 0x40000302 - 1
       else
-        let readPos = 0x40004a00
+        let readPos = 0x40000200
       end
     else
       return bytes
@@ -797,18 +797,18 @@ end
 
 fn writeFile src len
   vars bytes
-  while load8u 0x40004b00
+  while load8u 0x40000300
     if len
-      if not load8u 0x40004b01
+      if not load8u 0x40000301
         if lt len < 255
-          memCopy src 0x40004900 len
-          store8 0x40004b01 len
+          memCopy src 0x40000100 len
+          store8 0x40000301 len
           inc bytes += len
           inc src += len
           inc len += sub 0 - len
         else
-          memCopy src 0x40004900 255
-          store8 0x40004b01 255
+          memCopy src 0x40000100 255
+          store8 0x40000301 255
           inc bytes += 255
           inc src += 255
           inc len += -255

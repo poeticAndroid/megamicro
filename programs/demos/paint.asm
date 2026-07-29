@@ -1,8 +1,8 @@
 ;; z28r asm
 jump main
-ext cls         0x5008 0 0 ; cls
-ext pset        0x500c 3 0 ; pset x y c
-ext pget        0x5010 2 1 ; pget:c x y
+ext cls         0x0808 0 0 ; cls
+ext pset        0x080c 3 0 ; pset x y c
+ext pget        0x0810 2 1 ; pget:c x y
 
 globals mouseX mouseY penX penY
 
@@ -12,12 +12,12 @@ fn main args
   let mouseY = -8
   while true
     readMouse xhair
-    if load8u 0x40004b04 ; key pressed
-      store8 0x40004800 and 7 load8u 0x40004b05
-      store 0x40004b04 0
+    if load8u 0x40000304 ; key pressed
+      store8 0x40000000 and 7 load8u 0x40000305
+      store 0x40000304 0
       vsync
     end
-    if load8u 0x40004b0b ; mouse btn pressed
+    if load8u 0x4000030b ; mouse btn pressed
       while or (not eq penX != mouseX) | (not eq penY != mouseY)
         if lt penX < mouseX
           inc penX += 1
@@ -31,7 +31,7 @@ fn main args
         if gt penY > mouseY
           inc penY += -1
         end
-        if eq load8u 0x40004b0b == 2
+        if eq load8u 0x4000030b == 2
           subColor penX penY 4
         else
           addColor penX penY 4
@@ -83,44 +83,44 @@ fn subColor x y s
 end
 
 fn readMouse
-  if eq load8u 0x40004800 == 0
-    let mouseX = mult load8u 0x40004b09 * 2
-    let mouseY = mult load8u 0x40004b0a * 2
+  if eq load8u 0x40000000 == 0
+    let mouseX = mult load8u 0x40000309 * 2
+    let mouseY = mult load8u 0x4000030a * 2
     endcall
   end
-  if eq load8u 0x40004800 == 1
-    let mouseX = mult load8u 0x40004b09 * 2
-    let mouseY =      load8u 0x40004b0a
+  if eq load8u 0x40000000 == 1
+    let mouseX = mult load8u 0x40000309 * 2
+    let mouseY =      load8u 0x4000030a
     endcall
   end
-  if eq load8u 0x40004800 == 2
-    let mouseX =      load8u 0x40004b09
-    let mouseY =      load8u 0x40004b0a
+  if eq load8u 0x40000000 == 2
+    let mouseX =      load8u 0x40000309
+    let mouseY =      load8u 0x4000030a
     endcall
   end
-  if eq load8u 0x40004800 == 3
-    let mouseX =      load8u 0x40004b09
-    let mouseY = div  load8u 0x40004b0a / 2
+  if eq load8u 0x40000000 == 3
+    let mouseX =      load8u 0x40000309
+    let mouseY = div  load8u 0x4000030a / 2
     endcall
   end
-  if eq load8u 0x40004800 == 4
-    let mouseX = mult load8u 0x40004b09 * 2
-    let mouseY = mult load8u 0x40004b0a * 2
+  if eq load8u 0x40000000 == 4
+    let mouseX = mult load8u 0x40000309 * 2
+    let mouseY = mult load8u 0x4000030a * 2
     endcall
   end
-  if eq load8u 0x40004800 == 5
-    let mouseX =      load8u 0x40004b09
-    let mouseY = mult load8u 0x40004b0a * 2
+  if eq load8u 0x40000000 == 5
+    let mouseX =      load8u 0x40000309
+    let mouseY = mult load8u 0x4000030a * 2
     endcall
   end
-  if eq load8u 0x40004800 == 6
-    let mouseX =      load8u 0x40004b09
-    let mouseY =      load8u 0x40004b0a
+  if eq load8u 0x40000000 == 6
+    let mouseX =      load8u 0x40000309
+    let mouseY =      load8u 0x4000030a
     endcall
   end
-  if eq load8u 0x40004800 == 7
-    let mouseX = div  load8u 0x40004b09 / 2
-    let mouseY =      load8u 0x40004b0a
+  if eq load8u 0x40000000 == 7
+    let mouseX = div  load8u 0x40000309 / 2
+    let mouseY =      load8u 0x4000030a
     endcall
   end
 end

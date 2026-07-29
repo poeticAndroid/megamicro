@@ -1091,7 +1091,7 @@
   ]
 
   loadWordList(["0123456789abcdef"], 0)
-  setInterval(() => {
+  setTimeout(() => {
     for (let i = 0; i < mem.length; i++) {
       mem[i] = Math.random() * 255
     }

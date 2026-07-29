@@ -1,20 +1,20 @@
 ;; z28r asm
 jump main
-ext printChr 0x501c 1 0
-ext printStr 0x5020 2
-ext readLn 0x5024 2
-ext openFile 0x503c 3
-ext readFile 0x5040 2
-ext intToStr 0x502c 3 0 ; intToStr int base dest
-ext fill     0x5038 3 0 ; fill val dest len
-ext memCopy  0x5034 3 0 ; memCopy src dest len
+ext printChr 0x081c 1 0
+ext printStr 0x0820 2
+ext readLn 0x0824 2
+ext openFile 0x083c 3
+ext readFile 0x0840 2
+ext intToStr 0x082c 3 0 ; intToStr int base dest
+ext fill     0x0838 3 0 ; fill val dest len
+ext memCopy  0x0834 3 0 ; memCopy src dest len
 
 fn main args
   vars len, ls, err
   let len = true
   let ls = load buffer
   printStr cwd 64
-  let len = sub absadr stackptr - buffer
+  let len = sub load 0x40000008 - buffer
   intToStr len 10 buffer
   printStr buffer 64
   printStr cmd 64
@@ -84,7 +84,7 @@ fn execute cmd
     return run args
   end
   
-  printStr 0x40004a00 256
+  printStr 0x40000200 256
   return 404
 end
 
@@ -93,7 +93,7 @@ fn run args
   return exec buffer 1 args
 end
 
-data cwd "\n\nMegaDOS 1.\x9b\n\0"
+data cwd "\n\nMegaDOS 1.1.\x9b\n\0"
 end
 skipby 64
 

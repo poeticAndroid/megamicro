@@ -1,15 +1,15 @@
 ;; z28r asm
 jump main
-ext printChr    0x501c 1 0 ; printChr char
-ext printStr    0x5020 2 0 ; printStr str max
-ext strToInt    0x5028 3 1 ; strToInt:int str base max
-ext intToStr    0x502c 3 0 ; intToStr int base dest
-ext strLen      0x5030 2 1 ; strLen:len str max
-ext memCopy     0x5034 3 0 ; memCopy src dest len
-ext fill        0x5038 3 0 ; fill val dest len
-ext openFile    0x503c 3 1 ; open:bytes cmd path bytes
-ext readFile    0x5040 2 1 ; read:bytes dest max
-ext writeFile   0x5044 2 1 ; write:bytes src len
+ext printChr    0x081c 1 0 ; printChr char
+ext printStr    0x0820 2 0 ; printStr str max
+ext strToInt    0x0828 3 1 ; strToInt:int str base max
+ext intToStr    0x082c 3 0 ; intToStr int base dest
+ext strLen      0x0830 2 1 ; strLen:len str max
+ext memCopy     0x0834 3 0 ; memCopy src dest len
+ext fill        0x0838 3 0 ; fill val dest len
+ext openFile    0x083c 3 1 ; open:bytes cmd path bytes
+ext readFile    0x0840 2 1 ; read:bytes dest max
+ext writeFile   0x0844 2 1 ; write:bytes src len
 
 globals srcpos litpos exepos changes state
 
@@ -34,15 +34,15 @@ fn main(args)
 
     let len = assemble()
     let adr = filename
-    while load8u(adr)
+    while gt(load8u(adr) > 0x20)
       inc adr += 1
     end
-    store(sub(adr - 3), 0x677270) ; prg
+    store(sub(adr - 4), 0x6772702e) ; .prg
 
     drop openFile 0x20747570 filename len ; put
     let len = writeFile item(state, 10) len
   else
-    printStr(0x40004a00, 256)
+    printStr(0x40000200, 256)
     printChr(0x0a)
     return 1
   end

@@ -1,9 +1,9 @@
 ;; z28r asm
 jump main
-ext printChr 0x501c 1
-ext printStr 0x5020 2
-ext openFile 0x503c 3
-ext readFile 0x5040 2
+ext printChr 0x081c 1
+ext printStr 0x0820 2
+ext openFile 0x083c 3
+ext readFile 0x0840 2
 
 fn main args
   vars len
@@ -17,25 +17,25 @@ fn main args
   
   let len = openFile 0x20746567 args 0 ; get
   if len
-    store 0x40004bfc 0
-    readFile 0x40004800 1
-    readFile 0x40004bfe 1
-    store8 0x40004bff xor -1 load8u 0x40004bfe
-    readFile 0x40000000 2
+    store 0x400003fc 0
+    readFile 0x40000000 1
+    readFile 0x400003fe 1
+    store8 0x400003ff xor -1 load8u 0x400003fe
+    readFile load 0x40000008 2
     
-    while load 0x40004b00
-      readFile 0x40000000 0x4800
+    while load 0x40000300
+      readFile load 0x40000008 0x4800
       vsync
     end
-    while load 0x40004b04
-      store 0x40004b04 0
+    while load 0x40000304
+      store 0x40000304 0
       vsync
     end
-    while not load 0x40004b04
+    while not load 0x40000304
       vsync
     end
   else
-    printStr 0x40004a00 256
+    printStr 0x40000200 256
     printChr 0x0a
     return 1
   end

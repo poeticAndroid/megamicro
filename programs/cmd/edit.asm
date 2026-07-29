@@ -1,14 +1,14 @@
 ;; z28r asm
 jump main
-ext cls       0x5008 0
-ext printChr  0x501c 1
-ext printStr  0x5020 2
-ext readLn    0x5024 2
-ext strLen    0x5030 2
-ext openFile  0x503c 3
-ext readFile  0x5040 2
-ext writeFile 0x5044 2
-ext memCopy   0x5034 3
+ext cls       0x0808 0
+ext printChr  0x081c 1
+ext printStr  0x0820 2
+ext readLn    0x0824 2
+ext strLen    0x0830 2
+ext openFile  0x083c 3
+ext readFile  0x0840 2
+ext writeFile 0x0844 2
+ext memCopy   0x0834 3
 
 fn main args
   vars len
@@ -36,7 +36,7 @@ fn main args
     if eq load8u input_str == 0x79
       drop openFile 0x20747570 args len ; put
       let len = writeFile buffer len
-      printStr 0x40004a00 256
+      printStr 0x40000200 256
       printChr 0x0a
       printStr saved_str -1
     else
@@ -71,23 +71,23 @@ fn edit dest
     end
     
     cursor dest
-    store8 0x40004bff xor -1 load8u 0x40004bff
-    store8 0x40004bfe xor -1 load8u 0x40004bfe
+    store8 0x400003ff xor -1 load8u 0x400003ff
+    store8 0x400003fe xor -1 load8u 0x400003fe
     cursor dest
-    store8 0x40004bff xor -1 load8u 0x40004bff
-    store8 0x40004bfe xor -1 load8u 0x40004bfe    
-    while not load 0x40004b04
+    store8 0x400003ff xor -1 load8u 0x400003ff
+    store8 0x400003fe xor -1 load8u 0x400003fe    
+    while not load 0x40000304
       vsync
     end
     cursor dest
     
-    if eq load8u 0x40004b06 == 0x23 ; End
+    if eq load8u 0x40000306 == 0x23 ; End
       while gt load8u dest > 0x1f
         printChrOvr load8u dest
         inc dest += 1
       end
     end
-    if eq load8u 0x40004b06 == 0x24 ; Home
+    if eq load8u 0x40000306 == 0x24 ; Home
       if gt load8u dest > 0x20
         while gt load8u dest > 0x1f
           printChr 0x08
@@ -106,7 +106,7 @@ fn edit dest
         inc dest += 1
       end
     end
-    if eq load8u 0x40004b06 == 0x25 ; Left
+    if eq load8u 0x40000306 == 0x25 ; Left
       if gt dest > start
         printChr 0x08
         inc dest += -1
@@ -115,9 +115,9 @@ fn edit dest
         end
       end
     end
-    if eq load8u 0x40004b06 == 0x26 ; Up
-      let col = load8s 0x40004bfc
-      let done = load8u 0x40004802
+    if eq load8u 0x40000306 == 0x26 ; Up
+      let col = load8s 0x400003fc
+      let done = load8u 0x40000002
       while done
         if gt dest > start
           printChr 0x08
@@ -125,34 +125,34 @@ fn edit dest
           if eq load8u dest == 0x0a
             reline dest
           end
-          if eq col == load8s 0x40004bfc
+          if eq col == load8s 0x400003fc
             let done = true
           end
         end
         inc done += -1
       end
     end
-    if eq load8u 0x40004b06 == 0x27 ; Right
+    if eq load8u 0x40000306 == 0x27 ; Right
       if load8u dest
         printChrOvr load8u dest
         inc dest += 1
       end
     end
-    if eq load8u 0x40004b06 == 0x28 ; Down
-      let col = load8s 0x40004bfc
-      let done = load8u 0x40004802
+    if eq load8u 0x40000306 == 0x28 ; Down
+      let col = load8s 0x400003fc
+      let done = load8u 0x40000002
       while done
         if load8u dest
           printChrOvr load8u dest
           inc dest += 1
         end
-        if eq col == load8s 0x40004bfc
+        if eq col == load8s 0x400003fc
           let done = true
         end
         inc done += -1
       end
     end
-    if eq load8u 0x40004b05 == 0x08 ; Backspace
+    if eq load8u 0x40000305 == 0x08 ; Backspace
       if gt dest > start
         inc dest += -1
         ; if eq load8u dest == 0x0a
@@ -165,12 +165,12 @@ fn edit dest
         let dirty = true
       end
     end
-    if eq load8u 0x40004b05 == 0x0a ; Enter
+    if eq load8u 0x40000305 == 0x0a ; Enter
       if not load8u dest
         store dest 0
       end
       memCopy dest add dest + 1 sub end - dest
-      store8 dest load8u 0x40004b05
+      store8 dest load8u 0x40000305
       ; cls
       ;reline dest
       endline dest
@@ -181,15 +181,15 @@ fn edit dest
       endline dest
       let dirty = true
     end
-    if eq load8u 0x40004b05 == 0x1b ; Esc
+    if eq load8u 0x40000305 == 0x1b ; Esc
       let done = true
     end
-    if gt load8u 0x40004b05 > 0x1f ; any printable
+    if gt load8u 0x40000305 > 0x1f ; any printable
       if not load8u dest
         store dest 0
       end
       memCopy dest add dest + 1 sub end - dest
-      store8 dest load8u 0x40004b05
+      store8 dest load8u 0x40000305
       printChrOvr load8u dest
       inc dest += 1
       inc end += 1
@@ -197,7 +197,7 @@ fn edit dest
       endline dest
       let dirty = true
     end
-    store 0x40004b04 0
+    store 0x40000304 0
   end
   let dest = goto_bottom dest
   printChr 0x0a
@@ -216,10 +216,10 @@ end
 
 fn printChrOvr char
   if eq char == 0x0a
-    if eq load8s 0x40004bfc == load8s 0x40004802
+    if eq load8s 0x400003fc == load8s 0x40000002
       printChr 0x0a
     end
-    while lt load8s 0x40004bfc < load8s 0x40004802
+    while lt load8s 0x400003fc < load8s 0x40000002
       printChr 0x20
     end
   end
@@ -234,7 +234,7 @@ fn reline end
     printChr 0x08
     inc dest += -1
   end
-  store8 0x40004bfc 0
+  store8 0x400003fc 0
   inc dest += 1
   while lt dest < end
     printChrOvr load8u dest
@@ -245,11 +245,11 @@ end
 fn endline start
   vars dest
   
-  if lt load8s 0x40004bfd < sub load8s 0x40004803 - 3
-    store8 0x40004bfd sub load8s 0x40004bfd - sub load8s 0x40004803 - 1
+  if lt load8s 0x400003fd < sub load8s 0x40000003 - 3
+    store8 0x400003fd sub load8s 0x400003fd - sub load8s 0x40000003 - 1
     printChr 0x20
     printChr 0x08
-    store8 0x40004bfd add load8s 0x40004bfd + sub load8s 0x40004803 - 1
+    store8 0x400003fd add load8s 0x400003fd + sub load8s 0x40000003 - 1
     reline start
   end
   
@@ -258,7 +258,7 @@ fn endline start
     printChr load8u dest
     inc dest += 1
   end
-  while lt load8s 0x40004bfc < load8s 0x40004802
+  while lt load8s 0x400003fc < load8s 0x40000002
     printChr 0x20
     inc dest += 1
   end
@@ -272,7 +272,7 @@ fn goto_bottom dest
   while load8u dest
     printChrOvr load8u dest
     inc dest += 1
-    if eq load8u 0x40004bfd == sub load8u 0x40004803 - 1
+    if eq load8u 0x400003fd == sub load8u 0x40000003 - 1
       while gt load8u dest > 0x1f
         printChr load8u dest
         inc dest += 1

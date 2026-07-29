@@ -1,7 +1,7 @@
 ;; z28r asm
 jump main
-ext printStr    0x5020 2 0 ; printStr str max
-ext strToInt    0x5028 3 1 ; strToInt:int str base max
+ext printStr    0x0820 2 0 ; printStr str max
+ext strToInt    0x0828 3 1 ; strToInt:int str base max
 
 
 fn main args
@@ -14,7 +14,7 @@ fn main args
     inc args +=1
   end
   if load8u args
-    store8 0x40004800 strToInt args 10 4
+    store8 0x40000000 strToInt args 10 4
   else
     printStr help_str -1
   end
@@ -26,7 +26,7 @@ fn main args
     inc args +=1
   end
   if load8u args
-    store8 0x40004bfe strToInt args 10 4
+    store8 0x400003fe strToInt args 10 4
   end
   while gt load8u args > 0x20
     inc args +=1
@@ -36,7 +36,7 @@ fn main args
     inc args +=1
   end
   if load8u args
-    store8 0x40004bff strToInt args 10 4
+    store8 0x400003ff strToInt args 10 4
   end
   while gt load8u args > 0x20
     inc args +=1
