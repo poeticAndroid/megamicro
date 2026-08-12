@@ -6,11 +6,12 @@
     float32 = new Float32Array(uint8.buffer)
 
   let
+    debug = 0,
     srcpos = 0,
     litpos = 0,
     exepos = 0,
     changes = 0,
-    state = 0x42
+    state = 0x142
   // 0:keywords
   // 1:opcodes
   // 2:source
@@ -23,7 +24,13 @@
   // 9:lit lengths
   // 10:executable
 
-  function assemble(asm) {
+  function assemble(asm, _debug = false) {
+    debug = _debug
+    for (let i = 0; i < location.hash.length; i++) {
+      mem[42 + i] = location.hash.charCodeAt(i)
+      mem[43 + i] = 0
+    }
+
     let adr, tries, maxlit
 
     adr = item(state, 0)//keywords
@@ -76,6 +83,9 @@
       litpos = item(state, 9)//lits
       exepos = item(state, 10)//exe
       changes = 0
+      if (debug) {
+        compileDebugInit()
+      }
       compile()
       tries--
     }
@@ -395,6 +405,9 @@
     }
     if (!start) return
     srcpos = start
+    if (debug) {
+      compileDebug()
+    }
     while (words) {
       i = -1
       if (isNumber(srcpos)) {
@@ -514,6 +527,62 @@
     size = load8u(litpos)
     if (size > 3) size = 5
     return size
+  }
+
+  function compileDebugInit(args = 42) {
+    let i, first, last
+    vstore(exepos, 0x3e900188)
+    exepos += 4
+    vstore(exepos, 0x94430d47)
+    exepos += 4
+    vstore(exepos, 0x01880883)
+    exepos += 4
+    vstore8(exepos, 0x04)
+    exepos += 1
+    i = args
+    first = exepos
+    last = exepos + 15
+    while (exepos < last && load8u(i) > 0x00) {
+      if (load8u(i) > 0x20) {
+        store8(exepos, load8u(i))
+        exepos += 1
+      } else {
+        exepos = first
+      }
+      if (load8u(i) == 0x2f) {
+        exepos = first
+      }
+      if (load8u(i) == 0x3a) {
+        exepos = first
+      }
+      i += 1
+    }
+    last += 9
+    while (exepos < last) {
+      store8(exepos, 0)
+      exepos += 1
+    }
+  }
+  function compileDebug() {
+    let line = 0, col = 0, s = 0
+    s = item(state, 2)
+    line = 1
+    while (s < srcpos) {
+      col++
+      if (load8u(s) === 0x0a) {
+        line++
+        col = 0
+      }
+      s++
+    }
+    // compileLit(col)
+    // compileLit(0x400003f4)
+    // vstore8(exepos, 0x1b)
+    // exepos++
+    compileLit(line)
+    compileLit(0x400003f0)
+    vstore8(exepos, 0x1b)
+    exepos++
   }
 
   function listGlobals() {

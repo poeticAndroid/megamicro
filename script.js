@@ -214,6 +214,7 @@
 
 
     if (debugMode) {
+      updateAsmDebug()
       updateMonitor(cpu.getPC())
       updateStack()
     }
@@ -593,6 +594,19 @@
     let s = eval(document.querySelector("#speedTxt").value)
     speed = Math.pow(2, s)
     localStorage.setItem("?speed", document.querySelector("#speedTxt").value)
+  }
+
+  function updateAsmDebug() {
+    let name = "", line = -1, col = -1
+    for (let i = 0x03e0; i < 0x03f0; i++) {
+      if (!mem[i]) break
+      name += String.fromCharCode(mem[i])
+    }
+    uint8.set(mem.slice(0x03f0, 0x03f4))
+    line = int32[0]
+    uint8.set(mem.slice(0x03f4, 0x03f8))
+    col = int32[0]
+    document.querySelector("#debugPre").textContent = `${name}:${line},${col}`
   }
 
   function dumpMem(adr, len, pc) {

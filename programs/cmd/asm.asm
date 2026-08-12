@@ -11,7 +11,7 @@ ext openFile    0x083c 3 1 ; open:bytes cmd path bytes
 ext readFile    0x0840 2 1 ; read:bytes dest max
 ext writeFile   0x0844 2 1 ; write:bytes src len
 
-globals srcpos litpos exepos changes state
+globals debug, srcpos, litpos, exepos, changes, state
 
 fn main(args)
   vars len, adr
@@ -108,6 +108,9 @@ fn assemble()
     let litpos = item(state, 9) ; lits
     let exepos = item(state, 10) ; exe
     let changes = 0
+    if debug
+      compileDebugInit()
+    end
     compile()
     inc tries += -1
   end
@@ -423,6 +426,9 @@ fn compileLine()
     endcall
   end
   let srcpos = start
+  if debug
+    compileDebug()
+  end
   while words
     let i = -1
     if isNumber(srcpos)
@@ -576,6 +582,63 @@ fn getLit()
   end
   return size
 end
+
+fn compileDebugInit(args)
+  vars i, first, last
+  vstore(exepos, 0x3e900188)
+  inc exepos += 4
+  vstore(exepos, 0x94430d47)
+  inc exepos += 4
+  vstore(exepos, 0x01880883)
+  inc exepos += 4
+  vstore8(exepos, 0x04)
+  inc exepos += 1
+  let i = args
+  let first = exepos
+  let last = add(exepos + 15)
+  while and(lt(exepos < last) && gt(load8u(i) > 0x00))
+    if gt(load8u(i) > 0x20)
+      store8(exepos, load8u(i))
+      inc exepos += 1
+    else
+      let exepos = first
+    end
+    if eq(load8u(i) == 0x2f)
+      let exepos = first
+    end
+    if eq(load8u(i) == 0x3a)
+      let exepos = first
+    end
+    inc i += 1
+  end
+  inc last += 9
+  while lt(exepos < last)
+    store8(exepos, 0)
+    inc exepos += 1
+  end
+end
+fn compileDebug()
+  vars line, col, s
+  let s = item(state, 2)
+  let line = 1
+  while lt(s < srcpos)
+    inc col += 1
+    if eq(load8u(s) === 0x0a)
+      inc line += 1
+      let col = 0
+    end
+    inc s += 1
+  end
+  ; compileLit(col)
+  ; compileLit(0x400003f4)
+  ; vstore8(exepos, 0x1b)
+  ; inc exepos += 1
+  compileLit(line)
+  compileLit(0x400003f0)
+  vstore8(exepos, 0x1b)
+  inc exepos += 1
+end
+
 fn listGlobals()
   vars kw, src, globlist, globlistPos, pos
   let kw = item(state, 0)

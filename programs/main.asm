@@ -90,6 +90,7 @@ end
 
 fn run args
   -1
+  fill 0 0x400003e0 24
   return exec buffer 1 args
 end
 
